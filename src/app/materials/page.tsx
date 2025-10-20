@@ -12,19 +12,13 @@ import {
   Popconfirm,
 } from "antd";
 
-type Material = {
-  _id?: string;
-  material_id: string;
-  name: string;
-  category: string;
-  status?: string;
-  place_used?: string;
-};
+import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
 
 const { Option } = Select;
 
 export default function MaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [filters, setFilters] = useState({ q: "", category: "", status: "" });
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
@@ -38,7 +32,7 @@ export default function MaterialsPage() {
       setMaterials(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
-      message.error("Failed to load materials");
+      message.error("Tải danh sách vật tư thất bại");
     } finally {
       setLoading(false);
     }
@@ -47,6 +41,22 @@ export default function MaterialsPage() {
   useEffect(() => {
     fetchMaterials();
   }, []);
+
+  const filteredMaterials = materials.filter((m) => {
+    const q = filters.q.trim().toLowerCase();
+    if (q) {
+      const inId = m.material_id?.toLowerCase().includes(q);
+      const inName = m.name?.toLowerCase().includes(q);
+      if (!inId && !inName) return false;
+    }
+    if (filters.category) {
+      if ((m.category || "") !== filters.category) return false;
+    }
+    if (filters.status) {
+      if ((m.status || "") !== filters.status) return false;
+    }
+    return true;
+  });
 
   function openCreate() {
     setEditing(null);
@@ -69,12 +79,12 @@ export default function MaterialsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-      if (!res.ok) throw new Error("Delete failed");
-      message.success("Deleted");
+      if (!res.ok) throw new Error("Xóa thất bại");
+      message.success("Đã xóa");
       fetchMaterials();
     } catch (err) {
       console.error(err);
-      message.error("Failed to delete");
+      message.error("Xóa thất bại");
     } finally {
       setLoading(false);
     }
@@ -91,38 +101,38 @@ export default function MaterialsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Save failed");
-      message.success(editing ? "Updated" : "Created");
+      if (!res.ok) throw new Error("Lưu thất bại");
+      message.success(editing ? "Đã cập nhật" : "Đã tạo");
       setModalOpen(false);
       fetchMaterials();
     } catch (err: any) {
       console.error(err);
-      message.error(err?.message || "Failed to save");
+      message.error(err?.message || "Lưu thất bại");
     } finally {
       setLoading(false);
     }
   }
 
   const columns = [
-    { title: "Material ID", dataIndex: "material_id", key: "material_id" },
-    { title: "Name", dataIndex: "name", key: "name" },
-    { title: "Category", dataIndex: "category", key: "category" },
-    { title: "Status", dataIndex: "status", key: "status" },
-    { title: "Place Used", dataIndex: "place_used", key: "place_used" },
+    { title: "Mã vật tư", dataIndex: "material_id", key: "material_id" },
+    { title: "Tên", dataIndex: "name", key: "name" },
+    { title: "Danh mục", dataIndex: "category", key: "category" },
+    { title: "Tình trạng", dataIndex: "status", key: "status" },
+    { title: "Vị trí sử dụng", dataIndex: "place_used", key: "place_used" },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       render: (_: any, record: Material) => (
         <div className="space-x-2">
           <Button size="small" onClick={() => openEdit(record)}>
-            Edit
+            Sửa
           </Button>
           <Popconfirm
-            title="Delete this material?"
+            title="Bạn có chắc muốn xóa vật tư này?"
             onConfirm={() => handleDelete(record._id)}
           >
             <Button size="small" danger>
-              Delete
+              Xóa
             </Button>
           </Popconfirm>
         </div>
@@ -133,66 +143,118 @@ export default function MaterialsPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Materials</h1>
+        <h1 className="text-2xl font-semibold">Vật tư</h1>
         <Button type="primary" onClick={openCreate}>
-          Add Material
+          Thêm vật tư
         </Button>
+      </div>
+
+      <div className="mb-4 bg-white dark:bg-black p-4 rounded shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <Input
+            placeholder="Tìm theo mã hoặc tên"
+            value={filters.q}
+            onChange={(e) => setFilters((s) => ({ ...s, q: e.target.value }))}
+            style={{ maxWidth: 320 }}
+          />
+
+          <Select
+            placeholder="Lọc theo danh mục"
+            value={filters.category || undefined}
+            onChange={(val) =>
+              setFilters((s) => ({ ...s, category: val || "" }))
+            }
+            allowClear
+            style={{ minWidth: 180 }}
+          >
+            {Object.values(MaterialCategory).map((v) => (
+              <Option key={v} value={v}>
+                {v}
+              </Option>
+            ))}
+          </Select>
+
+          <Select
+            placeholder="Lọc theo tình trạng"
+            value={filters.status || undefined}
+            onChange={(val) => setFilters((s) => ({ ...s, status: val || "" }))}
+            allowClear
+            style={{ minWidth: 180 }}
+          >
+            {Object.values(MaterialStatus).map((v) => (
+              <Option key={v} value={v}>
+                {v}
+              </Option>
+            ))}
+          </Select>
+
+          <div className="ml-auto">
+            <Button
+              onClick={() => setFilters({ q: "", category: "", status: "" })}
+            >
+              Đặt lại
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Table
         rowKey={(r: Material) => r._id || r.material_id}
-        dataSource={materials}
+        dataSource={filteredMaterials}
         columns={columns}
         loading={loading}
         pagination={{ pageSize: 10 }}
       />
 
       <Modal
-        title={editing ? "Edit Material" : "Add Material"}
+        title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
         open={modalOpen}
         onOk={handleOk}
         onCancel={() => setModalOpen(false)}
-        okText="Save"
+        okText="Lưu"
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="material_id"
-            label="Material ID"
-            rules={[{ required: true, message: "Please enter material id" }]}
+            label="Mã vật tư"
+            rules={[{ required: true, message: "Vui lòng nhập mã vật tư" }]}
           >
             <Input />
           </Form.Item>
 
           <Form.Item
             name="name"
-            label="Name"
-            rules={[{ required: true, message: "Please enter name" }]}
+            label="Tên"
+            rules={[{ required: true, message: "Vui lòng nhập tên" }]}
           >
             <Input />
           </Form.Item>
 
           <Form.Item
             name="category"
-            label="Category"
-            rules={[{ required: true, message: "Please select category" }]}
+            label="Danh mục"
+            rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
           >
             <Select>
-              <Option value="resistor">Resistor</Option>
-              <Option value="capacitor">Capacitor</Option>
-              <Option value="ic">IC</Option>
-              <Option value="other">Other</Option>
+              {Object.values(MaterialCategory).map((v) => (
+                <Option key={v} value={v}>
+                  {v}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
 
-          <Form.Item name="status" label="Status">
+          <Form.Item name="status" label="Tình trạng">
             <Select>
-              <Option value="available">Available</Option>
-              <Option value="in_use">In use</Option>
-              <Option value="broken">Broken</Option>
+              {Object.values(MaterialStatus).map((v) => (
+                <Option key={v} value={v}>
+                  {v}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
 
-          <Form.Item name="place_used" label="Place used">
+          <Form.Item name="place_used" label="Vị trí sử dụng">
             <Input />
           </Form.Item>
         </Form>
