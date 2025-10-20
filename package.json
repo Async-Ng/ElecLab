@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.1.0",
+    "antd": "^5.27.5",
     "mongoose": "^8.19.1",
     "next": "15.5.6",
     "react": "19.1.0",
