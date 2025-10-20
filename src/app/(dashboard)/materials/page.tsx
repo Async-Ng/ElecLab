@@ -111,7 +111,7 @@ export default function MaterialsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div>
       <div className="flex flex-col gap-4 ">
         <div>
           <h1 className="text-3xl font-bold">Vật tư</h1>
