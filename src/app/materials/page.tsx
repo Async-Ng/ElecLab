@@ -1,20 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  message,
-  Popconfirm,
-} from "antd";
+import { Button, Form, message, Popconfirm } from "antd";
 
-import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
-
-const { Option } = Select;
+import { Material } from "@/types/material";
+import MaterialFilters from "./_components/MaterialFilters";
+import MaterialsTable from "./_components/MaterialsTable";
+import MaterialModal from "./_components/MaterialModal";
+import ImportButtons from "./_components/ImportButtons";
+import { PlusOutlined } from "@ant-design/icons";
 
 export default function MaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -63,6 +57,9 @@ export default function MaterialsPage() {
     form.resetFields();
     setModalOpen(true);
   }
+
+  // Import from Excel
+  // import buttons component will handle file import and template download
 
   function openEdit(record: Material) {
     setEditing(record);
@@ -141,124 +138,43 @@ export default function MaterialsPage() {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Vật tư</h1>
-        <Button type="primary" onClick={openCreate}>
-          Thêm vật tư
-        </Button>
-      </div>
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Vật tư</h1>
+          <p className="text-sm text-muted-foreground">
+            Quản lý danh sách vật tư của phòng thí nghiệm
+          </p>
+        </div>
 
-      <div className="mb-4 bg-white dark:bg-black p-4 rounded shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-          <Input
-            placeholder="Tìm theo mã hoặc tên"
-            value={filters.q}
-            onChange={(e) => setFilters((s) => ({ ...s, q: e.target.value }))}
-            style={{ maxWidth: 320 }}
-          />
-
-          <Select
-            placeholder="Lọc theo danh mục"
-            value={filters.category || undefined}
-            onChange={(val) =>
-              setFilters((s) => ({ ...s, category: val || "" }))
-            }
-            allowClear
-            style={{ minWidth: 180 }}
-          >
-            {Object.values(MaterialCategory).map((v) => (
-              <Option key={v} value={v}>
-                {v}
-              </Option>
-            ))}
-          </Select>
-
-          <Select
-            placeholder="Lọc theo tình trạng"
-            value={filters.status || undefined}
-            onChange={(val) => setFilters((s) => ({ ...s, status: val || "" }))}
-            allowClear
-            style={{ minWidth: 180 }}
-          >
-            {Object.values(MaterialStatus).map((v) => (
-              <Option key={v} value={v}>
-                {v}
-              </Option>
-            ))}
-          </Select>
-
-          <div className="ml-auto">
-            <Button
-              onClick={() => setFilters({ q: "", category: "", status: "" })}
-            >
-              Đặt lại
-            </Button>
-          </div>
+        <div className="flex items-center gap-3">
+          <ImportButtons onImported={fetchMaterials} setLoading={setLoading} />
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            Thêm
+          </Button>
         </div>
       </div>
 
-      <Table
-        rowKey={(r: Material) => r._id || r.material_id}
-        dataSource={filteredMaterials}
-        columns={columns}
+      <div className="mb-6 bg-white dark:bg-black p-4 rounded-lg shadow">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+          <MaterialFilters filters={filters} setFilters={setFilters} />
+        </div>
+      </div>
+
+      <MaterialsTable
+        materials={filteredMaterials}
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        onEdit={openEdit}
+        onDelete={handleDelete}
       />
 
-      <Modal
-        title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
+      <MaterialModal
         open={modalOpen}
         onOk={handleOk}
         onCancel={() => setModalOpen(false)}
-        okText="Lưu"
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="material_id"
-            label="Mã vật tư"
-            rules={[{ required: true, message: "Vui lòng nhập mã vật tư" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="name"
-            label="Tên"
-            rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="category"
-            label="Danh mục"
-            rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
-          >
-            <Select>
-              {Object.values(MaterialCategory).map((v) => (
-                <Option key={v} value={v}>
-                  {v}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="status" label="Tình trạng">
-            <Select>
-              {Object.values(MaterialStatus).map((v) => (
-                <Option key={v} value={v}>
-                  {v}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="place_used" label="Vị trí sử dụng">
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
+        editing={editing}
+        form={form}
+      />
     </div>
   );
 }
