@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button, message, Space } from "antd";
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import { MaterialCategory, MaterialStatus } from "@/types/material";
+import ImportPreviewModal from "./ImportPreviewModal";
 
 type Props = {
   onImported?: () => void;
@@ -11,6 +12,10 @@ type Props = {
 };
 
 export default function ImportButtons({ onImported, setLoading }: Props) {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewRows, setPreviewRows] = useState<any[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -22,27 +27,30 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-      const created: any[] = [];
-      for (const r of rows) {
-        const payload = {
-          material_id: String(r.material_id || r["Mã vật tư"] || "").trim(),
-          name: String(r.name || r["Tên"] || "").trim(),
-          category: String(r.category || r["Danh mục"] || "").trim(),
-          status: String(r.status || r["Tình trạng"] || "").trim(),
-          place_used: String(r.place_used || r["Vị trí sử dụng"] || "").trim(),
-        };
-        if (!payload.material_id || !payload.name || !payload.category)
-          continue;
-        const res = await fetch("/api/materials", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+      // prepare preview rows (keep original fields and computed ones)
+      const preview: any[] = [];
+      for (const [idx, r] of rows.entries()) {
+        const material_id = String(
+          r.material_id || r["Mã vật tư"] || ""
+        ).trim();
+        const name = String(r.name || r["Tên"] || "").trim();
+        const category = String(r.category || r["Danh mục"] || "").trim();
+        const status = String(r.status || r["Tình trạng"] || "").trim();
+        const place_used = String(
+          r.place_used || r["Vị trí sử dụng"] || ""
+        ).trim();
+        preview.push({
+          key: idx,
+          material_id,
+          name,
+          category,
+          status,
+          place_used,
         });
-        if (res.ok) created.push(await res.json());
       }
-      message.success(`Đã import ${created.length} bản ghi`);
-      onImported?.();
+
+      setPreviewRows(preview);
+      setPreviewOpen(true);
     } catch (err) {
       console.error(err);
       message.error("Import thất bại");
@@ -108,16 +116,71 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
 
   return (
     <Space>
+      <ImportPreviewModal
+        open={previewOpen}
+        initialRows={previewRows}
+        onCancel={() => setPreviewOpen(false)}
+        onConfirm={async (rows) => {
+          // rows already filtered to valid ones by modal
+          if (!rows || rows.length === 0) {
+            message.warning("Không có bản ghi hợp lệ để import");
+            return;
+          }
+          setPreviewOpen(false);
+          setLoading?.(true);
+          try {
+            const res = await fetch("/api/materials", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(
+                rows.map((r: any) => ({
+                  material_id: r.material_id,
+                  name: r.name,
+                  category: r.category,
+                  status: r.status,
+                  place_used: r.place_used,
+                }))
+              ),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const inserted =
+                data.insertedCount ?? (Array.isArray(data) ? data.length : 1);
+              message.success(`Đã import ${inserted} bản ghi`);
+              onImported?.();
+            } else if (res.status === 207) {
+              const data = await res.json().catch(() => ({}));
+              const inserted = data.insertedCount ?? 0;
+              message.warning(
+                `Import một phần: ${inserted} bản ghi được import. Một số bản ghi bị trùng hoặc lỗi.`
+              );
+              onImported?.();
+            } else {
+              const err = await res.json().catch(() => ({}));
+              console.error(err);
+              message.error("Import thất bại");
+            }
+          } catch (err) {
+            console.error(err);
+            message.error("Import thất bại");
+          } finally {
+            setLoading?.(false);
+          }
+        }}
+      />
       <input
+        ref={fileInputRef}
         type="file"
         accept=".xlsx,.xls,csv"
         style={{ display: "none" }}
-        id="materials-import-input"
         onChange={handleFileChange}
       />
-      <label htmlFor="materials-import-input">
-        <Button icon={<UploadOutlined />}>Import</Button>
-      </label>
+      <Button
+        icon={<UploadOutlined />}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        Import
+      </Button>
       <Button icon={<DownloadOutlined />} onClick={handleDownloadTemplate}>
         Tải mẫu
       </Button>

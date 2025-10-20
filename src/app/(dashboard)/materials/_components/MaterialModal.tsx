@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Modal, Form, Input, Select, FormInstance } from "antd";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
 
@@ -21,6 +21,17 @@ export default function MaterialModal({
   editing,
   form,
 }: Props) {
+  useEffect(() => {
+    if (!form) return;
+    if (open) {
+      if (editing) {
+        form.setFieldsValue(editing as any);
+      } else {
+        form.resetFields();
+      }
+    }
+    // when modal closes we keep the form state; calling reset when reopening is handled above
+  }, [open, editing, form]);
   return (
     <Modal
       title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
@@ -28,7 +39,7 @@ export default function MaterialModal({
       onOk={onOk}
       onCancel={onCancel}
       okText="Lưu"
-      destroyOnClose
+      destroyOnHidden={true}
     >
       <Form form={form} layout="vertical">
         <Form.Item

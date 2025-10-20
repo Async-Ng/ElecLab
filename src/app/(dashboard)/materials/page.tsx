@@ -54,7 +54,6 @@ export default function MaterialsPage() {
 
   function openCreate() {
     setEditing(null);
-    form.resetFields();
     setModalOpen(true);
   }
 
@@ -63,7 +62,6 @@ export default function MaterialsPage() {
 
   function openEdit(record: Material) {
     setEditing(record);
-    form.setFieldsValue(record as any);
     setModalOpen(true);
   }
 
