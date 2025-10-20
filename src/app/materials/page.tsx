@@ -110,36 +110,9 @@ export default function MaterialsPage() {
     }
   }
 
-  const columns = [
-    { title: "Mã vật tư", dataIndex: "material_id", key: "material_id" },
-    { title: "Tên", dataIndex: "name", key: "name" },
-    { title: "Danh mục", dataIndex: "category", key: "category" },
-    { title: "Tình trạng", dataIndex: "status", key: "status" },
-    { title: "Vị trí sử dụng", dataIndex: "place_used", key: "place_used" },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (_: any, record: Material) => (
-        <div className="space-x-2">
-          <Button size="small" onClick={() => openEdit(record)}>
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Bạn có chắc muốn xóa vật tư này?"
-            onConfirm={() => handleDelete(record._id)}
-          >
-            <Button size="small" danger>
-              Xóa
-            </Button>
-          </Popconfirm>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-4 ">
         <div>
           <h1 className="text-3xl font-bold">Vật tư</h1>
           <p className="text-sm text-muted-foreground">
@@ -147,20 +120,18 @@ export default function MaterialsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className=" flex gap-3 justify-end">
           <ImportButtons onImported={fetchMaterials} setLoading={setLoading} />
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Thêm
           </Button>
         </div>
-      </div>
-
-      <div className="mb-6 bg-white dark:bg-black p-4 rounded-lg shadow">
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <MaterialFilters filters={filters} setFilters={setFilters} />
+        <div className="mb-6 p-4 rounded-lg shadow">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <MaterialFilters filters={filters} setFilters={setFilters} />
+          </div>
         </div>
       </div>
-
       <MaterialsTable
         materials={filteredMaterials}
         loading={loading}
