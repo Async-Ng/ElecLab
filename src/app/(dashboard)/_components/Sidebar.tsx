@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 
 type Props = {
@@ -31,21 +32,23 @@ export default function Sidebar({ onClose }: Props) {
         </svg>
       </button>
 
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold">ElecLab</h1>
-        <p className="text-sm text-slate-300">Dashboard</p>
+      <div className="mb-6 flex items-center gap-3">
+        {/* Logo: put the provided image into public/images/eleclab-logo.png */}
+        <Image
+          src="/images/logo.png"
+          alt="ElecLab logo"
+          className="object-contain rounded-md bg-white/5 p-1"
+          width={48}
+          height={48}
+        />
+        <div>
+          <h1 className="text-lg font-semibold">ElecLab</h1>
+          <p className="text-sm text-slate-300">Dashboard</p>
+        </div>
       </div>
 
       <nav>
         <ul className="space-y-2">
-          <li>
-            <Link
-              href="/dashboard"
-              className="block py-2 px-2 rounded hover:bg-slate-800"
-            >
-              Overview
-            </Link>
-          </li>
           <li>
             <Link
               href="/materials"
