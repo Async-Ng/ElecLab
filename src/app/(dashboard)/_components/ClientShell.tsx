@@ -37,7 +37,7 @@ export default function ClientShell({
       </div>
 
       <div className="flex-1 flex flex-col">
-        <main className="p-4">{children}</main>
+        <main className="p-6">{children}</main>
       </div>
     </div>
   );
