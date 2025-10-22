@@ -65,97 +65,47 @@ export default function LoginPage() {
     }
   };
 
-// ... (các import và code logic khác giữ nguyên)
-
-
-
   return (
-
     // Nền: Tăng cường độ phủ sóng
-
     <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-100 p-0">
-
       
-
-      {/* 🌟 Container Chính */}
-
+      {/* 🌟 Container Chính đã được thay đổi:
+          - Loại bỏ 'max-w-5xl' và 'rounded-xl'.
+          - Thêm 'w-full h-full' để chiếm trọn div cha (w-screen h-screen).
+      */}
       <div className="w-full h-full bg-white shadow-none overflow-hidden flex transition duration-500">
-
         <Row gutter={[0, 0]} className="w-full h-full">
-
           
-
-          {/* Cột 1: Hình ảnh/Minh họa */}
-
+          {/* Cột 1: Hình ảnh/Minh họa (Bây giờ chiếm 50% màn hình) */}
           <Col xs={0} md={12} className="relative flex flex-col justify-center items-center text-white">
-
             {/* Background Image */}
-
             <div className="absolute inset-0 w-full h-full">
-
               <Image
-
                 src="/images/background.jpg"
-
                 alt="Background"
-
                 fill
-
                 className="object-cover"
-
                 priority
-
               />
-
-              {/* Overlay tối hơn để tăng độ tương phản của chữ */}
-
-              <div className="absolute inset-0 bg-black/50" />
-
+              {/* Overlay to make text more readable */}
+              <div className="absolute inset-0 bg-black/30" />
             </div>
-
             
-
             {/* Content on top of background */}
-
             <div className="relative z-10 text-center p-10">
-
-              {/* Title vẫn là H2, màu trắng */}
-
               <Title level={2} className="text-white !mt-0 !mb-2">
-
                 Quản Lý Thiết Bị
-
               </Title>
-
-              {/* Đổi từ text-white/80 thành text-white và tăng kích thước chữ lên XL */}
-
-              <Text className="text-white text-xl block">
-
+              <Text className="text-white/80 text-lg block">
                 Hệ thống quản lý vật tư và thiết bị phòng thí nghiệm điện tử của bạn.
-
               </Text>
-
-              {/* Đổi từ text-white/90 thành text-white và tăng kích thước chữ lên LG/XL */}
-
-              <Text className="text-white mt-4 block text-lg">
-
+              <Text className="text-white/90 mt-4 block">
                 TK: ndloi@hcmct.edu.vn
-
                 <br />
-
                 MK: 123456
-
               </Text>
-
             </div>
-
           </Col>
-
-
-
-          {/* Cột 2: Form Đăng nhập (Giữ nguyên) */}
-
-// ... (phần còn lại của code)
 
           {/* Cột 2: Form Đăng nhập (Bây giờ chiếm 50% màn hình) */}
           <Col xs={24} md={12} className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center items-center">
