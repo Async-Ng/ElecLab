@@ -14,25 +14,6 @@ type Props = {
 export default function Sidebar({ onClose }: Props) {
   const menuItems = [
     {
-      href: "/materials",
-      label: "Vật tư",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 7h18M3 12h18M3 17h18"
-          />
-        </svg>
-      ),
-    },
-    {
       href: "/timetable",
       label: "Thời khóa biểu",
       icon: (
@@ -52,6 +33,26 @@ export default function Sidebar({ onClose }: Props) {
         </svg>
       ),
     },
+    {
+      href: "/materials",
+      label: "Vật tư",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 7h18M3 12h18M3 17h18"
+          />
+        </svg>
+      ),
+    },
+
     {
       href: "/users",
       label: "Người dùng",
