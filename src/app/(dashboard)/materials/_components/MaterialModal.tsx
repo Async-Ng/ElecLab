@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Form, Input, Select, FormInstance } from "antd";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
 
@@ -14,24 +14,37 @@ type Props = {
   form: FormInstance;
 };
 
-export default function MaterialModal({
-  open,
-  onOk,
-  onCancel,
-  editing,
-  form,
-}: Props) {
+export default function MaterialModal(props: Props) {
+  const { open, onOk, onCancel, editing, form } = props;
+  const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
   useEffect(() => {
     if (!form) return;
     if (open) {
       if (editing) {
-        form.setFieldsValue(editing as any);
+        // Nếu editing.place_used là object, lấy _id
+        const values = {
+          ...editing,
+          place_used:
+            typeof editing.place_used === "object" && editing.place_used?._id
+              ? editing.place_used._id
+              : editing.place_used,
+        };
+        form.setFieldsValue(values as any);
       } else {
         form.resetFields();
       }
     }
-    // when modal closes we keep the form state; calling reset when reopening is handled above
   }, [open, editing, form]);
+
+  useEffect(() => {
+    // Lấy danh sách phòng với quyền Head_of_deparment
+    fetch("/api/rooms?userRole=Head_of_deparment")
+      .then((res) => res.json())
+      .then((data) => {
+        setRooms(data.rooms || []);
+      });
+  }, []);
+
   return (
     <Modal
       title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
@@ -83,7 +96,17 @@ export default function MaterialModal({
         </Form.Item>
 
         <Form.Item name="place_used" label="Vị trí sử dụng">
-          <Input />
+          <Select
+            showSearch
+            optionFilterProp="children"
+            placeholder="Chọn phòng"
+          >
+            {rooms.map((room) => (
+              <Option key={room._id} value={room._id}>
+                {room.name}
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
       </Form>
     </Modal>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, message, Space } from "antd";
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import { MaterialCategory, MaterialStatus } from "@/types/material";
@@ -14,7 +14,19 @@ type Props = {
 export default function ImportButtons({ onImported, setLoading }: Props) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRows, setPreviewRows] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<
+    { room_id: string; _id: string; name: string }[]
+  >([]);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    // Lấy danh sách phòng để map mã phòng sang _id
+    fetch("/api/rooms?userRole=Head_of_deparment")
+      .then((res) => res.json())
+      .then((data) => {
+        setRooms(data.rooms || []);
+      });
+  }, []);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -119,6 +131,7 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
       <ImportPreviewModal
         open={previewOpen}
         initialRows={previewRows}
+        rooms={rooms}
         onCancel={() => setPreviewOpen(false)}
         onConfirm={async (rows) => {
           // rows already filtered to valid ones by modal
@@ -128,18 +141,37 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
           }
           setPreviewOpen(false);
           setLoading?.(true);
+          // Map mã phòng sang _id
+          const mappedRows = rows.map((r: any) => {
+            let place_used_id = "";
+            if (r.place_used) {
+              const found = rooms.find((room) => room.room_id === r.place_used);
+              if (found) place_used_id = found._id;
+            }
+            return {
+              material_id: r.material_id,
+              name: r.name,
+              category: r.category,
+              status: r.status,
+              place_used: place_used_id || undefined,
+              _room_id_input: r.place_used, // giữ lại để kiểm tra cảnh báo
+            };
+          });
+          // Kiểm tra các bản ghi có mã phòng không hợp lệ
+          const invalidRooms = mappedRows.filter(
+            (r) => r._room_id_input && !r.place_used
+          );
+          if (invalidRooms.length > 0) {
+            message.warning(
+              `Có ${invalidRooms.length} bản ghi có mã phòng không hợp lệ và sẽ không được liên kết phòng. Kiểm tra lại cột 'Vị trí sử dụng'.`
+            );
+          }
           try {
             const res = await fetch("/api/materials", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(
-                rows.map((r: any) => ({
-                  material_id: r.material_id,
-                  name: r.name,
-                  category: r.category,
-                  status: r.status,
-                  place_used: r.place_used,
-                }))
+                mappedRows.map(({ _room_id_input, ...rest }) => rest)
               ),
             });
             if (res.ok) {

@@ -34,7 +34,18 @@ export default function MaterialsTable({
         return <Tag color={color}>{s || "-"}</Tag>;
       },
     },
-    { title: "Vị trí", dataIndex: "place_used", key: "place_used", width: 180 },
+    {
+      title: "Vị trí",
+      dataIndex: "place_used",
+      key: "place_used",
+      width: 180,
+      render: (place_used: any) => {
+        if (!place_used) return "-";
+        if (typeof place_used === "object" && place_used.name)
+          return place_used.name;
+        return String(place_used);
+      },
+    },
     {
       title: "Hành động",
       key: "actions",
