@@ -1,13 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Form, Input, Button, Card, message, Typography, Row, Col } from 'antd';
-import { UserOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { Form, Input, Button, Card, message, Typography, Row, Col } from "antd";
+import {
+  UserOutlined,
+  LockOutlined,
+  ArrowRightOutlined,
+} from "@ant-design/icons";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
-const PRIMARY_COLOR = '#1890ff';
+const PRIMARY_COLOR = "#1890ff";
 
 interface LoginForm {
   username: string;
@@ -17,49 +22,37 @@ interface LoginForm {
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { isAuthenticated, login } = useAuth();
 
-  // Check if user is already logged in
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    const user = localStorage.getItem('user');
-    if (token && user) {
-      router.push('/timetable');
+    if (isAuthenticated) {
+      router.replace("/timetable");
     }
-  }, [router]);
+  }, [isAuthenticated, router]);
 
   const onFinish = async (values: LoginForm) => {
     try {
       setLoading(true);
-      
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: values.username, // Since we're using email as username
+          email: values.username,
           password: values.password,
         }),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
-        message.error(data.message || 'Đăng nhập thất bại');
+        message.error(data.message || "Đăng nhập thất bại");
         return;
       }
-
-      // Save token to localStorage
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Show success message
-      message.success('Đăng nhập thành công!');
-
-      // Redirect to timetable page
-      router.push('/timetable');
-      
+      // Use context login to update state and localStorage
+      login(data.token, data.user);
+      message.success("Đăng nhập thành công!");
+      // Redirect handled by useEffect above
     } catch (error) {
-      console.error('Login error:', error);
-      message.error('Đăng nhập thất bại, vui lòng thử lại');
+      console.error("Login error:", error);
+      message.error("Đăng nhập thất bại, vui lòng thử lại");
     } finally {
       setLoading(false);
     }
@@ -68,14 +61,8 @@ export default function LoginPage() {
   return (
     // Nền: Tăng cường độ phủ sóng
     <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-100 p-0">
-      
-      {/* 🌟 Container Chính đã được thay đổi:
-          - Loại bỏ 'max-w-5xl' và 'rounded-xl'.
-          - Thêm 'w-full h-full' để chiếm trọn div cha (w-screen h-screen).
-      */}
       <div className="w-full h-full bg-white shadow-none overflow-hidden flex transition duration-500">
         <Row gutter={[0, 0]} className="w-full h-full">
-          
           {/* Cột 1: Hình ảnh/Minh họa (Bây giờ chiếm 50% màn hình) */}
           <Col xs={0} md={12} className="relative flex flex-col justify-center items-center text-white">
             {/* Background Image */}
@@ -108,13 +95,17 @@ export default function LoginPage() {
           </Col>
 
           {/* Cột 2: Form Đăng nhập (Bây giờ chiếm 50% màn hình) */}
-          <Col xs={24} md={12} className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center items-center">
+          <Col
+            xs={24}
+            md={12}
+            className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center items-center"
+          >
             {/* 🌟 Thêm một div để giới hạn form lại ở trung tâm cột, tránh bị quá rộng */}
-            <div className="w-full max-sm:-sm"> 
+            <div className="w-full max-sm:-sm">
               <div className="flex flex-col items-center mb-10">
                 <div className="relative w-35 h-16 mb-4">
                   <Image
-                    src="/images/logo.png" 
+                    src="/images/logo.png"
                     alt="Logo"
                     fill
                     className="object-contain"
@@ -140,7 +131,9 @@ export default function LoginPage() {
                 <Form.Item
                   label="Tên đăng nhập"
                   name="username"
-                  rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
+                  rules={[
+                    { required: true, message: "Vui lòng nhập tên đăng nhập!" },
+                  ]}
                 >
                   <Input
                     prefix={<UserOutlined className="text-gray-400" />}
@@ -152,8 +145,8 @@ export default function LoginPage() {
                   label="Mật khẩu"
                   name="password"
                   rules={[
-                    { required: true, message: 'Vui lòng nhập mật khẩu!' },
-                    { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
+                    { required: true, message: "Vui lòng nhập mật khẩu!" },
+                    { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
                   ]}
                 >
                   <Input.Password
@@ -171,7 +164,7 @@ export default function LoginPage() {
                     icon={<ArrowRightOutlined />}
                     style={{ backgroundColor: PRIMARY_COLOR }}
                   >
-                    {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+                    {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
                   </Button>
                 </Form.Item>
 
@@ -180,8 +173,11 @@ export default function LoginPage() {
                     Quên mật khẩu?
                   </Typography.Link>
                   <Text className="text-sm text-gray-500">
-                    Chưa có tài khoản?{' '}
-                    <Typography.Link onClick={() => router.push('/register')} className="font-medium text-indigo-500 hover:text-indigo-700 transition">
+                    Chưa có tài khoản?{" "}
+                    <Typography.Link
+                      onClick={() => router.push("/register")}
+                      className="font-medium text-indigo-500 hover:text-indigo-700 transition"
+                    >
                       Đăng ký
                     </Typography.Link>
                   </Text>
