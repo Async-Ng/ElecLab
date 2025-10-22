@@ -123,11 +123,21 @@ export default function Sidebar({ onClose }: Props) {
         <Image
           src="/images/logo.png"
           alt="ElecLab logo"
-          className="object-contain rounded-md bg-white/10 p-2 shadow"
-          width={56}
-          height={56}
+          className="object-contain rounded-md bg-white/10 p-4 shadow"
+          width={200}
+          height={200}
         />
         <h1 className="text-xl font-bold tracking-wide mt-2">ElecLab</h1>
+        <div className="mt-4 mb-2 text-center">
+          <p className="text-base font-semibold text-white mt-1">
+            {user?.name}
+          </p>
+          <p className="text-xs text-slate-400">
+            {user?.roles
+              .map((role) => UserRole[role as keyof typeof UserRole] || role)
+              .join(", ")}
+          </p>
+        </div>
       </div>
 
       <nav className="flex-1 px-4 py-6">
@@ -152,17 +162,6 @@ export default function Sidebar({ onClose }: Props) {
       </nav>
 
       <div className="mt-auto border-t border-slate-800 px-6 py-6 bg-slate-900/80">
-        <div className="mb-3">
-          <p className="text-xs text-slate-400">Đăng nhập với tư cách</p>
-          <p className="text-base font-semibold text-white mt-1">
-            {user?.name}
-          </p>
-          <p className="text-xs text-slate-400">
-            {user?.roles
-              .map((role) => UserRole[role as keyof typeof UserRole] || role)
-              .join(", ")}
-          </p>
-        </div>
         <button
           onClick={logout}
           className="w-full text-sm bg-slate-800 border border-slate-700 rounded px-3 py-2 hover:bg-slate-700 transition-colors font-semibold"
