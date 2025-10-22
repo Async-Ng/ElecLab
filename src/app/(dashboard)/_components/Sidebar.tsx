@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 type Props = {
   onClose?: () => void;
@@ -11,6 +12,7 @@ type Props = {
 
 export default function Sidebar({ onClose }: Props) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const isActive = (path: string) => pathname?.startsWith(path);
   return (
     <aside className="relative h-full flex flex-col bg-slate-900 text-slate-100 p-4 w-full md:w-64">
@@ -100,12 +102,68 @@ export default function Sidebar({ onClose }: Props) {
               <span>Thời khóa biểu</span>
             </Link>
           </li>
+          <li>
+            <Link
+              href="/users"
+              className={`flex items-center gap-2 py-2 px-2 rounded ${
+                isActive("/users") ? "bg-slate-800" : "hover:bg-slate-800"
+              }`}
+              onClick={onClose}
+            >
+              <svg
+                className="w-5 h-5 text-slate-300"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4a4 4 0 100 8 4 4 0 000-8zM16 20H8a2 2 0 01-2-2v-1a5 5 0 0110 0v1a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span>Người dùng</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/room"
+              className={`flex items-center gap-2 py-2 px-2 rounded ${
+                isActive("/room") ? "bg-slate-800" : "hover:bg-slate-800"
+              }`}
+              onClick={onClose}
+            >
+              <svg
+                className="w-5 h-5 text-slate-300"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 21V8l9-5 9 5v13M9 21v-7h6v7"
+                />
+              </svg>
+              <span>Phòng học</span>
+            </Link>
+          </li>
         </ul>
       </nav>
 
-      <div className="mt-auto pt-4">
-        <button className="w-full text-sm bg-transparent border border-slate-700 rounded px-3 py-2">
-          Sign out
+      <div className="mt-auto pt-4 px-4">
+        <div className="mb-4">
+          <p className="text-sm text-slate-400">Đăng nhập với tư cách</p>
+          <p className="text-sm font-medium text-white">{user?.name}</p>
+          <p className="text-xs text-slate-400">({user?.roles.join(", ")})</p>
+        </div>
+        <button 
+          onClick={logout}
+          className="w-full text-sm bg-transparent border border-slate-700 rounded px-3 py-2 hover:bg-slate-700 transition-colors"
+        >
+          Đăng xuất
         </button>
       </div>
     </aside>
