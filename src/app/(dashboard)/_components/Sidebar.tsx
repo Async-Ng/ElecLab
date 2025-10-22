@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 type Props = {
   onClose?: () => void;
@@ -11,6 +12,7 @@ type Props = {
 
 export default function Sidebar({ onClose }: Props) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const isActive = (path: string) => pathname?.startsWith(path);
   return (
     <aside className="relative h-full flex flex-col bg-slate-900 text-slate-100 p-4 w-full md:w-64">
@@ -151,9 +153,17 @@ export default function Sidebar({ onClose }: Props) {
         </ul>
       </nav>
 
-      <div className="mt-auto pt-4">
-        <button className="w-full text-sm bg-transparent border border-slate-700 rounded px-3 py-2">
-          Sign out
+      <div className="mt-auto pt-4 px-4">
+        <div className="mb-4">
+          <p className="text-sm text-slate-400">Đăng nhập với tư cách</p>
+          <p className="text-sm font-medium text-white">{user?.name}</p>
+          <p className="text-xs text-slate-400">({user?.roles.join(", ")})</p>
+        </div>
+        <button 
+          onClick={logout}
+          className="w-full text-sm bg-transparent border border-slate-700 rounded px-3 py-2 hover:bg-slate-700 transition-colors"
+        >
+          Đăng xuất
         </button>
       </div>
     </aside>

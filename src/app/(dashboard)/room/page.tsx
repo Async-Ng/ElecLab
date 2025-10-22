@@ -17,7 +17,23 @@ export default function RoomPage() {
   async function fetchRooms() {
     setLoading(true);
     try {
-      const res = await fetch("/api/rooms");
+      // Get user info from localStorage
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        message.error("Vui lòng đăng nhập lại");
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      const queryParams = new URLSearchParams({
+        userId: user._id,
+        userRole: user.roles[0], // Assuming first role is primary
+      }).toString();
+      
+      const res = await fetch(`/api/rooms?${queryParams}`);
+      if (!res.ok) {
+        throw new Error("Không có quyền truy cập");
+      }
       const data = await res.json();
       setRooms(Array.isArray(data.rooms) ? data.rooms : []);
     } catch (err) {
@@ -66,9 +82,22 @@ export default function RoomPage() {
     try {
       const values = await form.validateFields();
       setLoading(true);
+      
+      // Get user info from localStorage
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        throw new Error("Vui lòng đăng nhập lại");
+      }
+      
+      const user = JSON.parse(userStr);
+      const queryParams = new URLSearchParams({
+        userId: user._id,
+        userRole: user.roles[0], // Assuming first role is primary
+      }).toString();
+      
       const method = editing ? "PUT" : "POST";
       const payload = editing ? { ...values, _id: editing._id } : values;
-      const url = editing ? `/api/rooms/${editing._id}` : "/api/rooms";
+      const url = editing ? `/api/rooms/${editing._id}` : `/api/rooms?${queryParams}`;
       
       const res = await fetch(url, {
         method,
@@ -76,7 +105,11 @@ export default function RoomPage() {
         body: JSON.stringify(payload),
       });
       
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Lưu thất bại");
+      }
+      
       message.success(editing ? "Đã cập nhật phòng" : "Đã thêm phòng");
       setModalOpen(false);
       fetchRooms();

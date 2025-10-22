@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, message, Typography, Row, Col } from 'antd';
 import { UserOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import Image from 'next/image';
@@ -18,18 +18,48 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      router.push('/timetable');
+    }
+  }, [router]);
+
   const onFinish = async (values: LoginForm) => {
     try {
       setLoading(true);
-      console.log('Login values:', values);
       
-      // Simulate API call
-      await new Promise((_, reject) => setTimeout(reject, 1500)); 
-      
-      message.error('Login failed. Invalid username or password.');
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: values.username, // Since we're using email as username
+          password: values.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        message.error(data.message || 'Đăng nhập thất bại');
+        return;
+      }
+
+      // Save token to localStorage
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Show success message
+      message.success('Đăng nhập thành công!');
+
+      // Redirect to timetable page
+      router.push('/timetable');
       
     } catch (error) {
-      // Handle error
+      console.error('Login error:', error);
+      message.error('Đăng nhập thất bại, vui lòng thử lại');
     } finally {
       setLoading(false);
     }
