@@ -7,7 +7,10 @@ import { UsersTable } from './_components/UsersTable';
 import { UserModal } from './_components/UserModal';
 import { User, UserFormData } from '@/types/user';
 
-const availableRoles = ['Quản trị viên', 'Người dùng', 'Quản lý'];
+const availableRoles = [
+  { value: 'Lecture', label: 'Giảng viên' },
+  { value: 'Head_of_deparment', label: 'Trưởng bộ môn' }
+];
 const availableRooms = ['Phòng A', 'Phòng B', 'Phòng C', 'Phòng D'];
 
 export default function UsersPage() {

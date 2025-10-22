@@ -10,7 +10,7 @@ interface UserModalProps {
   editingUser?: User;
   onCancel: () => void;
   onSubmit: (values: UserFormData) => void;
-  roles: string[];
+  roles: { value: string; label: string }[];
   rooms: string[];
 }
 
@@ -116,7 +116,7 @@ export const UserModal = ({
           <Select
             mode="multiple"
             placeholder="Chọn vai trò"
-            options={roles.map((role) => ({ label: role, value: role }))}
+            options={roles}
           />
         </Form.Item>
 

@@ -37,7 +37,7 @@ export const UsersTable = ({ users, loading, onEdit, onDelete }: UsersTableProps
         <>
           {roles.map((role) => (
             <Tag color="blue" key={role}>
-              {role.toUpperCase()}
+              {role === 'Lecture' ? 'Giảng viên' : 'Trưởng bộ môn'}
             </Tag>
           ))}
         </>
