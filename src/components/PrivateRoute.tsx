@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 export default function PrivateRoute({
   children,
@@ -14,14 +14,23 @@ export default function PrivateRoute({
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isAuthenticated && pathname !== '/login') {
-      router.push('/login');
+    // Only redirect to /login if not authenticated and not already on /login
+    if (!isAuthenticated && pathname !== "/login") {
+      router.replace("/login");
+    }
+    // If authenticated and on /login, redirect to /timetable
+    if (isAuthenticated && pathname === "/login") {
+      router.replace("/timetable");
     }
   }, [isAuthenticated, router, pathname]);
 
-  if (!isAuthenticated && pathname !== '/login') {
+  // Always render children on /login page
+  if (pathname === "/login") {
+    return children;
+  }
+  // If not authenticated, block access to protected routes
+  if (!isAuthenticated) {
     return null;
   }
-
   return children;
 }
