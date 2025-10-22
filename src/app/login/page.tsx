@@ -1,18 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { Form, Input, Button, Card, message, Typography, Row, Col } from "antd";
-import {
-  UserOutlined,
-  LockOutlined,
-  ArrowRightOutlined,
-} from "@ant-design/icons";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { Form, Input, Button, message, Typography, Row, Col, Space, Divider } from 'antd';
+import { UserOutlined, LockOutlined, ArrowRightOutlined, GoogleOutlined } from '@ant-design/icons';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const { Title, Text } = Typography;
-const PRIMARY_COLOR = "#1890ff";
+// const PRIMARY_COLOR = '#1890ff'; // Không dùng nữa, sẽ dùng màu đen/xám đậm cho nút
 
 interface LoginForm {
   username: string;
@@ -22,90 +17,126 @@ interface LoginForm {
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { isAuthenticated, login } = useAuth();
 
+  // Check if user is already logged in
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/timetable");
+    const token = localStorage.getItem('auth_token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      router.push('/timetable'); // Chuyển hướng đến trang /timetable
     }
-  }, [isAuthenticated, router]);
+  }, [router]);
 
   const onFinish = async (values: LoginForm) => {
     try {
       setLoading(true);
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: values.username,
+          email: values.username, // Since we're using email as username
           password: values.password,
         }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
-        message.error(data.message || "Đăng nhập thất bại");
+        message.error(data.message || 'Đăng nhập thất bại');
         return;
       }
-      // Use context login to update state and localStorage
-      login(data.token, data.user);
-      message.success("Đăng nhập thành công!");
-      // Redirect handled by useEffect above
+
+      // Save token to localStorage
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Show success message
+      message.success('Đăng nhập thành công!');
+
+      // Redirect to timetable page
+      router.push('/timetable');
+
     } catch (error) {
-      console.error("Login error:", error);
-      message.error("Đăng nhập thất bại, vui lòng thử lại");
+      console.error('Login error:', error);
+      message.error('Đăng nhập thất bại, vui lòng thử lại');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // Nền: Tăng cường độ phủ sóng
-    <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-100 p-0">
-      <div className="w-full h-full bg-white shadow-none overflow-hidden flex transition duration-500">
-        <Row gutter={[0, 0]} className="w-full h-full">
-          {/* Cột 1: Hình ảnh/Minh họa (Bây giờ chiếm 50% màn hình) */}
-          <Col xs={0} md={12} className="relative flex flex-col justify-center items-center text-white">
-            {/* Background Image */}
-            <div className="absolute inset-0 w-full h-full">
-              <Image
-                src="/images/background.jpg"
-                alt="Background"
-                fill
-                className="object-cover"
-                priority
-              />
-              {/* Overlay to make text more readable */}
-              <div className="absolute inset-0 bg-black/30" />
-            </div>
-            
-            {/* Content on top of background */}
-            <div className="relative z-10 text-center p-10">
-              <Title level={2} className="text-white !mt-0 !mb-2">
-                Quản Lý Thiết Bị
+    // Toàn bộ màn hình, màu nền không gradient, chỉ để cho ảnh nền quyết định
+    <div className="w-screen h-screen flex items-center justify-center p-0 overflow-hidden">
+
+      {/* Background Image full screen */}
+      <Image
+        src="/images/background.jpg" // Đổi thành ảnh nền bạn muốn
+        alt="Login Background"
+        fill
+        className="object-cover"
+        priority
+      />
+      {/* Overlay tổng thể, có thể làm mờ hơn nếu cần */}
+      <div className="absolute inset-0 bg-black/40 z-0" /> {/* Tối hơn một chút */}
+
+      {/* Container Chính - Giờ đây là một khối hình chữ nhật lớn */}
+      {/* Chúng ta sẽ dùng flex để chia làm 2 cột trong đây */}
+      <div className="relative z-10 w-[90%] h-[90%] flex bg-transparent shadow-lg rounded-xl overflow-hidden">
+        <Row className="w-full h-full">
+
+          {/* Cột 1: Hình ảnh/Minh họa & Văn bản (chiếm 60% chiều rộng) */}
+          <Col xs={0} md={14} className="relative flex flex-col justify-center text-left p-12 ">
+            {/* Lớp overlay riêng cho phần ảnh để văn bản dễ đọc hơn */}
+            {/* Đã được đẩy ra ngoài cho toàn màn hình rồi */}
+
+            {/* Content trên nền ảnh */}
+            <div className="relative z-10 w-full">
+              {/* Tiêu đề chính, đậm và lớn */}
+              <Title
+                level={2}
+                style={{ color: '#FFFFFF' }} // Dùng mã Hex
+                className="!mt-0 !mb-2"
+              >
+                Khoa kỹ thuật Điện - Điện tử
               </Title>
-              <Text className="text-white/80 text-lg block">
-                Hệ thống quản lý vật tư và thiết bị phòng thí nghiệm điện tử của bạn.
+
+              <Text
+                style={{ color: 'white' }} // Hoặc dùng tên màu tiếng Anh
+                className="block"
+              >
+                Hệ thống quản lý phòng thực hành - ElecLab
               </Text>
-              <Text className="text-white/90 mt-4 block">
+
+              {/* Thông tin tài khoản mẫu (nếu cần hiển thị) */}
+              {/* Tôi sẽ bỏ nó đi để giao diện trông sạch hơn giống ảnh */}
+              {/* <Text className="text-white mt-8 block text-lg custom-text-shadow">
                 TK: ndloi@hcmct.edu.vn
                 <br />
                 MK: 123456
-              </Text>
+              </Text> */}
             </div>
           </Col>
 
-          {/* Cột 2: Form Đăng nhập (Bây giờ chiếm 50% màn hình) */}
+          {/* Cột 2: Form Đăng nhập (chiếm 40% chiều rộng) */}
+          {/* Để tạo hình dạng cong, chúng ta sẽ dùng border-radius và một padding/margin ảo */}
           <Col
             xs={24}
-            md={12}
-            className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center items-center"
+            md={10}
+            className="relative flex flex-col justify-center items-center p-8 sm:p-12 lg:p-16 bg-white overflow-hidden"
+            style={{
+              borderTopLeftRadius: '50% 50%', // Cong theo hình ellipse
+              borderBottomLeftRadius: '50% 50%', // Cong theo hình ellipse
+              marginLeft: '-150px', // Đẩy lùi phần cong vào trong để lộ ảnh nền
+              paddingLeft: '180px', // Bù lại khoảng trống đã mất
+            }}
           >
-            {/* 🌟 Thêm một div để giới hạn form lại ở trung tâm cột, tránh bị quá rộng */}
-            <div className="w-full max-sm:-sm">
+            {/* Tạo một div để giới hạn form lại ở trung tâm cột, tránh bị quá rộng */}
+            <div className="w-full max-w-md">
               <div className="flex flex-col items-center mb-10">
-                <div className="relative w-35 h-16 mb-4">
+                <div className="relative w-32 h-32 mb-4"> {/* Kích thước logo lớn hơn */}
                   <Image
-                    src="/images/logo.png"
+                    src="/images/logo.png" // Thay bằng logo của bạn
                     alt="Logo"
                     fill
                     className="object-contain"
@@ -113,10 +144,10 @@ export default function LoginPage() {
                   />
                 </div>
                 <Title level={3} className="text-center !mb-1 text-gray-800">
-                  Chào mừng trở lại!
+                  Đăng nhập
                 </Title>
-                <Text type="secondary" className="text-center">
-                  Vui lòng nhập thông tin đăng nhập để tiếp tục
+                <Text type="secondary" className="text-center text-base">
+                  Chào mừng bạn trở lại với hệ thống Eleclab.
                 </Text>
               </div>
 
@@ -129,55 +160,63 @@ export default function LoginPage() {
                 size="large"
               >
                 <Form.Item
-                  label="Tên đăng nhập"
                   name="username"
-                  rules={[
-                    { required: true, message: "Vui lòng nhập tên đăng nhập!" },
-                  ]}
+                  rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
+                  className="!mb-6" // Khoảng cách giữa các item
                 >
                   <Input
-                    prefix={<UserOutlined className="text-gray-400" />}
-                    placeholder="Tên người dùng hoặc Email"
+                    prefix={<UserOutlined className="site-form-item-icon" />}
+                    placeholder="Email"
                   />
                 </Form.Item>
 
                 <Form.Item
-                  label="Mật khẩu"
                   name="password"
                   rules={[
-                    { required: true, message: "Vui lòng nhập mật khẩu!" },
-                    { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+                    { required: true, message: 'Vui lòng nhập mật khẩu!' },
+                    { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
                   ]}
+                  className="!mb-6"
                 >
                   <Input.Password
-                    prefix={<LockOutlined className="text-gray-400" />}
+                    prefix={<LockOutlined className="site-form-item-icon" />}
                     placeholder="Mật khẩu"
                   />
                 </Form.Item>
 
-                <Form.Item className="!mt-8">
+                <Form.Item className="!mb-8"> {/* Tăng khoảng cách dưới nút */}
                   <Button
                     type="primary"
                     htmlType="submit"
                     className="w-full h-12 flex items-center justify-center font-semibold text-lg"
                     loading={loading}
                     icon={<ArrowRightOutlined />}
-                    style={{ backgroundColor: PRIMARY_COLOR }}
+                    style={{ backgroundColor: '#333333', borderColor: '#333333' }} // Màu nút đen
                   >
-                    {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
+                    {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                   </Button>
                 </Form.Item>
 
-                <div className="flex justify-between items-center mt-4">
-                  <Typography.Link className="text-sm text-gray-600 hover:text-indigo-500 transition">
+                {/* Divider hoặc "hoặc" */}
+                <Divider>Hoặc</Divider>
+
+                <Form.Item className="!mb-6">
+                  <Button
+                    icon={<GoogleOutlined />}
+                    className="w-full h-12 flex items-center justify-center font-semibold text-lg"
+                  >
+                    Đăng nhập với Google
+                  </Button>
+                </Form.Item>
+
+
+                <div className="flex justify-between items-center mt-6 text-sm"> {/* Căn chỉnh lại phần dưới */}
+                  <Typography.Link className="text-gray-600 hover:text-indigo-500 transition">
                     Quên mật khẩu?
                   </Typography.Link>
-                  <Text className="text-sm text-gray-500">
-                    Chưa có tài khoản?{" "}
-                    <Typography.Link
-                      onClick={() => router.push("/register")}
-                      className="font-medium text-indigo-500 hover:text-indigo-700 transition"
-                    >
+                  <Text className="text-gray-500">
+                    Chưa có tài khoản?{' '}
+                    <Typography.Link onClick={() => router.push('/register')} className="font-medium text-indigo-500 hover:text-indigo-700 transition">
                       Đăng ký
                     </Typography.Link>
                   </Text>
@@ -190,3 +229,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
