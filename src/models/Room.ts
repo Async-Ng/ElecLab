@@ -3,7 +3,7 @@ import { Room } from '@/types/room';
 
 const roomSchema = new mongoose.Schema<Room>(
   {
-    id: {
+    room_id: {
       type: String,
       required: true,
       unique: true,

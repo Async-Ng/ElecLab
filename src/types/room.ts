@@ -1,5 +1,6 @@
 export interface Room {
-  id: string;
+  _id?: string;
+  room_id: string;
   name: string;
   location: string;
   users_manage: string[];
