@@ -1,0 +1,157 @@
+'use client';
+
+import { useState } from 'react';
+import { Form, Input, Button, Card, message, Typography, Row, Col } from 'antd';
+import { UserOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
+const { Title, Text } = Typography;
+const PRIMARY_COLOR = '#1890ff';
+
+interface LoginForm {
+  username: string;
+  password: string;
+}
+
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const onFinish = async (values: LoginForm) => {
+    try {
+      setLoading(true);
+      console.log('Login values:', values);
+      
+      // Simulate API call
+      await new Promise((_, reject) => setTimeout(reject, 1500)); 
+      
+      message.error('Login failed. Invalid username or password.');
+      
+    } catch (error) {
+      // Handle error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    // Nền: Tăng cường độ phủ sóng
+    <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-100 p-0">
+      
+      {/* 🌟 Container Chính đã được thay đổi:
+          - Loại bỏ 'max-w-5xl' và 'rounded-xl'.
+          - Thêm 'w-full h-full' để chiếm trọn div cha (w-screen h-screen).
+      */}
+      <div className="w-full h-full bg-white shadow-none overflow-hidden flex transition duration-500">
+        <Row gutter={[0, 0]} className="w-full h-full">
+          
+          {/* Cột 1: Hình ảnh/Minh họa (Bây giờ chiếm 50% màn hình) */}
+          <Col xs={0} md={12} className="relative bg-gradient-to-br from-indigo-500 to-blue-700 p-10 flex flex-col justify-center items-center text-white">
+            <div className="text-center">
+              <Title level={2} className="text-white !mt-0 !mb-2">
+                Quản Lý Thiết Bị
+              </Title>
+              <Text className="text-white/80 text-lg">
+                Hệ thống quản lý vật tư và thiết bị phòng thí nghiệm điện tử của bạn.
+              </Text>
+            </div>
+            {/* Vị trí cho hình minh họa lớn */}
+            <div className="mt-8">
+              <Image
+                src="/images/illustration.svg" 
+                alt="Lab Illustration"
+                width={300}
+                height={300}
+                priority
+              />
+            </div>
+          </Col>
+
+          {/* Cột 2: Form Đăng nhập (Bây giờ chiếm 50% màn hình) */}
+          <Col xs={24} md={12} className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center items-center">
+            {/* 🌟 Thêm một div để giới hạn form lại ở trung tâm cột, tránh bị quá rộng */}
+            <div className="w-full max-sm:-sm"> 
+              <div className="flex flex-col items-center mb-10">
+                <div className="relative w-35 h-16 mb-4">
+                  <Image
+                    src="/images/logo.png" 
+                    alt="Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+                <Title level={3} className="text-center !mb-1 text-gray-800">
+                  Chào mừng trở lại!
+                </Title>
+                <Text type="secondary" className="text-center">
+                  Vui lòng nhập thông tin đăng nhập để tiếp tục
+                </Text>
+              </div>
+
+              {/* Form Ant Design */}
+              <Form
+                name="login"
+                initialValues={{ remember: true }}
+                onFinish={onFinish}
+                layout="vertical"
+                size="large"
+              >
+                <Form.Item
+                  label="Tên đăng nhập"
+                  name="username"
+                  rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
+                >
+                  <Input
+                    prefix={<UserOutlined className="text-gray-400" />}
+                    placeholder="Tên người dùng hoặc Email"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="Mật khẩu"
+                  name="password"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập mật khẩu!' },
+                    { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined className="text-gray-400" />}
+                    placeholder="Mật khẩu"
+                  />
+                </Form.Item>
+
+                <Form.Item className="!mt-8">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    className="w-full h-12 flex items-center justify-center font-semibold text-lg"
+                    loading={loading}
+                    icon={<ArrowRightOutlined />}
+                    style={{ backgroundColor: PRIMARY_COLOR }}
+                  >
+                    {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+                  </Button>
+                </Form.Item>
+
+                <div className="flex justify-between items-center mt-4">
+                  <Typography.Link className="text-sm text-gray-600 hover:text-indigo-500 transition">
+                    Quên mật khẩu?
+                  </Typography.Link>
+                  <Text className="text-sm text-gray-500">
+                    Chưa có tài khoản?{' '}
+                    <Typography.Link onClick={() => router.push('/register')} className="font-medium text-indigo-500 hover:text-indigo-700 transition">
+                      Đăng ký
+                    </Typography.Link>
+                  </Text>
+                </div>
+              </Form>
+            </div>
+          </Col>
+        </Row>
+      </div>
+    </div>
+  );
+}
