@@ -4,7 +4,6 @@ import dayjs from "dayjs";
  * Kiểu dữ liệu cho một dòng thời khoá biểu sau khi chuẩn hoá
  */
 export interface TimetableItem {
-  index: number | string;
   year: string;
   semester: string;
   date: string;
@@ -42,7 +41,6 @@ export function normalizeTimetableData(rawData: any[]): TimetableItem[] {
       }
 
       return {
-        index: row["__EMPTY"] ?? "",
         year: row["__EMPTY_1"] ?? "",
         semester: row["__EMPTY_2"] ?? "",
         date: dateStr,
