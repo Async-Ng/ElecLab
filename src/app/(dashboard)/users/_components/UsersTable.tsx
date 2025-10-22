@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Table, Space, Button, Popconfirm, Tag } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { User } from '@/types/user';
+import { Table, Space, Button, Popconfirm, Tag } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { User, UserRole } from "@/types/user";
 
 interface UsersTableProps {
   users: User[];
@@ -12,41 +12,46 @@ interface UsersTableProps {
   onDelete: (id: string) => void;
 }
 
-export const UsersTable = ({ users, loading, onEdit, onDelete }: UsersTableProps) => {
+export const UsersTable = ({
+  users,
+  loading,
+  onEdit,
+  onDelete,
+}: UsersTableProps) => {
   const columns: ColumnsType<User> = [
     {
-      title: 'Mã nhân viên',
-      dataIndex: 'staff_id',
-      key: 'staff_id',
+      title: "Mã nhân viên",
+      dataIndex: "staff_id",
+      key: "staff_id",
     },
     {
-      title: 'Tên',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Tên",
+      dataIndex: "name",
+      key: "name",
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
     },
     {
-      title: 'Vai trò',
-      dataIndex: 'roles',
-      key: 'roles',
+      title: "Vai trò",
+      dataIndex: "roles",
+      key: "roles",
       render: (roles: string[]) => (
         <>
           {roles.map((role) => (
             <Tag color="blue" key={role}>
-              {role === 'Lecture' ? 'Giảng viên' : 'Trưởng bộ môn'}
+              {UserRole[role as keyof typeof UserRole] || role}
             </Tag>
           ))}
         </>
       ),
     },
     {
-      title: 'Quản lý phòng',
-      dataIndex: 'rooms_manage',
-      key: 'rooms_manage',
+      title: "Quản lý phòng",
+      dataIndex: "rooms_manage",
+      key: "rooms_manage",
       render: (rooms: string[]) => (
         <>
           {rooms.map((room) => (
@@ -58,8 +63,8 @@ export const UsersTable = ({ users, loading, onEdit, onDelete }: UsersTableProps
       ),
     },
     {
-      title: 'Thao tác',
-      key: 'actions',
+      title: "Thao tác",
+      key: "actions",
       render: (_, record) => (
         <Space>
           <Button
