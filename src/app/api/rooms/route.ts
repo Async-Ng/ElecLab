@@ -11,7 +11,11 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     let query = {};
-    if (userId) {
+    if (userRole === "Head_of_deparment") {
+      // Trưởng khoa xem tất cả phòng
+      query = {};
+    } else if (userId) {
+      // Người dùng thường chỉ xem phòng mình quản lý
       query = { users_manage: userId };
     }
     // Nếu không truyền userId, trả về tất cả phòng
