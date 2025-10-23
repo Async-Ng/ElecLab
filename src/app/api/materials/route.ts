@@ -5,7 +5,7 @@ import { Material } from "@/models/Material";
 // GET all materials
 export async function GET() {
   await connectToDatabase();
-  const materials = await Material.find();
+  const materials = await Material.find().populate("place_used", "name");
   return NextResponse.json(materials);
 }
 

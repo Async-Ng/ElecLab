@@ -1,12 +1,13 @@
 import React from "react";
 import ClientShell from "./_components/ClientShell";
-
-export const metadata = {
-  title: "Dashboard",
-};
+import PrivateRoute from "@/components/PrivateRoute";
 
 export default function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return <ClientShell>{children}</ClientShell>;
+  return (
+    <PrivateRoute>
+      <ClientShell>{children}</ClientShell>
+    </PrivateRoute>
+  );
 }
