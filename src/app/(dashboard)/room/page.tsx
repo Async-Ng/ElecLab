@@ -72,7 +72,11 @@ export default function RoomPage() {
 
   function openEdit(record: Room) {
     setEditing(record);
-    form.setFieldsValue(record);
+    // Chuyển users_manage thành mảng _id nếu là mảng object
+    const users_manage_ids = Array.isArray(record.users_manage)
+      ? record.users_manage.map((u: any) => (typeof u === "object" ? u._id : u))
+      : [];
+    form.setFieldsValue({ ...record, users_manage: users_manage_ids });
     setModalOpen(true);
   }
 

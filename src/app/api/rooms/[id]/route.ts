@@ -38,6 +38,13 @@ export async function PUT(
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
 
+    // Đảm bảo users_manage là mảng các chuỗi _id
+    if (body.users_manage && Array.isArray(body.users_manage)) {
+      body.users_manage = body.users_manage.map((u: any) =>
+        typeof u === 'string' ? u : (u._id || u.toString())
+      );
+    }
+
     const updatedRoom = await RoomModel.findOneAndUpdate(
       { _id: params.id },
       { $set: body },

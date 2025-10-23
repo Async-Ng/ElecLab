@@ -1,6 +1,6 @@
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
-import { Button, Popconfirm, Table } from "antd";
+import { Button, Popconfirm, Table, Tag } from "antd";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 
@@ -34,19 +34,21 @@ export default function RoomTable({
       title: "Vị trí",
       dataIndex: "location",
       key: "location",
-      width: "30%",
+      width: "10%",
     },
     {
       title: "Người quản lý",
       dataIndex: "users_manage",
       key: "users_manage",
-      width: "20%",
+      width: "40%",
       render: (users_manage: User[] = []) => (
-        <div>
-          {users_manage.length === 0
-            ? "Không có"
-            : users_manage.map((user) => user.name).join(", ")}
-        </div>
+        <>
+          {users_manage.map((user) => (
+            <Tag key={user._id} color="green">
+              {user.name}
+            </Tag>
+          ))}
+        </>
       ),
     },
     {

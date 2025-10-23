@@ -72,7 +72,7 @@ export default function RoomModal({
           >
             {users.map((user) => (
               <Select.Option key={user._id} value={user._id}>
-                {user.name} ({user.staff_id})
+                {user.name}
               </Select.Option>
             ))}
           </Select>
