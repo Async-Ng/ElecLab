@@ -4,12 +4,14 @@ import { Table, Space, Button, Popconfirm, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { User, UserRole } from "@/types/user";
+import { Room } from "@/types/room";
 
-interface UsersTableProps {
+export interface UsersTableProps {
   users: User[];
   loading?: boolean;
   onEdit: (user: User) => void;
   onDelete: (id: string) => void;
+  rooms: Room[];
 }
 
 export const UsersTable = ({
@@ -17,6 +19,7 @@ export const UsersTable = ({
   loading,
   onEdit,
   onDelete,
+  rooms,
 }: UsersTableProps) => {
   const columns: ColumnsType<User> = [
     {
@@ -52,13 +55,16 @@ export const UsersTable = ({
       title: "Quản lý phòng",
       dataIndex: "rooms_manage",
       key: "rooms_manage",
-      render: (rooms: string[]) => (
+      render: (roomIds: string[]) => (
         <>
-          {rooms.map((room) => (
-            <Tag color="green" key={room}>
-              {room}
-            </Tag>
-          ))}
+          {roomIds.map((roomId) => {
+            const room = rooms.find((r) => r._id === roomId);
+            return (
+              <Tag color="green" key={roomId}>
+                {room ? room.name : roomId}
+              </Tag>
+            );
+          })}
         </>
       ),
     },
@@ -67,11 +73,7 @@ export const UsersTable = ({
       key: "actions",
       render: (_, record) => (
         <Space>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          >
+          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
             Sửa
           </Button>
           <Popconfirm

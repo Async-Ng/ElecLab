@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { Modal, Form, Input, Select, Button } from "antd";
-import { User, UserFormData } from "@/types/user";
+import { User, UserFormData, UserRole } from "@/types/user";
+import { Room } from "@/types/room";
 
 interface UserModalProps {
   open: boolean;
@@ -11,7 +12,7 @@ interface UserModalProps {
   onCancel: () => void;
   onSubmit: (values: UserFormData) => void;
   roles: { value: string; label: string }[];
-  rooms: string[];
+  rooms: Room[];
 }
 
 export const UserModal = ({
@@ -27,12 +28,14 @@ export const UserModal = ({
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      // Đảm bảo roles là value enum, không phải label
+      // Đảm bảo roles là value enum UserRole
       if (Array.isArray(values.roles)) {
         values.roles = values.roles.map((role) => {
-          // Nếu là label tiếng Việt thì chuyển về value
-          if (role === "Giảng viên") return "Lecture";
-          if (role === "Trưởng bộ môn") return "Head_of_deparment";
+          // Nếu là key enum thì chuyển sang label tiếng Việt
+          if (role === "Lecture") return UserRole.Lecture;
+          if (role === "Head_of_deparment") return UserRole.Head_of_deparment;
+          // Nếu đã là label thì giữ nguyên
+          if ((Object.values(UserRole) as string[]).includes(role)) return role;
           return role;
         });
       }
@@ -125,9 +128,9 @@ export const UserModal = ({
           <Select
             mode="multiple"
             placeholder="Chọn vai trò"
-            options={roles.map((role) => ({
-              value: role.value,
-              label: role.label,
+            options={Object.entries(UserRole).map(([key, label]) => ({
+              value: key,
+              label,
             }))}
             optionLabelProp="label"
           />
@@ -137,7 +140,10 @@ export const UserModal = ({
           <Select
             mode="multiple"
             placeholder="Chọn phòng"
-            options={rooms.map((room) => ({ label: room, value: room }))}
+            options={rooms.map((room) => ({
+              label: room.name,
+              value: room._id,
+            }))}
           />
         </Form.Item>
       </Form>

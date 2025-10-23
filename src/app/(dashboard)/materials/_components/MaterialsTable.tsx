@@ -20,8 +20,8 @@ export default function MaterialsTable({
 }: Props) {
   const columns = [
     { title: "Mã", dataIndex: "material_id", key: "material_id", width: 160 },
-    { title: "Tên", dataIndex: "name", key: "name" },
-    { title: "Danh mục", dataIndex: "category", key: "category", width: 200 },
+    { title: "Tên", dataIndex: "name", key: "name", width: 600 },
+    { title: "Danh mục", dataIndex: "category", key: "category", width: 150 },
     {
       title: "Tình trạng",
       dataIndex: "status",
@@ -52,18 +52,14 @@ export default function MaterialsTable({
       width: 160,
       render: (_: unknown, record: Material) => (
         <Space>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          >
+          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
             Sửa
           </Button>
           <Popconfirm
             title="Bạn có chắc muốn xóa?"
             onConfirm={() => onDelete(record._id)}
           >
-            <Button size="small" danger icon={<DeleteOutlined />}>
+            <Button danger icon={<DeleteOutlined />}>
               Xóa
             </Button>
           </Popconfirm>

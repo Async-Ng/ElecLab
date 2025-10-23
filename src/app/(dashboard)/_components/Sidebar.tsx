@@ -12,7 +12,13 @@ type Props = {
 };
 
 export default function Sidebar({ onClose }: Props) {
-  const menuItems = [
+  // Định nghĩa các menu item với quyền truy cập
+  const allMenuItems: Array<{
+    href: string;
+    label: string;
+    icon: React.ReactNode;
+    roles: UserRole[];
+  }> = [
     {
       href: "/timetable",
       label: "Thời khóa biểu",
@@ -32,6 +38,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment, UserRole.Lecture],
     },
     {
       href: "/materials",
@@ -51,8 +58,8 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment],
     },
-
     {
       href: "/users",
       label: "Người dùng",
@@ -71,6 +78,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment],
     },
     {
       href: "/room",
@@ -90,11 +98,27 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment],
     },
   ];
 
-  const pathname = usePathname();
+  // Lọc menu theo role (sau khi lấy user)
   const { user, logout } = useAuth();
+  let menuItems: typeof allMenuItems = [];
+  if (user?.roles?.includes(UserRole.Head_of_deparment)) {
+    // Trưởng bộ môn: thấy toàn bộ
+    menuItems = allMenuItems;
+  } else if (user?.roles?.includes(UserRole.Lecture)) {
+    // Giảng viên: chỉ thấy các mục cho phép
+    menuItems = allMenuItems.filter((item) =>
+      item.roles.includes(UserRole.Lecture)
+    );
+  } else {
+    // Nếu chưa đăng nhập hoặc không có roles hợp lệ, hiển thị toàn bộ (hoặc tuỳ chỉnh: có thể để [] nếu muốn ẩn hết)
+    menuItems = allMenuItems;
+  }
+
+  const pathname = usePathname();
   const isActive = (path: string) => pathname?.startsWith(path);
 
   return (
