@@ -9,11 +9,12 @@ export default function PrivateRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
+    if (loading) return;
     // Only redirect to /login if not authenticated and not already on /login
     if (!isAuthenticated && pathname !== "/login") {
       router.replace("/login");
@@ -22,8 +23,12 @@ export default function PrivateRoute({
     if (isAuthenticated && pathname === "/login") {
       router.replace("/timetable");
     }
-  }, [isAuthenticated, router, pathname]);
+  }, [isAuthenticated, router, pathname, loading]);
 
+  if (loading) {
+    // You can return a spinner here if you want
+    return null;
+  }
   // Always render children on /login page
   if (pathname === "/login") {
     return children;

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { Alert } from "antd";
 import {
   Modal,
   Table,
@@ -25,19 +26,16 @@ type Row = {
   place_used?: string;
 };
 
-type Props = {
+interface Props {
   open: boolean;
   initialRows: Row[];
   onCancel: () => void;
   onConfirm: (rows: Row[]) => Promise<void> | void;
-};
+  rooms?: Array<{ room_id: string; _id: string; name: string }>;
+}
 
-export default function ImportPreviewModal({
-  open,
-  initialRows,
-  onCancel,
-  onConfirm,
-}: Props) {
+export default function ImportPreviewModal(props: Props) {
+  const { open, initialRows, onCancel, onConfirm, rooms = [] } = props;
   const [data, setData] = useState<Row[]>([]);
 
   useEffect(() => {
@@ -61,6 +59,14 @@ export default function ImportPreviewModal({
   }
 
   const isValid = (r: Row) => !!(r.material_id && r.name && r.category);
+
+  // Kiểm tra bản ghi có mã phòng không hợp lệ
+  const invalidRoomRows = data.filter(
+    (r) =>
+      r.place_used &&
+      rooms.length > 0 &&
+      !rooms.some((room) => room.room_id === r.place_used)
+  );
 
   const columns: ColumnsType<Row> = [
     {
@@ -146,13 +152,28 @@ export default function ImportPreviewModal({
         style: { whiteSpace: "normal", wordBreak: "break-word" },
       }),
       render: (val: string, record: Row) => (
-        <Input
+        <Select
+          showSearch
           style={{ width: "100%" }}
-          value={val}
-          onChange={(e) =>
-            updateRow(record.key, { place_used: e.target.value })
+          value={val || undefined}
+          placeholder="Chọn phòng theo mã phòng"
+          optionFilterProp="children"
+          onChange={(v) => updateRow(record.key, { place_used: v })}
+          filterOption={(input, option) =>
+            (option?.children as string)
+              ?.toLowerCase()
+              .includes(input.toLowerCase()) ||
+            (option?.value as string)
+              ?.toLowerCase()
+              .includes(input.toLowerCase())
           }
-        />
+        >
+          {rooms.map((room) => (
+            <Option key={room.room_id} value={room.room_id}>
+              {room.room_id} - {room.name}
+            </Option>
+          ))}
+        </Select>
       ),
     },
     {
@@ -161,12 +182,17 @@ export default function ImportPreviewModal({
       onCell: () => ({
         style: { whiteSpace: "normal", wordBreak: "break-word" },
       }),
-      render: (_: any, record: Row) =>
-        isValid(record) ? (
-          <Tag color="green">Hợp lệ</Tag>
-        ) : (
-          <Tag color="red">Thiếu trường</Tag>
-        ),
+      render: (_: any, record: Row) => {
+        if (!isValid(record)) return <Tag color="red">Thiếu trường</Tag>;
+        if (
+          record.place_used &&
+          rooms.length > 0 &&
+          !rooms.some((room) => room.room_id === record.place_used)
+        ) {
+          return <Tag color="orange">Mã phòng không hợp lệ</Tag>;
+        }
+        return <Tag color="green">Hợp lệ</Tag>;
+      },
     },
     {
       title: "Hành động",
@@ -216,6 +242,14 @@ export default function ImportPreviewModal({
           Hợp lệ: <b>{validCount}</b> &nbsp;|&nbsp; Tổng: <b>{data.length}</b>
         </span>
       </div>
+      {invalidRoomRows.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message={`Có ${invalidRoomRows.length} bản ghi có mã phòng không hợp lệ (không tìm thấy trong hệ thống). Các bản ghi này sẽ không được liên kết phòng.`}
+        />
+      )}
       <Table<Row>
         rowKey={(r) => r.key}
         dataSource={data}

@@ -5,22 +5,105 @@ import Image from "next/image";
 import React from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
 
 type Props = {
   onClose?: () => void;
 };
 
 export default function Sidebar({ onClose }: Props) {
+  const menuItems = [
+    {
+      href: "/timetable",
+      label: "Thời khóa biểu",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 2v4M8 2v4"
+          />
+        </svg>
+      ),
+    },
+    {
+      href: "/materials",
+      label: "Vật tư",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 7h18M3 12h18M3 17h18"
+          />
+        </svg>
+      ),
+    },
+
+    {
+      href: "/users",
+      label: "Người dùng",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4a4 4 0 100 8 4 4 0 000-8zM16 20H8a2 2 0 01-2-2v-1a5 5 0 0110 0v1a2 2 0 01-2 2z"
+          />
+        </svg>
+      ),
+    },
+    {
+      href: "/room",
+      label: "Phòng học",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 21V8l9-5 9 5v13M9 21v-7h6v7"
+          />
+        </svg>
+      ),
+    },
+  ];
+
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const isActive = (path: string) => pathname?.startsWith(path);
+
   return (
-    <aside className="relative h-full flex flex-col bg-slate-900 text-slate-100 p-4 w-full md:w-64">
-      {/* close button (mobile only) */}
+    <aside className="relative h-full flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100 shadow-lg w-full md:w-64 p-0">
+      {/* Close button for mobile */}
       <button
         onClick={onClose}
         className="absolute top-4 right-4 p-2 rounded bg-slate-800/60 md:hidden"
-        aria-label="Close menu"
+        aria-label="Đóng menu"
       >
         <svg
           className="w-5 h-5 text-white"
@@ -37,131 +120,52 @@ export default function Sidebar({ onClose }: Props) {
         </svg>
       </button>
 
-      <div className="mb-6 flex items-center gap-3">
-        {/* Logo: put the provided image into public/images/eleclab-logo.png */}
+      <div className="flex flex-col items-center py-8 gap-2 border-b border-slate-800">
         <Image
           src="/images/logo.png"
           alt="ElecLab logo"
-          className="object-contain rounded-md bg-white/5 p-1"
-          width={48}
-          height={48}
+          className="object-contain rounded-md bg-white/10 p-4 shadow"
+          width={200}
+          height={200}
         />
-        <div>
-          <h1 className="text-lg font-semibold">ElecLab</h1>
+        <h1 className="text-xl font-bold tracking-wide mt-2">ElecLab</h1>
+        <div className="mt-4 mb-2 text-center">
+          <p className="text-base font-semibold text-white mt-1">
+            {user?.name}
+          </p>
+          <p className="text-xs text-slate-400">
+            {user?.roles
+              .map((role) => UserRole[role as keyof typeof UserRole] || role)
+              .join(", ")}
+          </p>
         </div>
       </div>
 
-      <nav>
-        <ul className="space-y-2">
-          <li>
-            <Link
-              href="/materials"
-              className={`flex items-center gap-2 py-2 px-2 rounded ${
-                isActive("/materials") ? "bg-slate-800" : "hover:bg-slate-800"
-              }`}
-              onClick={onClose}
-            >
-              <svg
-                className="w-5 h-5 text-slate-300"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
+      <nav className="flex-1 px-4 py-6">
+        <ul className="space-y-1">
+          {menuItems.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-colors font-medium text-base ${
+                  isActive(item.href)
+                    ? "bg-slate-700 text-white shadow"
+                    : "hover:bg-slate-800 text-slate-300"
+                }`}
+                onClick={onClose}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 7h18M3 12h18M3 17h18"
-                />
-              </svg>
-              <span>Vật tư</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/timetable"
-              className={`flex items-center gap-2 py-2 px-2 rounded ${
-                isActive("/timetable") ? "bg-slate-800" : "hover:bg-slate-800"
-              }`}
-              onClick={onClose}
-            >
-              <svg
-                className="w-5 h-5 text-slate-300"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16 2v4M8 2v4"
-                />
-              </svg>
-              <span>Thời khóa biểu</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/users"
-              className={`flex items-center gap-2 py-2 px-2 rounded ${
-                isActive("/users") ? "bg-slate-800" : "hover:bg-slate-800"
-              }`}
-              onClick={onClose}
-            >
-              <svg
-                className="w-5 h-5 text-slate-300"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4a4 4 0 100 8 4 4 0 000-8zM16 20H8a2 2 0 01-2-2v-1a5 5 0 0110 0v1a2 2 0 01-2 2z"
-                />
-              </svg>
-              <span>Người dùng</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/room"
-              className={`flex items-center gap-2 py-2 px-2 rounded ${
-                isActive("/room") ? "bg-slate-800" : "hover:bg-slate-800"
-              }`}
-              onClick={onClose}
-            >
-              <svg
-                className="w-5 h-5 text-slate-300"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 21V8l9-5 9 5v13M9 21v-7h6v7"
-                />
-              </svg>
-              <span>Phòng học</span>
-            </Link>
-          </li>
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
 
-      <div className="mt-auto pt-4 px-4">
-        <div className="mb-4">
-          <p className="text-sm text-slate-400">Đăng nhập với tư cách</p>
-          <p className="text-sm font-medium text-white">{user?.name}</p>
-          <p className="text-xs text-slate-400">({user?.roles.join(", ")})</p>
-        </div>
-        <button 
+      <div className="mt-auto border-t border-slate-800 px-6 py-6 bg-slate-900/80">
+        <button
           onClick={logout}
-          className="w-full text-sm bg-transparent border border-slate-700 rounded px-3 py-2 hover:bg-slate-700 transition-colors"
+          className="w-full text-sm bg-slate-800 border border-slate-700 rounded px-3 py-2 hover:bg-slate-700 transition-colors font-semibold"
         >
           Đăng xuất
         </button>

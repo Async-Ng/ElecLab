@@ -9,11 +9,13 @@ export enum MaterialStatus {
   BROKEN = "Hư hỏng",
 }
 
+import type { Room } from "./room";
+
 export type Material = {
   _id?: string;
   material_id: string;
   name: string;
   category: MaterialCategory;
   status?: MaterialStatus;
-  place_used?: string;
+  place_used?: string | Room;
 };

@@ -1,21 +1,19 @@
-import Link from "next/link";
-import { Button } from "antd";
-import { CalendarOutlined } from "@ant-design/icons";
+"use client";
+import Image from "next/image";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
-  return (
-    <div>
-      abc
-      <Link href="/timetable">
-        <Button
-          type="primary"
-          icon={<CalendarOutlined />}
-          size="large"
-          className="rounded-xl"
-        >
-          Xem Thời khóa biểu
-        </Button>
-      </Link>
-    </div>
-  );
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/login");
+    } else {
+      router.replace("/timetable");
+    }
+  }, [isAuthenticated, router]);
+  // Không render gì ở trang chủ, chỉ chuyển hướng
+  return null;
 }

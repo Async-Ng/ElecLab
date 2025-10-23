@@ -14,7 +14,7 @@ const MaterialSchema = new Schema(
       default: Object.values(MaterialStatus)[0] as string,
       enum: Object.values(MaterialStatus),
     },
-    place_used: { type: String },
+    place_used: { type: Schema.Types.ObjectId, ref: "Room" },
   },
   { timestamps: true }
 );
