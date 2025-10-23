@@ -1,2 +1,14 @@
 @import "tailwindcss";
 
+/* Hide week numbers in DatePicker */
+.ant-picker-cell-week,
+.ant-picker-week-panel-row .ant-picker-cell:first-child,
+.ant-picker-content th:first-child,
+.ant-picker-body tr td:first-child {
+  display: none !important;
+}
+
+/* Adjust the calendar width after hiding the week column */
+.ant-picker-calendar {
+  width: auto !important;
+}
