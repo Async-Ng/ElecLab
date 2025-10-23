@@ -1,6 +1,5 @@
 // app/timetable/page.tsx
 "use client";
-import Swal from "sweetalert2";
 import React, { useState, useEffect } from "react";
 import {
   Button,
@@ -17,7 +16,6 @@ import {
   Card,
   Row,
   Col,
-  Switch,
 } from "antd";
 import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
@@ -274,20 +272,20 @@ export default function TimetablePage() {
 
       const result = await response.json();
       if (result.success) {
-        Swal.fire("Thành công!", "Đã cập nhật buổi học.", "success");
+        message.success("Đã cập nhật buổi học.");
         setIsEditing(false);
         fetchTimetables();
       } else {
-        Swal.fire("Lỗi!", result.error || "Không thể lưu.", "error");
+        message.error(result.error || "Không thể lưu.");
       }
     } catch (error) {
-      Swal.fire("Lỗi!", "Không thể cập nhật ghi chú.", "error");
+      message.error("Không thể cập nhật ghi chú.");
     }
   };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">Thời Khóa Biểu</h1>
           <Button
@@ -438,18 +436,15 @@ export default function TimetablePage() {
           open={isDetailModalOpen}
           onCancel={() => {
             if (isEditing) {
-              Swal.fire({
+              Modal.confirm({
                 title: "Hủy chỉnh sửa?",
-                text: "Mọi thay đổi chưa lưu sẽ bị mất.",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Hủy chỉnh sửa",
-                cancelButtonText: "Tiếp tục chỉnh sửa",
-              }).then((result) => {
-                if (result.isConfirmed) {
+                content: "Mọi thay đổi chưa lưu sẽ bị mất.",
+                okText: "Hủy chỉnh sửa",
+                cancelText: "Tiếp tục chỉnh sửa",
+                onOk: () => {
                   detailForm.setFieldsValue(selectedEntry);
                   setIsEditing(false);
-                }
+                },
               });
             } else {
               setIsDetailModalOpen(false);
@@ -460,18 +455,15 @@ export default function TimetablePage() {
               key="cancel"
               onClick={() => {
                 if (isEditing) {
-                  Swal.fire({
+                  Modal.confirm({
                     title: "Hủy chỉnh sửa?",
-                    text: "Mọi thay đổi chưa lưu sẽ bị mất.",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Hủy chỉnh sửa",
-                    cancelButtonText: "Tiếp tục chỉnh sửa",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
+                    content: "Mọi thay đổi chưa lưu sẽ bị mất.",
+                    okText: "Hủy chỉnh sửa",
+                    cancelText: "Tiếp tục chỉnh sửa",
+                    onOk: () => {
                       detailForm.setFieldsValue(selectedEntry);
                       setIsEditing(false);
-                    }
+                    },
                   });
                 } else {
                   setIsDetailModalOpen(false);
