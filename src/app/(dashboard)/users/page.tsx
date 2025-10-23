@@ -147,6 +147,7 @@ export default function UsersPage() {
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        rooms={rooms}
       />
       <UserModal
         open={modalOpen}

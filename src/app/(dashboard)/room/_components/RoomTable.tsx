@@ -55,16 +55,16 @@ export default function RoomTable({
       width: "20%",
       render: (_, record) => (
         <div className="flex gap-2">
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
+          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
+            Sửa
+          </Button>
           <Popconfirm
             title="Xác nhận xóa?"
             onConfirm={() => onDelete(record._id)}
           >
-            <Button type="text" danger icon={<DeleteOutlined />} />
+            <Button danger icon={<DeleteOutlined />}>
+              Xóa
+            </Button>
           </Popconfirm>
         </div>
       ),
