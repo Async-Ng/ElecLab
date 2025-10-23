@@ -52,6 +52,21 @@ export async function POST(request: Request) {
     });
 
     await newRoom.save();
+
+    // Đồng bộ rooms_manage cho user quản lý phòng
+    const mongoose = require("mongoose");
+    const UserModel = mongoose.models.User || mongoose.model("User");
+    const roomId = newRoom._id.toString();
+    const userIds: string[] = (newRoom.users_manage || []).map((u: any) =>
+      u.toString()
+    );
+    await Promise.all(
+      userIds.map((userId: string) =>
+        UserModel.findByIdAndUpdate(userId, {
+          $addToSet: { rooms_manage: roomId },
+        })
+      )
+    );
     return NextResponse.json({ room: newRoom }, { status: 201 });
   } catch (error) {
     console.error("Failed to create room:", error);
