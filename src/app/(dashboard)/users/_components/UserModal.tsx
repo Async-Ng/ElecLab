@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { Modal, Form, Input, Select, Button } from "antd";
 import { User, UserFormData } from "@/types/user";
 
+import { Room } from "@/types/room";
+
 interface UserModalProps {
   open: boolean;
   loading?: boolean;
@@ -11,7 +13,7 @@ interface UserModalProps {
   onCancel: () => void;
   onSubmit: (values: UserFormData) => void;
   roles: { value: string; label: string }[];
-  rooms: string[];
+  rooms: Room[];
 }
 
 export const UserModal = ({
@@ -137,7 +139,10 @@ export const UserModal = ({
           <Select
             mode="multiple"
             placeholder="Chọn phòng"
-            options={rooms.map((room) => ({ label: room, value: room }))}
+            options={rooms.map((room) => ({
+              label: room.name,
+              value: room._id,
+            }))}
           />
         </Form.Item>
       </Form>

@@ -11,13 +11,10 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     let query = {};
-    if (userRole !== "Head_of_deparment") {
-      if (!userId) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    if (userId) {
       query = { users_manage: userId };
     }
-
+    // Nếu không truyền userId, trả về tất cả phòng
     const rooms = await RoomModel.find(query).populate("users_manage");
     return NextResponse.json({ rooms }, { status: 200 });
   } catch (error) {

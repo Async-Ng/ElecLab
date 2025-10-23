@@ -12,11 +12,7 @@ const availableRoles = [
   { value: UserRole.Head_of_deparment, label: UserRole.Head_of_deparment },
 ];
 
-interface Room {
-  _id: string;
-  name: string;
-  location: string;
-}
+import { Room } from "@/types/room";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -159,7 +155,7 @@ export default function UsersPage() {
         onCancel={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         roles={availableRoles}
-        rooms={rooms.map((room) => room.name)}
+        rooms={rooms}
       />
     </Card>
   );
