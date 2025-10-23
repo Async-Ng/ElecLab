@@ -9,33 +9,53 @@ export default function PrivateRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (loading) return;
-    // Only redirect to /login if not authenticated and not already on /login
+    // Nếu chưa đăng nhập, chuyển về /login
     if (!isAuthenticated && pathname !== "/login") {
       router.replace("/login");
+      return;
     }
-    // If authenticated and on /login, redirect to /timetable
+    // Nếu đã đăng nhập và đang ở /login, chuyển về /timetable
     if (isAuthenticated && pathname === "/login") {
       router.replace("/timetable");
+      return;
     }
-  }, [isAuthenticated, router, pathname, loading]);
+    // Nếu là Lecture (không phải Head), chỉ cho phép truy cập /timetable
+    if (isAuthenticated && user) {
+      const isHead = user.roles.includes("Trưởng bộ môn");
+      const isLecture = user.roles.includes("Giảng viên");
+      if (!isHead && isLecture) {
+        // Nếu không phải Head, chỉ cho phép truy cập /timetable
+        if (!pathname.startsWith("/timetable")) {
+          router.replace("/timetable");
+        }
+      }
+    }
+  }, [isAuthenticated, router, pathname, loading, user]);
 
   if (loading) {
-    // You can return a spinner here if you want
     return null;
   }
-  // Always render children on /login page
+  // Luôn render children ở trang /login
   if (pathname === "/login") {
     return children;
   }
-  // If not authenticated, block access to protected routes
+  // Nếu chưa đăng nhập, chặn truy cập
   if (!isAuthenticated) {
     return null;
+  }
+  // Nếu là Lecture (không phải Head), chỉ render ở /timetable
+  if (user) {
+    const isHead = user.roles.includes("Trưởng bộ môn");
+    const isLecture = user.roles.includes("Giảng viên");
+    if (!isHead && isLecture && !pathname.startsWith("/timetable")) {
+      return null;
+    }
   }
   return children;
 }
