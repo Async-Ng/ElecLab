@@ -62,7 +62,7 @@ export default function Sidebar({ onClose }: Props) {
     },
     {
       href: "/users",
-      label: "Người dùng",
+      label: "Giảng viên",
       icon: (
         <svg
           className="w-5 h-5"
@@ -82,7 +82,7 @@ export default function Sidebar({ onClose }: Props) {
     },
     {
       href: "/room",
-      label: "Phòng học",
+      label: "Phòng thực hành",
       icon: (
         <svg
           className="w-5 h-5"

@@ -26,16 +26,20 @@ export const UsersTable = ({
       title: "Mã nhân viên",
       dataIndex: "staff_id",
       key: "staff_id",
+      width: "10%",
+      align: "center",
     },
     {
-      title: "Tên",
+      title: "Họ và tên",
       dataIndex: "name",
       key: "name",
+      width: "15%",
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      width: "15%",
     },
     {
       title: "Vai trò",
@@ -50,6 +54,7 @@ export const UsersTable = ({
           ))}
         </>
       ),
+      width: "15%",
     },
     {
       title: "Quản lý phòng",

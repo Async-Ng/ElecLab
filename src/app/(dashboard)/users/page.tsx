@@ -134,14 +134,21 @@ export default function UsersPage() {
   };
 
   return (
-    <Card
-      title="Quản lý người dùng"
-      extra={
+    <div>
+      <div className="flex flex-col gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Giảng viên</h1>
+          <p className="text-sm text-muted-foreground">
+            Quản lý danh sách giảng viên
+          </p>
+        </div>
+      </div>
+      <div className="flex justify-end">
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Thêm người dùng
+          Thêm giảng viên
         </Button>
-      }
-    >
+      </div>
+
       <UsersTable
         users={users}
         loading={loading}
@@ -158,6 +165,6 @@ export default function UsersPage() {
         roles={availableRoles}
         rooms={rooms}
       />
-    </Card>
+    </div>
   );
 }
