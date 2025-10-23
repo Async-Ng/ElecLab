@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { Room } from '@/types/room';
+import mongoose from "mongoose";
+import { Room } from "@/types/room";
 
 const roomSchema = new mongoose.Schema<Room>(
   {
@@ -16,14 +16,18 @@ const roomSchema = new mongoose.Schema<Room>(
       type: String,
       required: true,
     },
-    users_manage: {
-      type: [String],
-      default: [],
-    },
+    users_manage: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
-export const RoomModel = mongoose.models.Room || mongoose.model<Room>('Room', roomSchema);
+export const RoomModel =
+  mongoose.models.Room || mongoose.model<Room>("Room", roomSchema);

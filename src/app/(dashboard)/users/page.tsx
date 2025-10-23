@@ -11,13 +11,19 @@ const availableRoles = [
   { value: UserRole.Lecture, label: UserRole.Lecture },
   { value: UserRole.Head_of_deparment, label: UserRole.Head_of_deparment },
 ];
-const availableRooms = ["Phòng A", "Phòng B", "Phòng C", "Phòng D"];
+
+interface Room {
+  _id: string;
+  name: string;
+  location: string;
+}
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const [loading, setLoading] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>([]);
 
   const fetchUsers = async () => {
     try {
@@ -35,8 +41,22 @@ export default function UsersPage() {
     }
   };
 
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch("/api/rooms");
+      if (!response.ok) {
+        throw new Error("Failed to fetch rooms");
+      }
+      const data = await response.json();
+      setRooms(data.rooms || []);
+    } catch (error) {
+      message.error("Lỗi khi tải danh sách phòng");
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchRooms();
   }, []);
 
   const handleCreate = () => {
@@ -139,7 +159,7 @@ export default function UsersPage() {
         onCancel={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         roles={availableRoles}
-        rooms={availableRooms}
+        rooms={rooms.map((room) => room.name)}
       />
     </Card>
   );

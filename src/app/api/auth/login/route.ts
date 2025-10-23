@@ -4,7 +4,7 @@ import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export async function POST(req: Request) {
   try {
@@ -41,33 +41,29 @@ export async function POST(req: Request) {
 
     // Create JWT token
     const token = jwt.sign(
-      { 
+      {
         userId: user._id,
         email: user.email,
-        roles: user.roles
+        roles: user.roles,
       },
       JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: "1d" }
     );
 
     // Return user info and token
     return NextResponse.json({
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         staff_id: user.staff_id,
         name: user.name,
         email: user.email,
         roles: user.roles,
-        rooms_manage: user.rooms_manage
-      }
+        rooms_manage: user.rooms_manage,
+      },
     });
-
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { message: "Đã có lỗi xảy ra" },
-      { status: 500 }
-    );
+    console.error("Login error:", error);
+    return NextResponse.json({ message: "Đã có lỗi xảy ra" }, { status: 500 });
   }
 }

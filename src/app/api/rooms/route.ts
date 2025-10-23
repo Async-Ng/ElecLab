@@ -1,32 +1,29 @@
-import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
-import { RoomModel } from '@/models/Room';
+import { NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import { RoomModel } from "@/models/Room";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const userRole = searchParams.get('userRole');
+    const userId = searchParams.get("userId");
+    const userRole = searchParams.get("userRole");
 
     await connectToDatabase();
-    
+
     let query = {};
-    if (userRole !== 'Head_of_deparment') {
+    if (userRole !== "Head_of_deparment") {
       if (!userId) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       query = { users_manage: userId };
     }
 
-    const rooms = await RoomModel.find(query);
+    const rooms = await RoomModel.find(query).populate("users_manage");
     return NextResponse.json({ rooms }, { status: 200 });
   } catch (error) {
-    console.error('Failed to fetch rooms:', error);
+    console.error("Failed to fetch rooms:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch rooms' },
+      { error: "Failed to fetch rooms" },
       { status: 500 }
     );
   }
@@ -35,12 +32,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const userRole = searchParams.get('userRole');
+    const userId = searchParams.get("userId");
+    const userRole = searchParams.get("userRole");
 
-    if (userRole !== 'Head_of_deparment') {
+    if (userRole !== "Head_of_deparment") {
       return NextResponse.json(
-        { error: 'Unauthorized: Only Head of Department can create rooms' },
+        { error: "Unauthorized: Only Head of Department can create rooms" },
         { status: 403 }
       );
     }
@@ -56,9 +53,9 @@ export async function POST(request: Request) {
     await newRoom.save();
     return NextResponse.json({ room: newRoom }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create room:', error);
+    console.error("Failed to create room:", error);
     return NextResponse.json(
-      { error: 'Failed to create room' },
+      { error: "Failed to create room" },
       { status: 500 }
     );
   }

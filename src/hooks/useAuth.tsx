@@ -2,15 +2,9 @@
 
 import { useState, useEffect, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
+import { User } from "@/types/user";
 
-interface User {
-  id: string;
-  staff_id: string;
-  name: string;
-  email: string;
-  roles: string[];
-  rooms_manage: string[];
-}
+// Sử dụng type User từ src/types/user.ts
 
 interface AuthContextType {
   user: User | null;
