@@ -63,8 +63,8 @@ export default function LoginPage() {
       // Show success message
       message.success("Đăng nhập thành công!");
 
-      // Redirect to timetable page
-      router.push("/timetable");
+      // Redirect to lecturer's timetable page
+      router.push(`/timetables/${data.user._id}`);
     } catch (error) {
       console.error("Login error:", error);
       message.error("Đăng nhập thất bại, vui lòng thử lại");

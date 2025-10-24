@@ -24,6 +24,7 @@ export enum StudyTime {
 }
 // ...existing code...
 export interface Timetable {
+  _id?: string; // ID của lịch dạy
   schoolYear: string; // Năm học, ví dụ: "2025-2026"
   semester: Semester; // Học kỳ
   date: string; // Ngày, định dạng ISO: "2025-10-24"

@@ -12,6 +12,7 @@ type Props = {
 };
 
 export default function Sidebar({ onClose }: Props) {
+  const { user, logout } = useAuth();
   // Định nghĩa các menu item với quyền truy cập
   const allMenuItems: Array<{
     href: string;
@@ -20,7 +21,7 @@ export default function Sidebar({ onClose }: Props) {
     roles: UserRole[];
   }> = [
     {
-      href: "/timetable",
+      href: "/timetables",
       label: "Thời khóa biểu",
       icon: (
         <svg
@@ -38,7 +39,28 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Head_of_deparment, UserRole.Lecture],
+      roles: [UserRole.Head_of_deparment],
+    },
+    {
+      href: `/timetables/${user?._id}`,
+      label: "TKB của tôi",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 16v-4M12 8h.01"
+          />
+        </svg>
+      ),
+      roles: [UserRole.Lecture],
     },
     {
       href: "/materials",
@@ -81,7 +103,7 @@ export default function Sidebar({ onClose }: Props) {
       roles: [UserRole.Head_of_deparment],
     },
     {
-      href: "/room",
+      href: "/rooms",
       label: "Phòng thực hành",
       icon: (
         <svg
@@ -103,7 +125,7 @@ export default function Sidebar({ onClose }: Props) {
   ];
 
   // Lọc menu theo role (sau khi lấy user)
-  const { user, logout } = useAuth();
+
   let menuItems: typeof allMenuItems = [];
   if (user?.roles?.includes(UserRole.Head_of_deparment)) {
     // Trưởng bộ môn: thấy toàn bộ
