@@ -1,84 +1,53 @@
-import { Card, Tag, Tooltip, Button } from "antd";
+import { Card, Typography, Row, Col } from "antd";
+import { BookOutlined, HomeOutlined } from "@ant-design/icons";
 import { Timetable } from "@/types/timetable";
+
+const { Text } = Typography;
 
 interface LessonCardProps {
   lesson: Timetable;
-  statusInfo: ReturnType<typeof getStatusInfo>;
-  onDetail: () => void;
 }
 
-// You can move getStatusInfo to a shared utils file if needed
-function getStatusInfo(row: Timetable) {
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const isFuture = row.date > todayISO;
-  if (isFuture)
-    return {
-      color: undefined,
-      text: "Chưa diễn ra",
-      canClick: false,
-      isEdit: false,
-    };
-  if (row.date === todayISO)
-    return { color: "blue", text: "Hôm nay", canClick: true, isEdit: false };
-  return { color: "red", text: "Quá hạn", canClick: true, isEdit: false };
-}
-
-export default function LessonCard({
-  lesson,
-  statusInfo,
-  onDetail,
-}: LessonCardProps) {
+export default function LessonCard({ lesson }: LessonCardProps) {
   return (
     <Card
       size="small"
       key={lesson._id || lesson.className + lesson.date + lesson.period}
       style={{
-        marginBottom: 8,
-        borderRadius: 8,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-        background: "#fafcff",
+        marginBottom: 16,
+        borderRadius: 16,
+        background: "linear-gradient(90deg, #e0f7fa 0%, #f6faff 100%)",
+        border: "none",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
       }}
-      className="hover:shadow transition-shadow"
+      bodyStyle={{ padding: 18 }}
     >
-      <div style={{ fontWeight: 500, wordBreak: "break-word" }}>
-        <span>{lesson.className}</span>
-        <span> – </span>
-        <span>{lesson.subject}</span>
-      </div>
-      <div style={{ fontSize: 12, color: "#888" }}>
-        Phòng{" "}
-        {typeof lesson.room === "string" ? lesson.room : lesson.room?.name}
-      </div>
-      <div style={{ fontSize: 12, color: "#888" }}>
-        Giáo viên:{" "}
-        {typeof lesson.lecturer === "string"
-          ? lesson.lecturer
-          : lesson.lecturer?.name}
-      </div>
-      <div style={{ fontSize: 12, color: "#888" }}>
-        Thời gian: {lesson.time}
-      </div>
-      <div
-        style={{
-          marginTop: 8,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          flexWrap: "wrap",
-        }}
-      >
-        <Tag color={statusInfo.color}>{statusInfo.text}</Tag>
-        <Tooltip title={statusInfo.isEdit ? "Sửa" : "Xem chi tiết"}>
-          <Button
-            size="small"
-            type={statusInfo.isEdit ? "default" : "primary"}
-            disabled={!statusInfo.canClick}
-            onClick={onDetail}
-          >
-            {statusInfo.isEdit ? "Sửa" : "Chi tiết"}
-          </Button>
-        </Tooltip>
-      </div>
+      <Row align="middle" gutter={16}>
+        <Col>
+          <BookOutlined style={{ fontSize: 32, color: "#1890ff" }} />
+        </Col>
+        <Col flex="auto">
+          <Text strong style={{ fontSize: 18 }}>
+            {lesson.subject}
+          </Text>
+          <div>
+            <Text type="secondary" style={{ fontSize: 15 }}>
+              Lớp: <b>{lesson.className}</b>
+            </Text>
+          </div>
+          <div>
+            <HomeOutlined style={{ marginRight: 6, color: "#52c41a" }} />
+            <Text type="secondary" style={{ fontSize: 15 }}>
+              Phòng:{" "}
+              <b>
+                {typeof lesson.room === "string"
+                  ? lesson.room
+                  : lesson.room?.name}
+              </b>
+            </Text>
+          </div>
+        </Col>
+      </Row>
     </Card>
   );
 }

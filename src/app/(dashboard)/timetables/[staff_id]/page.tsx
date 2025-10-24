@@ -24,11 +24,9 @@ export default function StaffTimetableWeekView() {
     if (!staffId) return;
     const params = new URLSearchParams({
       userId: staffId,
-      week: weekStart.format("YYYY-MM-DD"),
-      className,
-      room: roomFilter,
+      // Nếu cần lọc thêm theo tuần, className, room thì xử lý ở frontend
     });
-    fetch(`/api/timetables/view?${params}`)
+    fetch(`/api/timetables?${params}`)
       .then((res) => res.json())
       .then((rows) => {
         setItems(rows);

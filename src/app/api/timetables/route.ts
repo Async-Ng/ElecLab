@@ -2,6 +2,47 @@ import { NextResponse } from "next/server";
 import Timetable from "@/models/Timetable";
 import { connectToDatabase } from "@/lib/mongodb";
 
+export async function PATCH(request: Request) {
+  await connectToDatabase();
+  const body = await request.json();
+  const { _id, ...updateData } = body;
+  if (!_id) {
+    return NextResponse.json(
+      { error: "Missing _id for update" },
+      { status: 400 }
+    );
+  }
+  try {
+    const updated = await Timetable.findByIdAndUpdate(_id, updateData, {
+      new: true,
+    });
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Timetable not found" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(updated);
+  } catch (error) {
+    let errorMsg = "Unknown error";
+    if (error instanceof Error) {
+      errorMsg = error.message;
+    } else if (
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error
+    ) {
+      errorMsg = (error as any).message;
+    }
+    console.error("UPDATE TIMETABLE ERROR:", error);
+    return NextResponse.json(
+      { error: errorMsg, details: error },
+      { status: 400 }
+    );
+  }
+}
+
+
 export async function GET(request: Request) {
   await connectToDatabase();
   const { searchParams } = new URL(request.url);

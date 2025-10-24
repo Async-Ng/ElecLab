@@ -20,10 +20,10 @@ export default function TimetableGrid({
 }: TimetableGridProps) {
   return (
     <div className="min-w-[900px]">
-      <Row gutter={[8, 8]}>
-        <Col span={4}></Col>
+      <Row gutter={[12, 12]}>
+        <Col span={3}></Col>
         {days.map((d) => (
-          <Col key={d.toString()} span={Math.floor(20 / 7)}>
+          <Col key={d.toString()} span={3}>
             <div style={{ textAlign: "center", fontWeight: 500 }}>
               {d.format(" DD/MM")}
             </div>
@@ -31,9 +31,9 @@ export default function TimetableGrid({
         ))}
       </Row>
       {allPeriods.map((s) => (
-        <Row key={s} gutter={[8, 8]} align="top">
+        <Row key={s} gutter={[12, 12]} align="top">
           <Col
-            span={4}
+            span={3}
             style={{ textAlign: "right", paddingRight: 8, fontWeight: 500 }}
           >
             Ca {s}
@@ -44,17 +44,17 @@ export default function TimetableGrid({
                 it.date === d.format("YYYY-MM-DD") && Number(it.period) === s
             );
             return (
-              <Col key={d.toString() + s} span={Math.floor(20 / 7)}>
+              <Col key={d.toString() + s} span={3}>
                 {cell.length === 0 ? (
                   <div
                     style={{
-                      minHeight: 60,
+                      minHeight: 80,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>
                       —
                     </Typography.Text>
                   </div>
