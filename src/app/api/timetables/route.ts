@@ -15,13 +15,38 @@ export async function GET(request: Request) {
     // Giảng viên chỉ xem thời khóa biểu của mình
     query = { lecturer: userId };
   }
-  const timetables = await Timetable.find(query);
+  const timetables = await Timetable.find(query)
+    .populate("room", "name room_id")
+    .populate("lecturer", "name email");
   return NextResponse.json(timetables);
 }
 
 export async function POST(request: Request) {
   await connectToDatabase();
   const body = await request.json();
-  const timetable = await Timetable.create(body);
-  return NextResponse.json(timetable);
+  try {
+    let result;
+    if (Array.isArray(body)) {
+      result = await Timetable.insertMany(body);
+    } else {
+      result = await Timetable.create(body);
+    }
+    return NextResponse.json(result);
+  } catch (error) {
+    let errorMsg = "Unknown error";
+    if (error instanceof Error) {
+      errorMsg = error.message;
+    } else if (
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error
+    ) {
+      errorMsg = (error as any).message;
+    }
+    console.error("IMPORT TIMETABLE ERROR:", error);
+    return NextResponse.json(
+      { error: errorMsg, details: error },
+      { status: 400 }
+    );
+  }
 }

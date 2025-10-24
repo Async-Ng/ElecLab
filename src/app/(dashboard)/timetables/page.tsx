@@ -11,18 +11,13 @@ export default function TimetablePage() {
   const [filtered, setFiltered] = useState<Timetable[]>([]);
 
   useEffect(() => {
-    if (!user) return;
-    const params = new URLSearchParams({
-      userId: user._id || "",
-      userRole: user.roles?.[0] || "",
-    });
-    fetch(`/api/timetables?${params}`)
+    fetch(`/api/timetables`)
       .then((res) => res.json())
       .then((rows) => {
         setData(rows);
         setFiltered(rows);
       });
-  }, [user]);
+  }, []);
 
   return (
     <div>

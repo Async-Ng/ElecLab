@@ -145,6 +145,7 @@ export default function ImportButtons() {
       return { ...row, room: roomId, lecturer: lecturerId };
     });
     try {
+      console.log("IMPORT PAYLOAD:", JSON.stringify(mappedRows, null, 2));
       const res = await fetch("/api/timetables", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,10 +154,12 @@ export default function ImportButtons() {
       if (res.ok) {
         message.success("Đã import thời khóa biểu");
       } else {
-        message.error("Import thất bại");
+        const errorData = await res.json();
+        console.error("IMPORT ERROR:", errorData);
+        message.error(`Import thất bại: ${errorData.error || "Unknown error"}`);
       }
     } catch (err) {
-      console.error(err);
+      console.error("IMPORT EXCEPTION:", err);
       message.error("Import thất bại");
     }
   }
