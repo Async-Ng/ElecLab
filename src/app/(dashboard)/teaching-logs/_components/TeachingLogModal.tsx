@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Select, Upload, Button, Tag } from "antd";
+import { Modal, Form, Input, Select, Upload, Button } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
+import TeachingLogDetail from "./TeachingLogDetail";
 
 interface TeachingLogModalProps {
   open: boolean;
@@ -58,15 +59,22 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
     }
   };
 
+  const timetable =
+    log?.timetable && typeof log.timetable === "object"
+      ? log.timetable
+      : undefined;
+
   return (
     <Modal
       open={open}
-      title={log ? "Sửa nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
+      title={log ? "Chi tiết nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={loading}
       destroyOnClose
+      width={900}
     >
+      {log && <TeachingLogDetail log={log} />}
       <Form
         form={form}
         layout="vertical"

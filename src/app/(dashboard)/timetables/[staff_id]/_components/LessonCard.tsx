@@ -1,8 +1,9 @@
-import { Card, Typography, Row, Col, Button } from "antd";
+import { Card, Typography, Row, Col, Button, Tag } from "antd";
 import { BookOutlined, HomeOutlined, FileAddOutlined } from "@ant-design/icons";
 import { Timetable } from "@/types/timetable";
 import TeachingLogModal from "@/app/(dashboard)/teaching-logs/_components/TeachingLogModal";
 import { useState } from "react";
+import { useLessonLogStatus } from "@/hooks/useLessonLogStatus";
 
 const { Text } = Typography;
 
@@ -12,6 +13,10 @@ interface LessonCardProps {
 
 export default function LessonCard({ lesson }: LessonCardProps) {
   const [logModalOpen, setLogModalOpen] = useState(false);
+  const { hasLog, isFuture } = useLessonLogStatus(
+    lesson._id as string,
+    lesson.date
+  );
 
   return (
     <Card
@@ -50,6 +55,11 @@ export default function LessonCard({ lesson }: LessonCardProps) {
               </b>
             </Text>
           </div>
+          {hasLog && (
+            <Tag color="green" style={{ marginTop: 8 }}>
+              Đã ghi log
+            </Tag>
+          )}
         </Col>
         <Col>
           <Button
@@ -57,8 +67,13 @@ export default function LessonCard({ lesson }: LessonCardProps) {
             type="primary"
             size="small"
             onClick={() => setLogModalOpen(true)}
+            disabled={isFuture || hasLog}
           >
-            Nhật ký ca dạy
+            {isFuture
+              ? "Chưa đến ngày"
+              : hasLog
+              ? "Đã ghi log"
+              : "Nhật ký ca dạy"}
           </Button>
         </Col>
       </Row>
