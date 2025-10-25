@@ -1,3 +1,4 @@
+import { RoomModel } from "@/models/Room";
 import { NextResponse } from "next/server";
 import Timetable from "@/models/Timetable";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -41,7 +42,6 @@ export async function PATCH(request: Request) {
     );
   }
 }
-
 
 export async function GET(request: Request) {
   await connectToDatabase();

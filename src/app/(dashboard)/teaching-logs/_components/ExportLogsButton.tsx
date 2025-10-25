@@ -19,9 +19,11 @@ function mapLogsToExcelRows(logs: any[]) {
       log.timetable?.lecturer?.name || log.timetable?.lecturer || "",
     "Ghi chú": log.note || "",
     "Trạng thái": log.status || "",
-    Ảnh: Array.isArray(log.imageUrl)
-      ? log.imageUrl.join(", ")
-      : log.imageUrl || "",
+    Ảnh: Array.isArray(log.images)
+      ? log.images
+          .map((img: string) => `data:image/jpeg;base64,${img}`)
+          .join(", ")
+      : log.images || "",
   }));
 }
 

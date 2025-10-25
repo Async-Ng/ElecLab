@@ -65,23 +65,6 @@ function getColumns(isHead: boolean) {
           {status}
         </Tag>
       ),
-    },
-    {
-      title: "Ảnh",
-      dataIndex: ["imageUrl"],
-      key: "imageUrl",
-      render: (images: string[] = []) => (
-        <span>
-          {images.map((url, idx) => (
-            <img
-              key={idx}
-              src={url}
-              alt={`log-img-${idx}`}
-              style={{ width: 60, marginRight: 8, borderRadius: 4 }}
-            />
-          ))}
-        </span>
-      ),
     }
   );
   return base;

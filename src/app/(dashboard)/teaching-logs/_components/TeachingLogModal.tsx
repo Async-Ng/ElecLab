@@ -27,29 +27,27 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState<any[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | undefined>();
+  const [previewVisible, setPreviewVisible] = useState(false);
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      // Upload images first (simulate, replace with real upload if needed)
-      let imageUrls: string[] = log?.imageUrl || [];
-      if (fileList.length > 0) {
-        // TODO: upload files to server and get URLs
-        imageUrls = fileList.map((f) => f.url || f.thumbUrl || "");
-      }
-      const payload = {
-        timetable: timetableId,
-        note: values.note,
-        status: values.status,
-        imageUrl: imageUrls,
-      };
+      const formData = new FormData();
+      formData.append("timetable", timetableId);
+      formData.append("note", values.note || "");
+      formData.append("status", values.status);
+      fileList.forEach((file: any) => {
+        if (file.originFileObj) {
+          formData.append("images", file.originFileObj);
+        }
+      });
       const method = log ? "PUT" : "POST";
       const url = log ? `/api/teaching-logs/${log._id}` : "/api/teaching-logs";
       await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
       setLoading(false);
       onSuccess?.();
@@ -83,39 +81,50 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
           status: log?.status || TeachingLogStatus.NORMAL,
         }}
       >
-        <Form.Item name="note" label="Ghi chú">
-          <Input.TextArea rows={3} />
-        </Form.Item>
         <Form.Item
-          name="status"
           label="Trạng thái"
+          name="status"
           rules={[{ required: true }]}
         >
           <Select options={statusOptions} />
         </Form.Item>
+        <Form.Item label="Ghi chú" name="note">
+          <Input.TextArea rows={3} />
+        </Form.Item>
         <Form.Item label="Ảnh minh họa">
           <Upload
-            listType="picture"
+            listType="picture-card"
             fileList={fileList}
             onChange={({ fileList }) => setFileList(fileList)}
             beforeUpload={() => false}
             multiple
+            showUploadList={{ showPreviewIcon: true }}
+            onPreview={async (file) => {
+              let src = file.url || file.thumbUrl;
+              if (!src && file.originFileObj) {
+                src = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  if (file.originFileObj)
+                    reader.readAsDataURL(file.originFileObj);
+                  reader.onload = () => resolve(reader.result as string);
+                });
+              }
+              setPreviewImage(src);
+              setPreviewVisible(true);
+            }}
           >
-            <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+            <div>
+              <UploadOutlined /> Tải ảnh lên
+            </div>
           </Upload>
         </Form.Item>
-        {log?.imageUrl?.length ? (
-          <div style={{ marginBottom: 8 }}>
-            {log.imageUrl.map((url, idx) => (
-              <img
-                key={idx}
-                src={url}
-                alt="log-img"
-                style={{ width: 60, marginRight: 8, borderRadius: 4 }}
-              />
-            ))}
-          </div>
-        ) : null}
+        <Modal
+          open={previewVisible}
+          footer={null}
+          onCancel={() => setPreviewVisible(false)}
+        >
+          <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+        </Modal>
       </Form>
     </Modal>
   );

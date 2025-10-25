@@ -1,6 +1,26 @@
 export async function POST(request: Request) {
   await connectToDatabase();
-  const body = await request.json();
+  const contentType = request.headers.get("content-type") || "";
+  let body: Record<string, any> = {};
+  let images: Buffer[] = [];
+  if (contentType.includes("application/json")) {
+    body = await request.json();
+    if (body.images && Array.isArray(body.images)) {
+      images = body.images.map((img: string) => Buffer.from(img, "base64"));
+    }
+  } else if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    body = {} as Record<string, any>;
+    for (const [key, value] of formData.entries()) {
+      if (key === "images" && value instanceof File) {
+        const arrayBuffer = await value.arrayBuffer();
+        images.push(Buffer.from(arrayBuffer));
+      } else {
+        body[key] = value;
+      }
+    }
+  }
+  body.images = images;
   try {
     const created = await TeachingLog.create(body);
     return NextResponse.json(created);

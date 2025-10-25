@@ -7,6 +7,7 @@ import {
   StudyTime,
   Semester,
 } from "../../../../types/timetable";
+import ImagePreviewGroup from "./ImagePreviewGroup";
 
 interface TeachingLogDetailProps {
   log: TeachingLog;
@@ -74,17 +75,8 @@ const TeachingLogDetail: React.FC<TeachingLogDetailProps> = ({ log }) => {
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Ảnh minh họa">
-            {log?.imageUrl?.length ? (
-              <div>
-                {log.imageUrl.map((url, idx) => (
-                  <img
-                    key={idx}
-                    src={url}
-                    alt="log-img"
-                    style={{ width: 60, marginRight: 8, borderRadius: 4 }}
-                  />
-                ))}
-              </div>
+            {log?.images?.length ? (
+              <ImagePreviewGroup images={log.images} />
             ) : (
               "Không có ảnh"
             )}

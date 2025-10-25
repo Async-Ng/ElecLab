@@ -8,7 +8,7 @@ export interface TeachingLog {
   _id: string;
   timetable: Timetable | string; // Tham chiếu đến Timetable hoặc ObjectId
   note?: string;
-  imageUrl?: string[];
+  images?: string[]; // base64 string array
   status: TeachingLogStatus;
   createdAt: string;
   updatedAt: string;
