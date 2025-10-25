@@ -127,7 +127,11 @@ const TeachingLogsTable: React.FC = () => {
     const t = (log.timetable as any) || {};
     if (filters.semester && t.semester !== filters.semester) return false;
     if (filters.schoolYear && t.schoolYear !== filters.schoolYear) return false;
-    if (filters.room && (t.room?.name || t.room) !== filters.room) return false;
+    if (filters.room) {
+      const room = t.room;
+      if (typeof room === "object" && room?._id !== filters.room) return false;
+      if (typeof room === "string" && room !== filters.room) return false;
+    }
     if (filters.lecturer) {
       const lec = t.lecturer;
       if (typeof lec === "object" && lec?._id !== filters.lecturer)

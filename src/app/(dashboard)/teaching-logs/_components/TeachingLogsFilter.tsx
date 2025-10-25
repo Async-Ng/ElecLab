@@ -31,17 +31,21 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = ({
       ),
     [logs]
   );
-  const rooms = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          logs
-            .map((l) => l.timetable?.room?.name || l.timetable?.room)
-            .filter(Boolean)
-        )
-      ),
-    [logs]
-  );
+  // Lấy danh sách phòng học từ API
+  const [rooms, setRooms] = useState<{ value: string; label: string }[]>([]);
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await fetch("/api/rooms");
+        const data = await res.json();
+        const roomList = Array.isArray(data.rooms) ? data.rooms : [];
+        setRooms(roomList.map((r: any) => ({ value: r._id, label: r.name })));
+      } catch {
+        setRooms([]);
+      }
+    };
+    fetchRooms();
+  }, []);
 
   // Lấy danh sách giảng viên từ API
   const [lecturers, setLecturers] = useState<
@@ -93,7 +97,7 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = ({
           style={{ width: "100%" }}
           value={filters.room}
           onChange={(v) => onChange({ ...filters, room: v })}
-          options={rooms.map((r) => ({ value: r, label: r }))}
+          options={rooms}
         />
       </Col>
       <Col span={6}>
