@@ -17,13 +17,12 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = ({
   filters,
   onChange,
 }) => {
-  const semesters = useMemo(
-    () =>
-      Array.from(
-        new Set(logs.map((l) => l.timetable?.semester).filter(Boolean))
-      ),
-    [logs]
-  );
+  // Học kỳ cố định
+  const semesters = [
+    { value: 1, label: "Học kỳ 1" },
+    { value: 2, label: "Học kỳ 2" },
+    { value: 3, label: "Học kỳ 3" },
+  ];
   const schoolYears = useMemo(
     () =>
       Array.from(
@@ -77,7 +76,7 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = ({
           style={{ width: "100%" }}
           value={filters.semester}
           onChange={(v) => onChange({ ...filters, semester: v })}
-          options={semesters.map((s) => ({ value: s, label: s }))}
+          options={semesters}
         />
       </Col>
       <Col span={6}>

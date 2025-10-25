@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Button, Select, Modal, Row, Col } from "antd";
+import ExportPreviewModal from "./ExportPreviewModal";
 import { DownloadOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 
@@ -9,12 +10,13 @@ interface ExportLogsButtonProps {
 
 function mapLogsToExcelRows(logs: any[]) {
   return logs.map((log) => ({
+    "Học kỳ": log.timetable?.semester || "",
+    "Năm học": log.timetable?.schoolYear || "",
     Ngày: log.timetable?.date || "",
     "Ca học": log.timetable?.period || "",
     "Phòng học": log.timetable?.room?.name || log.timetable?.room || "",
-    "Học kỳ": log.timetable?.semester || "",
-    "Năm học": log.timetable?.schoolYear || "",
-    "Giảng viên": log.timetable?.staff?.name || log.timetable?.staff || "",
+    "Giảng viên":
+      log.timetable?.lecturer?.name || log.timetable?.lecturer || "",
     "Ghi chú": log.note || "",
     "Trạng thái": log.status || "",
     Ảnh: Array.isArray(log.imageUrl)
@@ -24,13 +26,23 @@ function mapLogsToExcelRows(logs: any[]) {
 }
 
 const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
-  const semesters = useMemo(
-    () =>
-      Array.from(
-        new Set(logs.map((l) => l.timetable?.semester).filter(Boolean))
-      ),
-    [logs]
-  );
+  // All filter state and options logic moved to below (see previous patch)
+
+  const [semester, setSemester] = useState<string | undefined>();
+  const [schoolYear, setSchoolYear] = useState<string | undefined>();
+  const [room, setRoom] = useState<string | undefined>();
+  const [lecturer, setLecturer] = useState<string | undefined>();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  // Fixed semester options
+  const semesters = [
+    { value: "1", label: "Học kỳ 1" },
+    { value: "2", label: "Học kỳ 2" },
+    { value: "3", label: "Học kỳ 3" },
+  ];
+
+  // School years from logs
   const schoolYears = useMemo(
     () =>
       Array.from(
@@ -38,42 +50,60 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       ),
     [logs]
   );
-  const rooms = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          logs
-            .map((l) => l.timetable?.room?.name || l.timetable?.room)
-            .filter(Boolean)
-        )
-      ),
-    [logs]
-  );
-  const lecturers = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          logs
-            .map((l) => l.timetable?.staff?.name || l.timetable?.staff)
-            .filter(Boolean)
-        )
-      ),
-    [logs]
-  );
 
-  const [semester, setSemester] = useState<string | undefined>();
-  const [schoolYear, setSchoolYear] = useState<string | undefined>();
-  const [room, setRoom] = useState<string | undefined>();
-  const [lecturer, setLecturer] = useState<string | undefined>();
-  const [modalOpen, setModalOpen] = useState(false);
+  // Fetch rooms from API
+  const [rooms, setRooms] = useState<{ value: string; label: string }[]>([]);
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await fetch("/api/rooms");
+        const data = await res.json();
+        const roomList = Array.isArray(data.rooms) ? data.rooms : [];
+        setRooms(roomList.map((r: any) => ({ value: r._id, label: r.name })));
+      } catch {
+        setRooms([]);
+      }
+    };
+    fetchRooms();
+  }, []);
 
+  // Fetch lecturers from API
+  const [lecturers, setLecturers] = useState<
+    { value: string; label: string }[]
+  >([]);
+  useEffect(() => {
+    const fetchLecturers = async () => {
+      try {
+        const res = await fetch("/api/users?role=Lecture");
+        const data = await res.json();
+        setLecturers(
+          Array.isArray(data)
+            ? data.map((u: any) => ({ value: u._id, label: u.name }))
+            : []
+        );
+      } catch {
+        setLecturers([]);
+      }
+    };
+    fetchLecturers();
+  }, []);
+
+  // Filter logs using same logic as TeachingLogsTable
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       const t = log.timetable || {};
       if (semester && t.semester !== semester) return false;
       if (schoolYear && t.schoolYear !== schoolYear) return false;
-      if (room && (t.room?.name || t.room) !== room) return false;
-      if (lecturer && (t.staff?.name || t.staff) !== lecturer) return false;
+      if (room) {
+        const r = t.room;
+        if (typeof r === "object" && r?._id !== room) return false;
+        if (typeof r === "string" && r !== room) return false;
+      }
+      if (lecturer) {
+        const lec = t.lecturer;
+        if (typeof lec === "object" && lec?._id !== lecturer) return false;
+        if (typeof lec === "string" && lec !== lecturer) return false;
+      }
       return true;
     });
   }, [logs, semester, schoolYear, room, lecturer]);
@@ -106,6 +136,22 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
         okText="Xuất file Excel"
         cancelText="Hủy"
         width={600}
+        footer={[
+          <Button key="preview" onClick={() => setPreviewOpen(true)}>
+            Xem trước dữ liệu sẽ xuất
+          </Button>,
+          <Button
+            key="export"
+            type="primary"
+            onClick={handleExport}
+            disabled={!filteredLogs.length}
+          >
+            Xuất file Excel
+          </Button>,
+          <Button key="cancel" onClick={() => setModalOpen(false)}>
+            Hủy
+          </Button>,
+        ]}
       >
         <Row gutter={[16, 16]} style={{ marginBottom: 8 }}>
           <Col span={12}>
@@ -115,7 +161,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
               style={{ width: "100%" }}
               value={semester}
               onChange={setSemester}
-              options={semesters.map((s) => ({ value: s, label: s }))}
+              options={semesters}
             />
           </Col>
           <Col span={12}>
@@ -135,7 +181,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
               style={{ width: "100%" }}
               value={room}
               onChange={setRoom}
-              options={rooms.map((r) => ({ value: r, label: r }))}
+              options={rooms}
             />
           </Col>
           <Col span={12}>
@@ -145,7 +191,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
               style={{ width: "100%" }}
               value={lecturer}
               onChange={setLecturer}
-              options={lecturers.map((l) => ({ value: l, label: l }))}
+              options={lecturers}
             />
           </Col>
         </Row>
@@ -154,6 +200,12 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
           chọn sẽ xuất toàn bộ.
         </div>
       </Modal>
+
+      <ExportPreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        logs={filteredLogs}
+      />
     </>
   );
 };
