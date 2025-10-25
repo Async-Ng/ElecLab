@@ -1,35 +1,31 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { Button } from "antd";
+import dynamic from "next/dynamic";
 import { Table, Tag } from "antd";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { useAuth } from "../../../../hooks/useAuth";
 import { UserRole } from "../../../../types/user";
 
-const columns = [
+const TeachingLogModal = dynamic(() => import("./TeachingLogModal"), {
+  ssr: false,
+});
+
+const columnsBase = [
   {
-    title: "Thời gian",
-    dataIndex: "createdAt",
-    key: "createdAt",
-    render: (value: string) => new Date(value).toLocaleString(),
+    title: "Ngày",
+    dataIndex: ["timetable", "date"],
+    key: "date",
+    render: (value: string) => value,
   },
   {
-    title: "Giảng viên",
-    dataIndex: ["timetable", "lecturer"],
-    key: "lecturer",
-    render: (lecturer: any) => lecturer?.name || lecturer,
+    title: "Ca học",
+    dataIndex: ["timetable", "period"],
+    key: "period",
+    render: (value: number) => `Ca ${value}`,
   },
   {
-    title: "Môn học",
-    dataIndex: ["timetable", "subject"],
-    key: "subject",
-  },
-  {
-    title: "Lớp",
-    dataIndex: ["timetable", "className"],
-    key: "className",
-  },
-  {
-    title: "Phòng",
+    title: "Phòng học",
     dataIndex: ["timetable", "room"],
     key: "room",
     render: (room: any) => room?.name || room,
@@ -72,6 +68,8 @@ const TeachingLogsTable: React.FC = () => {
   const { user } = useAuth();
   const [logs, setLogs] = useState<TeachingLog[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editLog, setEditLog] = useState<TeachingLog | undefined>(undefined);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -86,7 +84,16 @@ const TeachingLogsTable: React.FC = () => {
         if (roleParam) q.set("userRole", roleParam);
         const res = await fetch(`/api/teaching-logs?${q.toString()}`);
         let data: TeachingLog[] = await res.json();
-        setLogs(data);
+        // Gắn hàm onEdit cho từng log (dùng kiểu any cho Table)
+        setLogs(
+          data.map((log: any) => ({
+            ...log,
+            onEdit: () => {
+              setEditLog(log);
+              setModalOpen(true);
+            },
+          }))
+        );
       } catch (err) {
         setLogs([]);
       }
@@ -96,13 +103,38 @@ const TeachingLogsTable: React.FC = () => {
   }, [user]);
 
   return (
-    <Table
-      columns={columns}
-      dataSource={logs}
-      rowKey={(record) => record._id}
-      loading={loading}
-      pagination={{ pageSize: 10 }}
-    />
+    <>
+      <Table
+        columns={columnsBase}
+        dataSource={logs}
+        rowKey={(record) => record._id}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        onRow={(record) => ({
+          onClick: () => {
+            setEditLog(record);
+            setModalOpen(true);
+          },
+        })}
+      />
+      <TeachingLogModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setEditLog(undefined);
+        }}
+        timetableId={
+          typeof editLog?.timetable === "object"
+            ? String(editLog?.timetable?._id || "")
+            : String(editLog?.timetable || "")
+        }
+        log={editLog}
+        onSuccess={() => {
+          setModalOpen(false);
+          setEditLog(undefined);
+        }}
+      />
+    </>
   );
 };
 

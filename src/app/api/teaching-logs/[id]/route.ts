@@ -28,12 +28,24 @@ export async function PUT(
 ) {
   await connectToDatabase();
   const body = await request.json();
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId");
   try {
+    const log = await TeachingLog.findById(params.id).populate({
+      path: "timetable",
+      select: "lecturer",
+    });
+    if (!log) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    // Chỉ cho phép giảng viên sửa log của chính mình
+    const lecturerId =
+      typeof log.timetable.lecturer === "object"
+        ? log.timetable.lecturer._id?.toString()
+        : log.timetable.lecturer;
+    if (!userId || userId !== lecturerId)
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     const updated = await TeachingLog.findByIdAndUpdate(params.id, body, {
       new: true,
     });
-    if (!updated)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (error) {
     return NextResponse.json(
