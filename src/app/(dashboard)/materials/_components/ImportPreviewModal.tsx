@@ -159,14 +159,14 @@ export default function ImportPreviewModal(props: Props) {
           placeholder="Chọn phòng theo mã phòng"
           optionFilterProp="children"
           onChange={(v) => updateRow(record.key, { place_used: v })}
-          filterOption={(input, option) =>
-            (option?.children as string)
-              ?.toLowerCase()
-              .includes(input.toLowerCase()) ||
-            (option?.value as string)
-              ?.toLowerCase()
-              .includes(input.toLowerCase())
-          }
+          filterOption={(input, option) => {
+            const childrenStr = String(option?.children ?? "").toLowerCase();
+            const valueStr = String(option?.value ?? "").toLowerCase();
+            return (
+              childrenStr.includes(input.toLowerCase()) ||
+              valueStr.includes(input.toLowerCase())
+            );
+          }}
         >
           {rooms.map((room) => (
             <Option key={room.room_id} value={room.room_id}>
