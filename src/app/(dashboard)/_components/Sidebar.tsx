@@ -12,9 +12,37 @@ type Props = {
 };
 
 export default function Sidebar({ onClose }: Props) {
-  const menuItems = [
+  const { user, logout } = useAuth();
+  // Định nghĩa các menu item với quyền truy cập
+  const allMenuItems: Array<{
+    href: string;
+    label: string;
+    icon: React.ReactNode;
+    roles: UserRole[];
+  }> = [
     {
-      href: "/timetable",
+      href: `/timetables/${user?._id}`,
+      label: "TKB của tôi",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 2v4M8 2v4"
+          />
+        </svg>
+      ),
+      roles: [UserRole.Head_of_deparment, UserRole.Lecture],
+    },
+    {
+      href: "/timetables",
       label: "Thời khóa biểu",
       icon: (
         <svg
@@ -32,7 +60,32 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment],
     },
+
+    {
+      href: "/teaching-logs",
+      label: "Nhật ký ca dạy",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8 2v4M16 2v4"
+          />
+          <circle cx="12" cy="14" r="3" />
+        </svg>
+      ),
+      roles: [UserRole.Lecture],
+    },
+
     {
       href: "/materials",
       label: "Vật tư",
@@ -51,11 +104,11 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment],
     },
-
     {
       href: "/users",
-      label: "Người dùng",
+      label: "Giảng viên",
       icon: (
         <svg
           className="w-5 h-5"
@@ -71,10 +124,11 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment],
     },
     {
-      href: "/room",
-      label: "Phòng học",
+      href: "/rooms",
+      label: "Phòng thực hành",
       icon: (
         <svg
           className="w-5 h-5"
@@ -90,11 +144,27 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
+      roles: [UserRole.Head_of_deparment],
     },
   ];
 
+  // Lọc menu theo role (sau khi lấy user)
+
+  let menuItems: typeof allMenuItems = [];
+  if (user?.roles?.includes(UserRole.Head_of_deparment)) {
+    // Trưởng bộ môn: thấy toàn bộ
+    menuItems = allMenuItems;
+  } else if (user?.roles?.includes(UserRole.Lecture)) {
+    // Giảng viên: chỉ thấy các mục cho phép
+    menuItems = allMenuItems.filter((item) =>
+      item.roles.includes(UserRole.Lecture)
+    );
+  } else {
+    // Nếu chưa đăng nhập hoặc không có roles hợp lệ, hiển thị toàn bộ (hoặc tuỳ chỉnh: có thể để [] nếu muốn ẩn hết)
+    menuItems = allMenuItems;
+  }
+
   const pathname = usePathname();
-  const { user, logout } = useAuth();
   const isActive = (path: string) => pathname?.startsWith(path);
 
   return (

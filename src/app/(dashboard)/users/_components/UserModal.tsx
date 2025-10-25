@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { Modal, Form, Input, Select, Button } from 'antd';
-import { User, UserFormData } from '@/types/user';
+import { useEffect } from "react";
+import { Modal, Form, Input, Select, Button } from "antd";
+import { User, UserFormData, UserRole } from "@/types/user";
+import { Room } from "@/types/room";
 
 interface UserModalProps {
   open: boolean;
@@ -11,7 +12,7 @@ interface UserModalProps {
   onCancel: () => void;
   onSubmit: (values: UserFormData) => void;
   roles: { value: string; label: string }[];
-  rooms: string[];
+  rooms: Room[];
 }
 
 export const UserModal = ({
@@ -27,6 +28,17 @@ export const UserModal = ({
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
+      // Đảm bảo roles là value enum UserRole
+      if (Array.isArray(values.roles)) {
+        values.roles = values.roles.map((role) => {
+          // Nếu là key enum thì chuyển sang label tiếng Việt
+          if (role === "Lecture") return UserRole.Lecture;
+          if (role === "Head_of_deparment") return UserRole.Head_of_deparment;
+          // Nếu đã là label thì giữ nguyên
+          if ((Object.values(UserRole) as string[]).includes(role)) return role;
+          return role;
+        });
+      }
       onSubmit(values);
     });
   };
@@ -34,14 +46,16 @@ export const UserModal = ({
   // Reset form when modal opens/closes
   useEffect(() => {
     if (open) {
-      form.setFieldsValue(editingUser || {
-        staff_id: '',
-        name: '',
-        email: '',
-        password: '',
-        roles: [],
-        rooms_manage: [],
-      });
+      form.setFieldsValue(
+        editingUser || {
+          staff_id: "",
+          name: "",
+          email: "",
+          password: "",
+          roles: [],
+          rooms_manage: [],
+        }
+      );
     } else {
       form.resetFields();
     }
@@ -50,7 +64,7 @@ export const UserModal = ({
   return (
     <Modal
       open={open}
-      title={editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+      title={editingUser ? "Chỉnh sửa người dùng" : "Thêm người dùng mới"}
       onCancel={onCancel}
       footer={[
         <Button key="cancel" onClick={onCancel}>
@@ -62,19 +76,15 @@ export const UserModal = ({
           loading={loading}
           onClick={handleSubmit}
         >
-          {editingUser ? 'Cập nhật' : 'Tạo mới'}
+          {editingUser ? "Cập nhật" : "Tạo mới"}
         </Button>,
       ]}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={editingUser}
-      >
+      <Form form={form} layout="vertical" initialValues={editingUser}>
         <Form.Item
           name="staff_id"
           label="Mã nhân viên"
-          rules={[{ required: true, message: 'Vui lòng nhập mã nhân viên!' }]}
+          rules={[{ required: true, message: "Vui lòng nhập mã nhân viên!" }]}
         >
           <Input />
         </Form.Item>
@@ -82,7 +92,7 @@ export const UserModal = ({
         <Form.Item
           name="name"
           label="Tên"
-          rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}
+          rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
         >
           <Input />
         </Form.Item>
@@ -91,8 +101,8 @@ export const UserModal = ({
           name="email"
           label="Email"
           rules={[
-            { required: true, message: 'Vui lòng nhập email!' },
-            { type: 'email', message: 'Vui lòng nhập email hợp lệ!' },
+            { required: true, message: "Vui lòng nhập email!" },
+            { type: "email", message: "Vui lòng nhập email hợp lệ!" },
           ]}
         >
           <Input />
@@ -102,7 +112,7 @@ export const UserModal = ({
           <Form.Item
             name="password"
             label="Mật khẩu"
-            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
           >
             <Input.Password />
           </Form.Item>
@@ -111,23 +121,29 @@ export const UserModal = ({
         <Form.Item
           name="roles"
           label="Vai trò"
-          rules={[{ required: true, message: 'Vui lòng chọn ít nhất một vai trò!' }]}
+          rules={[
+            { required: true, message: "Vui lòng chọn ít nhất một vai trò!" },
+          ]}
         >
           <Select
             mode="multiple"
             placeholder="Chọn vai trò"
-            options={roles}
+            options={Object.entries(UserRole).map(([key, label]) => ({
+              value: key,
+              label,
+            }))}
+            optionLabelProp="label"
           />
         </Form.Item>
 
-        <Form.Item
-          name="rooms_manage"
-          label="Quản lý phòng"
-        >
+        <Form.Item name="rooms_manage" label="Quản lý phòng">
           <Select
             mode="multiple"
             placeholder="Chọn phòng"
-            options={rooms.map((room) => ({ label: room, value: room }))}
+            options={rooms.map((room) => ({
+              label: room.name,
+              value: room._id,
+            }))}
           />
         </Form.Item>
       </Form>

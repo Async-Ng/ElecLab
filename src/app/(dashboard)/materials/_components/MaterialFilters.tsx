@@ -54,14 +54,6 @@ export default function MaterialFilters({ filters, setFilters }: Props) {
         ))}
       </Select>
 
-      <div className="ml-auto">
-        <Button
-          type="default"
-          onClick={() => setFilters({ q: "", category: "", status: "" })}
-        >
-          Đặt lại
-        </Button>
-      </div>
     </>
   );
 }

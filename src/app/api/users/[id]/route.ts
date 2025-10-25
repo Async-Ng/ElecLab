@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
-import { User } from '@/models/User';
+import { NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import { User } from "@/models/User";
 
 interface Params {
   id: string;
@@ -9,20 +9,20 @@ interface Params {
 export async function GET(request: Request, { params }: { params: Params }) {
   try {
     await connectToDatabase();
-    const user = await User.findById(params.id).select('-password');
-    
+    const user = await User.findById(params.id).select("-password");
+
     if (!user) {
       return NextResponse.json(
-        { message: 'Không tìm thấy người dùng' },
+        { message: "Không tìm thấy người dùng" },
         { status: 404 }
       );
     }
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error('Failed to fetch user:', error);
+    console.error("Failed to fetch user:", error);
     return NextResponse.json(
-      { message: 'Lỗi khi lấy thông tin người dùng' },
+      { message: "Lỗi khi lấy thông tin người dùng" },
       { status: 500 }
     );
   }
@@ -41,7 +41,7 @@ export async function PUT(request: Request, { params }: { params: Params }) {
 
     if (existingUser) {
       return NextResponse.json(
-        { message: 'Mã nhân viên hoặc email đã tồn tại' },
+        { message: "Mã nhân viên hoặc email đã tồn tại" },
         { status: 400 }
       );
     }
@@ -51,24 +51,61 @@ export async function PUT(request: Request, { params }: { params: Params }) {
       delete body.password;
     }
 
-    const user = await User.findByIdAndUpdate(
-      params.id,
-      { $set: body },
-      { new: true }
-    ).select('-password');
-
-    if (!user) {
+    // Lấy user cũ để so sánh rooms_manage
+    const oldUser = await User.findById(params.id);
+    if (!oldUser) {
       return NextResponse.json(
-        { message: 'Không tìm thấy người dùng' },
+        { message: "Không tìm thấy người dùng" },
         { status: 404 }
       );
     }
 
+    const user = await User.findByIdAndUpdate(
+      params.id,
+      { $set: body },
+      { new: true }
+    ).select("-password");
+
+    // Đồng bộ users_manage cho phòng
+    const mongoose = require("mongoose");
+    const RoomModel = mongoose.models.Room || mongoose.model("Room");
+    const userId = params.id;
+    const oldRoomIds: string[] = (oldUser.rooms_manage || []).map((r: any) =>
+      r.toString()
+    );
+    const newRoomIds: string[] = (body.rooms_manage || []).map((r: any) =>
+      r.toString()
+    );
+
+    // Phòng bị loại khỏi user
+    const removedRoomIds: string[] = oldRoomIds.filter(
+      (id: string) => !newRoomIds.includes(id)
+    );
+    // Phòng mới được thêm vào user
+    const addedRoomIds: string[] = newRoomIds.filter(
+      (id: string) => !oldRoomIds.includes(id)
+    );
+
+    // Xóa user khỏi users_manage của phòng bị loại
+    await Promise.all(
+      removedRoomIds.map((roomId: string) =>
+        RoomModel.findByIdAndUpdate(roomId, { $pull: { users_manage: userId } })
+      )
+    );
+    // Thêm user vào users_manage của phòng mới
+    await Promise.all(
+      addedRoomIds.map((roomId: string) =>
+        RoomModel.findByIdAndUpdate(roomId, {
+          $addToSet: { users_manage: userId },
+        })
+      )
+    );
+
     return NextResponse.json(user);
   } catch (error) {
-    console.error('Failed to update user:', error);
+    console.error("Failed to update user:", error);
     return NextResponse.json(
-      { message: 'Lỗi khi cập nhật người dùng' },
+      { message: "Lỗi khi cập nhật người dùng" },
       { status: 500 }
     );
   }
@@ -81,16 +118,16 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
 
     if (!user) {
       return NextResponse.json(
-        { message: 'Không tìm thấy người dùng' },
+        { message: "Không tìm thấy người dùng" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ message: 'Xóa người dùng thành công' });
+    return NextResponse.json({ message: "Xóa người dùng thành công" });
   } catch (error) {
-    console.error('Failed to delete user:', error);
+    console.error("Failed to delete user:", error);
     return NextResponse.json(
-      { message: 'Lỗi khi xóa người dùng' },
+      { message: "Lỗi khi xóa người dùng" },
       { status: 500 }
     );
   }

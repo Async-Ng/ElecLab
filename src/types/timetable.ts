@@ -1,37 +1,37 @@
-// types/timetable.types.ts
-export interface Session {
-  sessionNumber: number;
-  startTime: string;
-  endTime: string;
+import { Room } from "./room";
+import { User } from "./user";
+// Học kỳ
+export enum Semester {
+  First = 1,
+  Second = 2,
+  Third = 3,
 }
 
-export const SESSIONS: Session[] = [
-  { sessionNumber: 1, startTime: '07:00', endTime: '09:30' },
-  { sessionNumber: 2, startTime: '09:45', endTime: '11:45' },
-  { sessionNumber: 3, startTime: '12:30', endTime: '14:45' },
-  { sessionNumber: 4, startTime: '15:00', endTime: '17:15' },
-  
-];
-
-export type NoteStatus = 'normal' | 'incident';
-export type ViewMode = 'week' | 'month';
-export type Semester = '1' | '2' | '3';
-
-export interface TimetableEntry {
-  _id?: string;
-  academicYear: string;
-  semester: Semester;
-  date: Date;
-  sessions: number[];
-  subject: string;
-  room: string;
-  class: string;
-  instructor: string;
-  noteStatus: NoteStatus;
-  incidentNote?: string;
-  incidentImages?: string[];
-  createdAt?: Date;
-  updatedAt?: Date;
+// Ca học
+export enum Period {
+  Period1 = 1,
+  Period2 = 2,
+  Period3 = 3,
+  Period4 = 4,
 }
 
-export interface TimetableFormData extends Omit<TimetableEntry, '_id' | 'createdAt' | 'updatedAt'> {}
+// Thời gian học
+export enum StudyTime {
+  Period1 = "07:00-09:15",
+  Period2 = "09:30-11:45",
+  Period3 = "12:30-14:45",
+  Period4 = "15:00-17:15",
+}
+// ...existing code...
+export interface Timetable {
+  _id?: string; // ID của lịch dạy
+  schoolYear: string; // Năm học, ví dụ: "2025-2026"
+  semester: Semester; // Học kỳ
+  date: string; // Ngày, định dạng ISO: "2025-10-24"
+  period: Period; // Ca học
+  time: StudyTime; // Giờ học
+  subject: string; // Môn học
+  room: string | Room; // Tham chiếu đến roomId hoặc Room
+  className: string; // Lớp
+  lecturer: string | User; // Tham chiếu đến userId hoặc User
+}

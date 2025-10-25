@@ -118,15 +118,19 @@ export default function MaterialsPage() {
           </p>
         </div>
 
-        <div className=" flex gap-3 justify-end">
-          <ImportButtons onImported={fetchMaterials} setLoading={setLoading} />
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            Thêm
-          </Button>
-        </div>
-        <div className="mb-6 p-4 rounded-lg shadow">
+        <div className="flex justify-between mb-6 p-4 rounded-lg shadow">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
             <MaterialFilters filters={filters} setFilters={setFilters} />
+          </div>
+          <div className=" ml-auto flex gap-2">
+            <ImportButtons
+              onImported={fetchMaterials}
+              setLoading={setLoading}
+            />
+
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              Thêm
+            </Button>
           </div>
         </div>
       </div>

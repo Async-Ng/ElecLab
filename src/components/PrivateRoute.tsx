@@ -9,33 +9,61 @@ export default function PrivateRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
+  // Array các route cho phép giảng viên truy cập
+  const allowedRoutes = user
+    ? [`/timetables/${user._id}`, "/teaching-logs"]
+    : ["/teaching-logs"];
+
   useEffect(() => {
     if (loading) return;
-    // Only redirect to /login if not authenticated and not already on /login
+
     if (!isAuthenticated && pathname !== "/login") {
       router.replace("/login");
+      return;
     }
-    // If authenticated and on /login, redirect to /timetable
+
     if (isAuthenticated && pathname === "/login") {
-      router.replace("/timetable");
+      router.replace(user ? `/timetables/${user._id}` : "/login");
+      return;
     }
-  }, [isAuthenticated, router, pathname, loading]);
+
+    if (isAuthenticated && user) {
+      const isHead = user.roles.includes("Trưởng bộ môn");
+      const isLecture = user.roles.includes("Giảng viên");
+      if (!isHead && isLecture) {
+        if (!allowedRoutes.some((route) => pathname.startsWith(route))) {
+          router.replace(`/timetables/${user._id}`);
+        }
+      }
+    }
+  }, [isAuthenticated, router, pathname, loading, user]);
 
   if (loading) {
-    // You can return a spinner here if you want
     return null;
   }
-  // Always render children on /login page
+
   if (pathname === "/login") {
     return children;
   }
-  // If not authenticated, block access to protected routes
+
   if (!isAuthenticated) {
     return null;
+  }
+
+  if (user) {
+    const isHead = user.roles.includes("Trưởng bộ môn");
+    const isLecture = user.roles.includes("Giảng viên");
+    if (
+      !isHead &&
+      isLecture &&
+      !allowedRoutes.some((route) => pathname.startsWith(route))
+    ) {
+      return null;
+    }
   }
   return children;
 }

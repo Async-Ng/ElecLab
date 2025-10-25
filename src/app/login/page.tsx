@@ -63,8 +63,8 @@ export default function LoginPage() {
       // Show success message
       message.success("Đăng nhập thành công!");
 
-      // Redirect to timetable page
-      router.push("/timetable");
+      // Redirect to lecturer's timetable page
+      router.push(`/timetables/${data.user._id}`);
     } catch (error) {
       console.error("Login error:", error);
       message.error("Đăng nhập thất bại, vui lòng thử lại");
@@ -76,7 +76,6 @@ export default function LoginPage() {
   return (
     // Toàn bộ màn hình, màu nền không gradient, chỉ để cho ảnh nền quyết định
     <div className="w-screen h-screen flex items-center justify-center p-0 overflow-hidden">
-      {/* Background Image full screen */}
       <Image
         src="/images/background.jpg" // Đổi thành ảnh nền bạn muốn
         alt="Login Background"
@@ -84,52 +83,35 @@ export default function LoginPage() {
         className="object-cover"
         priority
       />
-      {/* Overlay tổng thể, có thể làm mờ hơn nếu cần */}
       <div className="absolute inset-0 bg-black/40 z-0" />{" "}
-      {/* Tối hơn một chút */}
-      {/* Container Chính - Giờ đây là một khối hình chữ nhật lớn */}
-      {/* Chúng ta sẽ dùng flex để chia làm 2 cột trong đây */}
       <div className="relative z-10 w-[90%] h-[90%] flex bg-transparent shadow-lg rounded-xl overflow-hidden">
         <Row className="w-full h-full">
-          {/* Cột 1: Hình ảnh/Minh họa & Văn bản (chiếm 60% chiều rộng) */}
           <Col
             xs={0}
             md={14}
             className="relative flex flex-col justify-center text-left p-12 "
           >
-            {/* Lớp overlay riêng cho phần ảnh để văn bản dễ đọc hơn */}
-            {/* Đã được đẩy ra ngoài cho toàn màn hình rồi */}
-
-            {/* Content trên nền ảnh */}
             <div className="relative z-10 w-full">
-              {/* Tiêu đề chính, đậm và lớn */}
               <Title
-                level={2}
-                style={{ color: "#FFFFFF" }} // Dùng mã Hex
-                className="!mt-0 !mb-2"
+                level={1}
+                style={{ color: "#FFFFFF", fontSize: "4.2rem" }}
+                className="!mt-0 !mb-2 text-5xl"
               >
                 Khoa kỹ thuật Điện - Điện tử
               </Title>
 
               <Text
-                style={{ color: "white" }} // Hoặc dùng tên màu tiếng Anh
+                style={{
+                  color: "#fff",
+                  fontSize: "2.2rem",
+                }}
                 className="block"
               >
                 Hệ thống quản lý phòng thực hành - ElecLab
               </Text>
-
-              {/* Thông tin tài khoản mẫu (nếu cần hiển thị) */}
-              {/* Tôi sẽ bỏ nó đi để giao diện trông sạch hơn giống ảnh */}
-              {/* <Text className="text-white mt-8 block text-lg custom-text-shadow">
-                TK: ndloi@hcmct.edu.vn
-                <br />
-                MK: 123456
-              </Text> */}
             </div>
           </Col>
 
-          {/* Cột 2: Form Đăng nhập (chiếm 40% chiều rộng) */}
-          {/* Để tạo hình dạng cong, chúng ta sẽ dùng border-radius và một padding/margin ảo */}
           <Col
             xs={24}
             md={10}
@@ -141,12 +123,10 @@ export default function LoginPage() {
               paddingLeft: "180px", // Bù lại khoảng trống đã mất
             }}
           >
-            {/* Tạo một div để giới hạn form lại ở trung tâm cột, tránh bị quá rộng */}
             <div className="w-full max-w-md">
               <div className="flex flex-col items-center mb-10">
                 <div className="relative w-32 h-32 mb-4">
                   {" "}
-                  {/* Kích thước logo lớn hơn */}
                   <Image
                     src="/images/logo.png" // Thay bằng logo của bạn
                     alt="Logo"
@@ -163,7 +143,6 @@ export default function LoginPage() {
                 </Text>
               </div>
 
-              {/* Form Ant Design */}
               <Form
                 name="login"
                 initialValues={{ remember: true }}
@@ -198,7 +177,6 @@ export default function LoginPage() {
 
                 <Form.Item className="!mb-8">
                   {" "}
-                  {/* Tăng khoảng cách dưới nút */}
                   <Button
                     type="primary"
                     htmlType="submit"
@@ -214,7 +192,6 @@ export default function LoginPage() {
                   </Button>
                 </Form.Item>
 
-                {/* Divider hoặc "hoặc" */}
                 <Divider>Hoặc</Divider>
 
                 <Form.Item className="!mb-6">
@@ -228,7 +205,6 @@ export default function LoginPage() {
 
                 <div className="flex justify-between items-center mt-6 text-sm">
                   {" "}
-                  {/* Căn chỉnh lại phần dưới */}
                   <Typography.Link className="text-gray-600 hover:text-indigo-500 transition">
                     Quên mật khẩu?
                   </Typography.Link>
