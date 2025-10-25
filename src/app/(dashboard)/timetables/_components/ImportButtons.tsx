@@ -11,7 +11,7 @@ export default function ImportButtons() {
   const [users, setUsers] = useState<User[]>([]);
   useEffect(() => {
     // Lấy danh sách phòng
-  fetch("/api/rooms?userRole=Admin")
+    fetch("/api/rooms?userRole=Admin")
       .then((res) => res.json())
       .then((data) =>
         setRooms(

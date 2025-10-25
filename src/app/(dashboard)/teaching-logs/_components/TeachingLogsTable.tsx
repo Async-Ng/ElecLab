@@ -129,9 +129,7 @@ const TeachingLogsTable: React.FC = () => {
       <TeachingLogsFilter logs={logs} filters={filters} onChange={setFilters} />
       <ExportLogsButton logs={filteredLogs} />
       <Table
-        columns={getColumns(
-          !!user?.roles?.includes(UserRole.Admin)
-        )}
+        columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
         dataSource={filteredLogs}
         rowKey={(record) => record._id}
         loading={loading}

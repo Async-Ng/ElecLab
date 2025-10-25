@@ -33,8 +33,8 @@ export default function PrivateRoute({
     }
 
     if (isAuthenticated && user) {
-  const isAdmin = user.roles.includes(UserRole.Admin);
-  const isUser = user.roles.includes(UserRole.User);
+      const isAdmin = user.roles.includes(UserRole.Admin);
+      const isUser = user.roles.includes(UserRole.User);
       if (!isAdmin && isUser) {
         if (!allowedRoutes.some((route) => pathname.startsWith(route))) {
           router.replace(`/timetables/${user._id}`);
@@ -56,8 +56,8 @@ export default function PrivateRoute({
   }
 
   if (user) {
-  const isAdmin = user.roles.includes(UserRole.Admin);
-  const isUser = user.roles.includes(UserRole.User);
+    const isAdmin = user.roles.includes(UserRole.Admin);
+    const isUser = user.roles.includes(UserRole.User);
     if (
       !isAdmin &&
       isUser &&

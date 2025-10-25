@@ -83,7 +83,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
     setTableData(data);
   }, [data]);
   React.useEffect(() => {
-  fetch("/api/rooms?userRole=Admin")
+    fetch("/api/rooms?userRole=Admin")
       .then((res) => res.json())
       .then((d) =>
         setRooms(

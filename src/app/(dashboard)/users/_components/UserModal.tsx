@@ -34,7 +34,8 @@ export const UserModal = ({
           // Nếu role là key của enum thì chuyển sang giá trị enum
           if (role in UserRole) return UserRole[role as keyof typeof UserRole];
           // Nếu đã là giá trị enum thì giữ nguyên
-          if (Object.values(UserRole).includes(role as UserRole)) return role as UserRole;
+          if (Object.values(UserRole).includes(role as UserRole))
+            return role as UserRole;
           return role as UserRole;
         });
       }

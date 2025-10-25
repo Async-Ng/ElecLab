@@ -39,7 +39,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-          roles: [UserRole.Admin, UserRole.User],
+      roles: [UserRole.Admin, UserRole.User],
     },
     {
       href: "/timetables",
@@ -60,7 +60,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-          roles: [UserRole.Admin],
+      roles: [UserRole.Admin],
     },
 
     {
@@ -83,7 +83,7 @@ export default function Sidebar({ onClose }: Props) {
           <circle cx="12" cy="14" r="3" />
         </svg>
       ),
-          roles: [UserRole.User],
+      roles: [UserRole.User],
     },
 
     {
@@ -104,7 +104,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-          roles: [UserRole.Admin],
+      roles: [UserRole.Admin],
     },
     {
       href: "/users",
@@ -124,7 +124,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-          roles: [UserRole.Admin],
+      roles: [UserRole.Admin],
     },
     {
       href: "/rooms",
@@ -144,7 +144,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-          roles: [UserRole.Admin],
+      roles: [UserRole.Admin],
     },
   ];
 
@@ -205,7 +205,9 @@ export default function Sidebar({ onClose }: Props) {
           </p>
           <p className="text-xs text-slate-400">
             {user?.roles
-              .map((role) => role === UserRole.Admin ? "Quản lý" : "Người dùng")
+              .map((role) =>
+                role === UserRole.Admin ? "Quản lý" : "Người dùng"
+              )
               .join(", ")}
           </p>
         </div>

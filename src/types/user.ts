@@ -1,9 +1,7 @@
-
 export enum UserRole {
   User = "Người dùng",
   Admin = "Quản lý",
 }
-
 
 export interface User {
   _id?: string;

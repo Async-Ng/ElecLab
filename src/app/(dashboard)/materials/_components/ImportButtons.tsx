@@ -21,7 +21,7 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
 
   useEffect(() => {
     // Lấy danh sách phòng để map mã phòng sang _id
-  fetch("/api/rooms?userRole=Admin")
+    fetch("/api/rooms?userRole=Admin")
       .then((res) => res.json())
       .then((data) => {
         setRooms(data.rooms || []);
