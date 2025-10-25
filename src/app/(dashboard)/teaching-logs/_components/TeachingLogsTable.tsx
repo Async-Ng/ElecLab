@@ -6,59 +6,86 @@ import { useAuth } from "../../../../hooks/useAuth";
 import { UserRole } from "../../../../types/user";
 import ExportLogsButton from "./ExportLogsButton";
 import TeachingLogModal from "./TeachingLogModal";
+import TeachingLogsFilter from "./TeachingLogsFilter";
 
-const columns = [
-  {
-    title: "Ngày",
-    dataIndex: ["timetable", "date"],
-    key: "date",
-    render: (value: string) => value,
-  },
-  {
-    title: "Ca học",
-    dataIndex: ["timetable", "period"],
-    key: "period",
-    render: (value: number) => `Ca ${value}`,
-  },
-  {
-    title: "Phòng học",
-    dataIndex: ["timetable", "room"],
-    key: "room",
-    render: (room: any) => room?.name || room,
-  },
-  {
-    title: "Ghi chú",
-    dataIndex: "note",
-    key: "note",
-  },
-  {
-    title: "Trạng thái",
-    dataIndex: "status",
-    key: "status",
-    render: (status: TeachingLogStatus) => (
-      <Tag color={status === TeachingLogStatus.NORMAL ? "green" : "red"}>
-        {status}
-      </Tag>
-    ),
-  },
-  {
-    title: "Ảnh",
-    dataIndex: "imageUrl",
-    key: "imageUrl",
-    render: (images: string[] = []) => (
-      <span>
-        {images.map((url, idx) => (
-          <img
-            key={idx}
-            src={url}
-            alt={`log-img-${idx}`}
-            style={{ width: 60, marginRight: 8, borderRadius: 4 }}
-          />
-        ))}
-      </span>
-    ),
-  },
-];
+function getColumns(isHead: boolean) {
+  const base = [
+    {
+      title: "Ngày",
+      dataIndex: ["timetable", "date"],
+      key: "date",
+      render: (value: string) => value,
+    },
+    {
+      title: "Ca học",
+      dataIndex: ["timetable", "period"],
+      key: "period",
+      render: (value: number) => `Ca ${value}`,
+    },
+    {
+      title: "Phòng học",
+      dataIndex: ["timetable", "room"],
+      key: "room",
+      render: (room: any) => room?.name || room,
+    },
+    {
+      title: "Học kỳ",
+      dataIndex: ["timetable", "semester"],
+      key: "semester",
+      render: (value: string | number) => value,
+    },
+    {
+      title: "Năm học",
+      dataIndex: ["timetable", "schoolYear"],
+      key: "schoolYear",
+      render: (value: string | number) => value,
+    },
+  ];
+  if (isHead) {
+    base.push({
+      title: "Giảng viên",
+      dataIndex: ["timetable", "lecturer"],
+      key: "lecturer",
+      render: (lecturer: any) => lecturer?.name || lecturer,
+    });
+  }
+  base.push(
+    {
+      title: "Ghi chú",
+      dataIndex: ["note"],
+      key: "note",
+      render: (value: string) => value,
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: ["status"],
+      key: "status",
+      render: (status: TeachingLogStatus) => (
+        <Tag color={status === TeachingLogStatus.NORMAL ? "green" : "red"}>
+          {status}
+        </Tag>
+      ),
+    },
+    {
+      title: "Ảnh",
+      dataIndex: ["imageUrl"],
+      key: "imageUrl",
+      render: (images: string[] = []) => (
+        <span>
+          {images.map((url, idx) => (
+            <img
+              key={idx}
+              src={url}
+              alt={`log-img-${idx}`}
+              style={{ width: 60, marginRight: 8, borderRadius: 4 }}
+            />
+          ))}
+        </span>
+      ),
+    }
+  );
+  return base;
+}
 
 const TeachingLogsTable: React.FC = () => {
   const { user } = useAuth();
@@ -66,6 +93,12 @@ const TeachingLogsTable: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [editLog, setEditLog] = useState<TeachingLog | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
+  const [filters, setFilters] = useState<{
+    semester?: string;
+    schoolYear?: string;
+    room?: string;
+    lecturer?: string;
+  }>({});
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -89,12 +122,30 @@ const TeachingLogsTable: React.FC = () => {
     fetchLogs();
   }, [user]);
 
+  // Lọc logs theo các trường filter
+  const filteredLogs = logs.filter((log) => {
+    const t = (log.timetable as any) || {};
+    if (filters.semester && t.semester !== filters.semester) return false;
+    if (filters.schoolYear && t.schoolYear !== filters.schoolYear) return false;
+    if (filters.room && (t.room?.name || t.room) !== filters.room) return false;
+    if (filters.lecturer) {
+      const lec = t.lecturer;
+      if (typeof lec === "object" && lec?._id !== filters.lecturer)
+        return false;
+      if (typeof lec === "string" && lec !== filters.lecturer) return false;
+    }
+    return true;
+  });
+
   return (
     <>
-      <ExportLogsButton logs={logs} />
+      <TeachingLogsFilter logs={logs} filters={filters} onChange={setFilters} />
+      <ExportLogsButton logs={filteredLogs} />
       <Table
-        columns={columns}
-        dataSource={logs}
+        columns={getColumns(
+          !!user?.roles?.includes(UserRole.Head_of_deparment)
+        )}
+        dataSource={filteredLogs}
         rowKey={(record) => record._id}
         loading={loading}
         pagination={{ pageSize: 10 }}
