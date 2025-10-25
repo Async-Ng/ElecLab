@@ -48,8 +48,8 @@ export const UsersTable = ({
       render: (roles: string[]) => (
         <>
           {roles.map((role) => (
-            <Tag color="blue" key={role}>
-              {UserRole[role as keyof typeof UserRole] || role}
+            <Tag color={role === UserRole.Admin ? "red" : "blue"} key={role}>
+              {role === UserRole.Admin ? "Quản lý" : "Người dùng"}
             </Tag>
           ))}
         </>

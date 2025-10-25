@@ -38,7 +38,7 @@ export default function MaterialModal(props: Props) {
 
   useEffect(() => {
     // Lấy danh sách phòng với quyền Head_of_deparment
-    fetch("/api/rooms?userRole=Head_of_deparment")
+  fetch("/api/rooms?userRole=Admin")
       .then((res) => res.json())
       .then((data) => {
         setRooms(data.rooms || []);

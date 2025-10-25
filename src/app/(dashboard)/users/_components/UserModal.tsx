@@ -31,12 +31,11 @@ export const UserModal = ({
       // Đảm bảo roles là value enum UserRole
       if (Array.isArray(values.roles)) {
         values.roles = values.roles.map((role) => {
-          // Nếu là key enum thì chuyển sang label tiếng Việt
-          if (role === "Lecture") return UserRole.Lecture;
-          if (role === "Head_of_deparment") return UserRole.Head_of_deparment;
-          // Nếu đã là label thì giữ nguyên
-          if ((Object.values(UserRole) as string[]).includes(role)) return role;
-          return role;
+          // Nếu role là key của enum thì chuyển sang giá trị enum
+          if (role in UserRole) return UserRole[role as keyof typeof UserRole];
+          // Nếu đã là giá trị enum thì giữ nguyên
+          if (Object.values(UserRole).includes(role as UserRole)) return role as UserRole;
+          return role as UserRole;
         });
       }
       onSubmit(values);

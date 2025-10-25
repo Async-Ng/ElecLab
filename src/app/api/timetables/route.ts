@@ -49,11 +49,11 @@ export async function GET(request: Request) {
   const userId = searchParams.get("userId");
   const userRole = searchParams.get("userRole");
   let query = {};
-  if (userRole === "Head_of_deparment") {
-    // Trưởng khoa xem toàn bộ
+  if (userRole === "Admin") {
+    // Quản lý xem toàn bộ
     query = {};
   } else if (userId) {
-    // Giảng viên chỉ xem thời khóa biểu của mình
+    // Người dùng chỉ xem thời khóa biểu của mình
     query = { lecturer: userId };
   }
   const timetables = await Timetable.find(query)

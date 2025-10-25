@@ -87,9 +87,9 @@ const TeachingLogsTable: React.FC = () => {
     const fetchLogs = async () => {
       setLoading(true);
       try {
-        const roleParam = user?.roles?.includes(UserRole.Head_of_deparment)
-          ? "Head_of_deparment"
-          : "Lecture";
+        const roleParam = user?.roles?.includes(UserRole.Admin)
+          ? "Admin"
+          : "User";
         const userId = user?._id;
         const q = new URLSearchParams();
         if (userId) q.set("userId", userId);
@@ -130,7 +130,7 @@ const TeachingLogsTable: React.FC = () => {
       <ExportLogsButton logs={filteredLogs} />
       <Table
         columns={getColumns(
-          !!user?.roles?.includes(UserRole.Head_of_deparment)
+          !!user?.roles?.includes(UserRole.Admin)
         )}
         dataSource={filteredLogs}
         rowKey={(record) => record._id}

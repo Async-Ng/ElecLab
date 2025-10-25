@@ -22,17 +22,25 @@ const userSchema = new mongoose.Schema({
   roles: {
     type: [String],
     required: true,
-    enum: ['Lecture', 'Head_of_deparment'],
+    enum: ['User', 'Admin'],
     validate: {
       validator: function(roles: string[]) {
-        return roles.every(role => ['Lecture', 'Head_of_deparment'].includes(role));
+        return roles.every(role => ['User', 'Admin'].includes(role));
       },
-      message: 'Vai trò không hợp lệ. Vai trò phải là "Lecture" hoặc "Head_of_deparment"'
+      message: 'Vai trò không hợp lệ. Vai trò phải là "User" hoặc "Admin"'
     }
   },
   rooms_manage: {
     type: [String],
     default: [],
+  },
+  avatar: {
+    type: Buffer,
+    default: null,
+  },
+  position: {
+    type: String,
+    default: '',
   },
 }, {
   timestamps: true,

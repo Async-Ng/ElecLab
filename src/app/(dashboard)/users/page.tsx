@@ -8,8 +8,8 @@ import { UserModal } from "./_components/UserModal";
 import { User, UserFormData, UserRole } from "@/types/user";
 
 const availableRoles = [
-  { value: UserRole.Lecture, label: UserRole.Lecture },
-  { value: UserRole.Head_of_deparment, label: UserRole.Head_of_deparment },
+  { value: UserRole.User, label: "Người dùng" },
+  { value: UserRole.Admin, label: "Quản lý" },
 ];
 
 import { Room } from "@/types/room";

@@ -39,7 +39,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Head_of_deparment, UserRole.Lecture],
+          roles: [UserRole.Admin, UserRole.User],
     },
     {
       href: "/timetables",
@@ -60,7 +60,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Head_of_deparment],
+          roles: [UserRole.Admin],
     },
 
     {
@@ -83,7 +83,7 @@ export default function Sidebar({ onClose }: Props) {
           <circle cx="12" cy="14" r="3" />
         </svg>
       ),
-      roles: [UserRole.Lecture],
+          roles: [UserRole.User],
     },
 
     {
@@ -104,7 +104,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Head_of_deparment],
+          roles: [UserRole.Admin],
     },
     {
       href: "/users",
@@ -124,7 +124,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Head_of_deparment],
+          roles: [UserRole.Admin],
     },
     {
       href: "/rooms",
@@ -144,20 +144,20 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Head_of_deparment],
+          roles: [UserRole.Admin],
     },
   ];
 
   // Lọc menu theo role (sau khi lấy user)
 
   let menuItems: typeof allMenuItems = [];
-  if (user?.roles?.includes(UserRole.Head_of_deparment)) {
-    // Trưởng bộ môn: thấy toàn bộ
+  if (user?.roles?.includes(UserRole.Admin)) {
+    // Quản lý: thấy toàn bộ
     menuItems = allMenuItems;
-  } else if (user?.roles?.includes(UserRole.Lecture)) {
-    // Giảng viên: chỉ thấy các mục cho phép
+  } else if (user?.roles?.includes(UserRole.User)) {
+    // Người dùng: chỉ thấy các mục cho phép
     menuItems = allMenuItems.filter((item) =>
-      item.roles.includes(UserRole.Lecture)
+      item.roles.includes(UserRole.User)
     );
   } else {
     // Nếu chưa đăng nhập hoặc không có roles hợp lệ, hiển thị toàn bộ (hoặc tuỳ chỉnh: có thể để [] nếu muốn ẩn hết)
@@ -205,7 +205,7 @@ export default function Sidebar({ onClose }: Props) {
           </p>
           <p className="text-xs text-slate-400">
             {user?.roles
-              .map((role) => UserRole[role as keyof typeof UserRole] || role)
+              .map((role) => role === UserRole.Admin ? "Quản lý" : "Người dùng")
               .join(", ")}
           </p>
         </div>

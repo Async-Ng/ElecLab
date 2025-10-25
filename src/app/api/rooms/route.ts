@@ -11,11 +11,11 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     let query = {};
-    if (userRole === "Head_of_deparment") {
-      // Trưởng khoa xem tất cả phòng
+    if (userRole === "Admin") {
+      // Quản lý xem tất cả phòng
       query = {};
     } else if (userId) {
-      // Người dùng thường chỉ xem phòng mình quản lý
+      // Người dùng chỉ xem phòng mình quản lý
       query = { users_manage: userId };
     }
     // Nếu không truyền userId, trả về tất cả phòng
@@ -36,9 +36,9 @@ export async function POST(request: Request) {
     const userId = searchParams.get("userId");
     const userRole = searchParams.get("userRole");
 
-    if (userRole !== "Head_of_deparment") {
+    if (userRole !== "Admin") {
       return NextResponse.json(
-        { error: "Unauthorized: Only Head of Department can create rooms" },
+        { error: "Unauthorized: Only Admin can create rooms" },
         { status: 403 }
       );
     }
