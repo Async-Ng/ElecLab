@@ -5,7 +5,7 @@ const TimetableSchema = new mongoose.Schema({
   schoolYear: { type: String, required: true },
   semester: { type: Number, required: true, enum: [1, 2, 3] },
   date: { type: String, required: true },
-  period: { type: Number, required: true, enum: Object.values(Period) },
+  period: { type: Number, required: true, enum: [1, 2, 3, 4] },
   time: { type: String, required: true, enum: Object.values(StudyTime) },
   subject: { type: String, required: true },
   room: { type: mongoose.Schema.Types.ObjectId, ref: "Room", required: true },
