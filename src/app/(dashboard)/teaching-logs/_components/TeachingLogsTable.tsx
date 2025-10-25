@@ -1,17 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Button } from "antd";
-import dynamic from "next/dynamic";
 import { Table, Tag } from "antd";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { useAuth } from "../../../../hooks/useAuth";
 import { UserRole } from "../../../../types/user";
+import ExportLogsButton from "./ExportLogsButton";
+import TeachingLogModal from "./TeachingLogModal";
 
-const TeachingLogModal = dynamic(() => import("./TeachingLogModal"), {
-  ssr: false,
-});
-
-const columnsBase = [
+const columns = [
   {
     title: "Ngày",
     dataIndex: ["timetable", "date"],
@@ -50,7 +46,7 @@ const columnsBase = [
     dataIndex: "imageUrl",
     key: "imageUrl",
     render: (images: string[] = []) => (
-      <>
+      <span>
         {images.map((url, idx) => (
           <img
             key={idx}
@@ -59,7 +55,7 @@ const columnsBase = [
             style={{ width: 60, marginRight: 8, borderRadius: 4 }}
           />
         ))}
-      </>
+      </span>
     ),
   },
 ];
@@ -84,16 +80,7 @@ const TeachingLogsTable: React.FC = () => {
         if (roleParam) q.set("userRole", roleParam);
         const res = await fetch(`/api/teaching-logs?${q.toString()}`);
         let data: TeachingLog[] = await res.json();
-        // Gắn hàm onEdit cho từng log (dùng kiểu any cho Table)
-        setLogs(
-          data.map((log: any) => ({
-            ...log,
-            onEdit: () => {
-              setEditLog(log);
-              setModalOpen(true);
-            },
-          }))
-        );
+        setLogs(data);
       } catch (err) {
         setLogs([]);
       }
@@ -104,8 +91,9 @@ const TeachingLogsTable: React.FC = () => {
 
   return (
     <>
+      <ExportLogsButton logs={logs} />
       <Table
-        columns={columnsBase}
+        columns={columns}
         dataSource={logs}
         rowKey={(record) => record._id}
         loading={loading}
