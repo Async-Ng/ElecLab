@@ -21,6 +21,27 @@ export default function Sidebar({ onClose }: Props) {
     roles: UserRole[];
   }> = [
     {
+      href: `/timetables/${user?._id}`,
+      label: "TKB của tôi",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 2v4M8 2v4"
+          />
+        </svg>
+      ),
+      roles: [UserRole.Head_of_deparment, UserRole.Lecture],
+    },
+    {
       href: "/timetables",
       label: "Thời khóa biểu",
       icon: (
@@ -41,9 +62,10 @@ export default function Sidebar({ onClose }: Props) {
       ),
       roles: [UserRole.Head_of_deparment],
     },
+
     {
-      href: `/timetables/${user?._id}`,
-      label: "TKB của tôi",
+      href: "/teaching-logs",
+      label: "Nhật ký ca dạy",
       icon: (
         <svg
           className="w-5 h-5"
@@ -52,16 +74,18 @@ export default function Sidebar({ onClose }: Props) {
           stroke="currentColor"
           strokeWidth={2}
         >
-          <circle cx="12" cy="12" r="10" />
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M12 16v-4M12 8h.01"
+            d="M8 2v4M16 2v4"
           />
+          <circle cx="12" cy="14" r="3" />
         </svg>
       ),
       roles: [UserRole.Lecture],
     },
+
     {
       href: "/materials",
       label: "Vật tư",

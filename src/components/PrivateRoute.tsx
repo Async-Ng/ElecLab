@@ -13,6 +13,11 @@ export default function PrivateRoute({
   const router = useRouter();
   const pathname = usePathname();
 
+  // Array các route cho phép giảng viên truy cập
+  const allowedRoutes = user
+    ? [`/timetables/${user._id}`, "/teaching-logs"]
+    : ["/teaching-logs"];
+
   useEffect(() => {
     if (loading) return;
 
@@ -22,7 +27,7 @@ export default function PrivateRoute({
     }
 
     if (isAuthenticated && pathname === "/login") {
-      router.replace("/timetable");
+      router.replace(user ? `/timetables/${user._id}` : "/login");
       return;
     }
 
@@ -30,8 +35,8 @@ export default function PrivateRoute({
       const isHead = user.roles.includes("Trưởng bộ môn");
       const isLecture = user.roles.includes("Giảng viên");
       if (!isHead && isLecture) {
-        if (!pathname.startsWith("/timetable")) {
-          router.replace("/timetable");
+        if (!allowedRoutes.some((route) => pathname.startsWith(route))) {
+          router.replace(`/timetables/${user._id}`);
         }
       }
     }
@@ -52,7 +57,11 @@ export default function PrivateRoute({
   if (user) {
     const isHead = user.roles.includes("Trưởng bộ môn");
     const isLecture = user.roles.includes("Giảng viên");
-    if (!isHead && isLecture && !pathname.startsWith("/timetable")) {
+    if (
+      !isHead &&
+      isLecture &&
+      !allowedRoutes.some((route) => pathname.startsWith(route))
+    ) {
       return null;
     }
   }
