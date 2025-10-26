@@ -23,6 +23,22 @@ export const UsersTable = ({
 }: UsersTableProps) => {
   const columns: ColumnsType<User> = [
     {
+      title: "Avatar",
+      dataIndex: "avatar",
+      key: "avatar",
+      width: "10%",
+      render: (avatar: string | undefined) =>
+        avatar ? (
+          <img
+            src={avatar}
+            alt="avatar"
+            style={{ width: 32, height: 32, borderRadius: "50%" }}
+          />
+        ) : (
+          <span>-</span>
+        ),
+    },
+    {
       title: "Mã nhân viên",
       dataIndex: "staff_id",
       key: "staff_id",
@@ -40,6 +56,13 @@ export const UsersTable = ({
       dataIndex: "email",
       key: "email",
       width: "15%",
+    },
+    {
+      title: "Chức vụ",
+      dataIndex: "position",
+      key: "position",
+      width: "10%",
+      render: (position: string | undefined) => position || "-",
     },
     {
       title: "Vai trò",
