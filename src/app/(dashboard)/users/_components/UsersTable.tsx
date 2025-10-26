@@ -45,13 +45,27 @@ export const UsersTable = ({
           ? avatar
           : `data:image/png;base64,${avatar}`;
         return (
-          <img
-            src={src}
-            alt="avatar"
-            width={32}
-            height={32}
-            style={{ objectFit: "cover", borderRadius: "50%" }}
-          />
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Image
+              src={src}
+              alt="avatar"
+              fill
+              style={{
+                objectFit: "contain",
+                borderRadius: "8px",
+                background: "#f0f0f0",
+              }}
+              unoptimized
+            />
+          </div>
         );
       },
     },
