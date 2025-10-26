@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/models/User";
 
-interface Params {
-  id: string;
-}
-
-export async function GET(request: Request, { params }: { params: Params }) {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const id = context.params.id;
   try {
     await connectToDatabase();
-    const user = await User.findById(params.id).select("-password");
+    const user = await User.findById(id).select("-password");
 
     if (!user) {
       return NextResponse.json(
@@ -27,15 +27,18 @@ export async function GET(request: Request, { params }: { params: Params }) {
     );
   }
 }
-
-export async function PUT(request: Request, { params }: { params: Params }) {
+export async function PUT(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const id = context.params.id;
   try {
     const body = await request.json();
     await connectToDatabase();
 
     // Check if updated staff_id or email conflicts with other users
     const existingUser = await User.findOne({
-      _id: { $ne: params.id },
+      _id: { $ne: id },
       $or: [{ staff_id: body.staff_id }, { email: body.email }],
     });
 
@@ -52,7 +55,7 @@ export async function PUT(request: Request, { params }: { params: Params }) {
     }
 
     // Lấy user cũ để so sánh rooms_manage
-    const oldUser = await User.findById(params.id);
+    const oldUser = await User.findById(id);
     if (!oldUser) {
       return NextResponse.json(
         { message: "Không tìm thấy người dùng" },
@@ -61,7 +64,7 @@ export async function PUT(request: Request, { params }: { params: Params }) {
     }
 
     const user = await User.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: body },
       { new: true }
     ).select("-password");
@@ -69,7 +72,7 @@ export async function PUT(request: Request, { params }: { params: Params }) {
     // Đồng bộ users_manage cho phòng
     const mongoose = require("mongoose");
     const RoomModel = mongoose.models.Room || mongoose.model("Room");
-    const userId = params.id;
+    const userId = id;
     const oldRoomIds: string[] = (oldUser.rooms_manage || []).map((r: any) =>
       r.toString()
     );
@@ -110,11 +113,14 @@ export async function PUT(request: Request, { params }: { params: Params }) {
     );
   }
 }
-
-export async function DELETE(request: Request, { params }: { params: Params }) {
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const id = context.params.id;
   try {
     await connectToDatabase();
-    const user = await User.findByIdAndDelete(params.id);
+    const user = await User.findByIdAndDelete(id);
 
     if (!user) {
       return NextResponse.json(

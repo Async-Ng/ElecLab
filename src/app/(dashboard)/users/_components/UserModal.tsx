@@ -32,12 +32,15 @@ export const UserModal = ({
       if (Array.isArray(values.roles)) {
         values.roles = values.roles.map((role) => {
           // Nếu role là key của enum thì chuyển sang giá trị enum
-          if (role in UserRole) return UserRole[role as keyof typeof UserRole];
+          if (Object.prototype.hasOwnProperty.call(UserRole, role)) {
+            return (UserRole as Record<string, UserRole>)[role];
+          }
           // Nếu đã là giá trị enum thì giữ nguyên
-          if (Object.values(UserRole).includes(role as UserRole))
+          if (Object.values(UserRole).includes(role as UserRole)) {
             return role as UserRole;
+          }
           return role as UserRole;
-        });
+        }) as UserRole[];
       }
       onSubmit(values);
     });
@@ -46,19 +49,20 @@ export const UserModal = ({
   // Reset form when modal opens/closes
   useEffect(() => {
     if (open) {
-      form.setFieldsValue(
-        editingUser || {
+      if (editingUser) {
+        form.setFieldsValue(editingUser);
+      } else {
+        form.setFieldsValue({
           staff_id: "",
           name: "",
           email: "",
           password: "",
           roles: [],
           rooms_manage: [],
-        }
-      );
-    } else {
-      form.resetFields();
+        });
+      }
     }
+    // Do not call form.resetFields() when modal closes to avoid warning
   }, [open, editingUser, form]);
 
   return (
@@ -80,7 +84,12 @@ export const UserModal = ({
         </Button>,
       ]}
     >
-      <Form form={form} layout="vertical" initialValues={editingUser}>
+      <Form form={form} layout="vertical">
+        {loading && (
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <span>Đang tải dữ liệu...</span>
+          </div>
+        )}
         <Form.Item
           name="staff_id"
           label="Mã nhân viên"

@@ -197,6 +197,7 @@ export default function Sidebar({ onClose }: Props) {
           className="object-contain rounded-md bg-white/10 p-4 shadow"
           width={200}
           height={200}
+          priority
         />
         <h1 className="text-xl font-bold tracking-wide mt-2">ElecLab</h1>
         <div className="mt-4 mb-2 text-center">
