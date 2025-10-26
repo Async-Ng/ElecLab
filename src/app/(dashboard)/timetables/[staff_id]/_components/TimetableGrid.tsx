@@ -25,7 +25,7 @@ export default function TimetableGrid({
         {days.map((d) => (
           <Col key={d.toString()} span={3}>
             <div style={{ textAlign: "center", fontWeight: 500 }}>
-              {d.format(" DD/MM")}
+              {d.format("DD/MM/YYYY")}
             </div>
           </Col>
         ))}

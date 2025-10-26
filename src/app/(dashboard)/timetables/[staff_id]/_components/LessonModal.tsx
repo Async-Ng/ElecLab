@@ -36,7 +36,8 @@ export default function LessonModal({ modal, onClose }: LessonModalProps) {
             <b>Thời gian:</b> {modal.record.time}
           </div>
           <div>
-            <b>Ngày:</b> {modal.record.date}
+            <b>Ngày:</b>{" "}
+            {new Date(modal.record.date).toLocaleDateString("vi-VN")}
           </div>
           <div>
             <b>Lớp:</b> {modal.record.className}

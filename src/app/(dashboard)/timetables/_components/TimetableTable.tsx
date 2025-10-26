@@ -9,69 +9,6 @@ interface TimetableTableProps {
   data: Timetable[];
 }
 
-const columns: ColumnsType<Timetable> = [
-  {
-    title: "Năm học",
-    dataIndex: "schoolYear",
-    key: "schoolYear",
-  },
-  {
-    title: "Học kỳ",
-    dataIndex: "semester",
-    key: "semester",
-    render: (value: Semester) => `HK${value}`,
-  },
-  {
-    title: "Ngày",
-    dataIndex: "date",
-    key: "date",
-  },
-  {
-    title: "Ca học",
-    dataIndex: "period",
-    key: "period",
-    render: (value: Period) => `Ca ${value}`,
-  },
-  {
-    title: "Giờ học",
-    dataIndex: "time",
-    key: "time",
-    render: (value: StudyTime) => value,
-  },
-  {
-    title: "Môn học",
-    dataIndex: "subject",
-    key: "subject",
-  },
-  {
-    title: "Phòng học",
-    dataIndex: "room",
-    key: "room",
-    render: (room: any) => (typeof room === "string" ? room : room?.name),
-  },
-  {
-    title: "Lớp",
-    dataIndex: "className",
-    key: "className",
-  },
-  {
-    title: "Giảng viên",
-    dataIndex: "lecturer",
-    key: "lecturer",
-    render: (lecturer: any) =>
-      typeof lecturer === "string" ? lecturer : lecturer?.name,
-  },
-  {
-    title: "Chỉnh sửa",
-    key: "actions",
-    render: (_: any, record: Timetable) => (
-      <Button type="link" onClick={() => handleEdit(record)}>
-        Chỉnh sửa
-      </Button>
-    ),
-  },
-];
-
 export default function TimetableTable({ data }: TimetableTableProps) {
   const [editVisible, setEditVisible] = useState(false);
   const [editRecord, setEditRecord] = useState<Timetable | null>(null);
@@ -133,6 +70,10 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       title: "Ngày",
       dataIndex: "date",
       key: "date",
+      render: (value: string) => {
+        const date = new Date(value);
+        return date.toLocaleDateString("vi-VN");
+      },
     },
     {
       title: "Ca học",

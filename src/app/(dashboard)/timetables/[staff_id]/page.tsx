@@ -1,10 +1,12 @@
 "use client";
-import FilterBar from "./_components/FilterBar";
+
+import StaffFilterBar from "../_components/StaffFilterBar";
+import TimetableTable from "../_components/TimetableTable";
 import TimetableGrid from "./_components/TimetableGrid";
 import LessonModal from "./_components/LessonModal";
 import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
-import { Timetable } from "@/types/timetable";
+import { Timetable, Semester } from "@/types/timetable";
 import { useParams } from "next/navigation";
 
 export default function StaffTimetableWeekView() {
@@ -12,6 +14,10 @@ export default function StaffTimetableWeekView() {
   const staffId = params?.staff_id as string;
   const [weekStart, setWeekStart] = useState<Dayjs>(dayjs().startOf("week"));
   const [items, setItems] = useState<Timetable[]>([]);
+  const [filtered, setFiltered] = useState<Timetable[]>([]);
+  const [schoolYear, setSchoolYear] = useState<string>("");
+  const [semester, setSemester] = useState<Semester | null>(null);
+  // Giữ lại các filter cũ nếu cần
   const [className, setClassName] = useState<string>("");
   const [roomFilter, setRoomFilter] = useState<string>("");
   const [modal, setModal] = useState<{ open: boolean; record?: Timetable }>({
@@ -22,14 +28,12 @@ export default function StaffTimetableWeekView() {
 
   useEffect(() => {
     if (!staffId) return;
-    const params = new URLSearchParams({
-      userId: staffId,
-      // Nếu cần lọc thêm theo tuần, className, room thì xử lý ở frontend
-    });
+    const params = new URLSearchParams({ userId: staffId });
     fetch(`/api/timetables?${params}`)
       .then((res) => res.json())
       .then((rows) => {
         setItems(rows);
+        setFiltered(rows);
         setClassOptions(
           Array.from(
             new Set(rows.map((r: Timetable) => r.className))
@@ -45,8 +49,34 @@ export default function StaffTimetableWeekView() {
           ) as string[]
         );
       });
-  }, [staffId, weekStart, className, roomFilter]);
+  }, [staffId]);
 
+  // Lấy danh sách năm học có trong dữ liệu
+  const schoolYearOptions = Array.from(
+    new Set(items.map((row) => row.schoolYear))
+  );
+
+  useEffect(() => {
+    let result = items;
+    if (schoolYear) {
+      result = result.filter((row) => row.schoolYear === schoolYear);
+    }
+    if (semester) {
+      result = result.filter((row) => row.semester === semester);
+    }
+    if (className) {
+      result = result.filter((row) => row.className === className);
+    }
+    if (roomFilter) {
+      result = result.filter((row) => {
+        if (typeof row.room === "string") return row.room === roomFilter;
+        return row.room?.name === roomFilter;
+      });
+    }
+    setFiltered(result);
+  }, [schoolYear, semester, className, roomFilter, items]);
+
+  // Tuần trước/tuần sau giữ nguyên
   const days = Array.from({ length: 7 }, (_, i) => weekStart.add(i, "day"));
   const allPeriods = [1, 2, 3, 4];
 
@@ -65,26 +95,50 @@ export default function StaffTimetableWeekView() {
     return { color: "red", text: "Quá hạn", canClick: true, isEdit: false };
   }
 
+  // Callback tuần trước/tuần sau
+  const handlePrevWeek = () => setWeekStart((prev) => prev.subtract(1, "week"));
+  const handleNextWeek = () => setWeekStart((prev) => prev.add(1, "week"));
+
   return (
-    <div className="overflow-x-auto">
-      <FilterBar
-        weekStart={weekStart}
-        setWeekStart={setWeekStart}
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 16px" }}>
+      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>
+        Thời khóa biểu cá nhân
+      </h1>
+      <StaffFilterBar
+        schoolYear={schoolYear}
+        setSchoolYear={setSchoolYear}
+        semester={semester}
+        setSemester={setSemester}
+        schoolYearOptions={schoolYearOptions}
         className={className}
         setClassName={setClassName}
         roomFilter={roomFilter}
         setRoomFilter={setRoomFilter}
         classOptions={classOptions}
         roomOptions={roomOptions}
+        onPrevWeek={handlePrevWeek}
+        onNextWeek={handleNextWeek}
       />
-      <TimetableGrid
-        items={items}
-        days={days}
-        allPeriods={allPeriods}
-        statusInfo={statusInfo}
-        onDetail={(lesson) => setModal({ open: true, record: lesson })}
-      />
-      <LessonModal modal={modal} onClose={() => setModal({ open: false })} />
+      <div style={{ marginTop: 16 }}>
+        {/* Nếu filter theo năm học/học kỳ thì hiển thị bảng, ngược lại giữ grid tuần */}
+        {schoolYear || semester ? (
+          <TimetableTable data={filtered} />
+        ) : (
+          <>
+            <TimetableGrid
+              items={filtered}
+              days={days}
+              allPeriods={allPeriods}
+              statusInfo={statusInfo}
+              onDetail={(lesson) => setModal({ open: true, record: lesson })}
+            />
+            <LessonModal
+              modal={modal}
+              onClose={() => setModal({ open: false })}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }
