@@ -175,7 +175,6 @@ export default function LoginPage() {
                 </Form.Item>
 
                 <Form.Item className="!mb-8">
-                  {" "}
                   <Button
                     type="primary"
                     htmlType="submit"
@@ -185,11 +184,34 @@ export default function LoginPage() {
                     style={{
                       backgroundColor: "#333333",
                       borderColor: "#333333",
-                    }} // Màu nút đen
+                    }}
                   >
                     {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                   </Button>
                 </Form.Item>
+                {/* Static info below login button */}
+                <div className="mt-6 text-center text-gray-500 text-sm">
+                  <Divider plain className="!mb-4">
+                    Thông tin hệ thống
+                  </Divider>
+                  <p>
+                    Hệ thống ElecLab dành cho giảng viên và quản lý phòng thực
+                    hành.
+                  </p>
+                  <p>
+                    Liên hệ hỗ trợ:{" "}
+                    <a
+                      href="mailto:ndloi@hcmct.edu.vn"
+                      className="text-blue-600"
+                    >
+                      ndloi@hcmct.edu.vn
+                    </a>
+                  </p>
+                  <p>
+                    Đảm bảo bảo mật thông tin cá nhân và dữ liệu phòng thực
+                    hành.
+                  </p>
+                </div>
               </Form>
             </div>
           </Col>
