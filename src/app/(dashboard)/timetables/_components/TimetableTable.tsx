@@ -2,6 +2,7 @@
 import { Table, Button } from "antd";
 import TimetableModal from "./TimetableModal";
 import React, { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 
@@ -15,6 +16,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   const [tableData, setTableData] = useState<Timetable[]>(data);
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const { user, hasRole } = useAuth();
 
   React.useEffect(() => {
     setTableData(data);
@@ -134,11 +136,23 @@ export default function TimetableTable({ data }: TimetableTableProps) {
     {
       title: "Chỉnh sửa",
       key: "actions",
-      render: (_: any, record: Timetable) => (
-        <Button type="link" onClick={() => handleEdit(record)}>
-          Chỉnh sửa
-        </Button>
-      ),
+      render: (_: any, record: Timetable) => {
+        // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
+        const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
+        const isOwner =
+          user &&
+          (record.lecturer === user._id ||
+            (typeof record.lecturer === "object" &&
+              record.lecturer._id === user._id));
+        if (isAdmin || isOwner) {
+          return (
+            <Button type="link" onClick={() => handleEdit(record)}>
+              Chỉnh sửa
+            </Button>
+          );
+        }
+        return null;
+      },
     },
   ];
 

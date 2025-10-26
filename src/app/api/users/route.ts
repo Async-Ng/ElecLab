@@ -14,7 +14,6 @@ export async function GET() {
     const usersWithAvatar = users.map((u: any) => {
       const userObj = u.toObject();
       const avatar = userObj.avatar;
-      console.log("Avatar:", avatar);
       if (avatar) {
         // Nếu avatar là Binary của MongoDB
         if (avatar instanceof Binary) {
