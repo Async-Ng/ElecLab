@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Select, DatePicker } from "antd";
+import viVN from "antd/es/date-picker/locale/vi_VN";
 import { Semester } from "@/types/timetable";
 import { Dayjs } from "dayjs";
 
@@ -61,6 +62,7 @@ export default function FilterBar({
         onChange={(d) => d && setWeekStart(d.startOf("week"))}
         style={{ width: 120 }}
         placeholder="Chọn tuần"
+        locale={viVN}
       />
     </div>
   );

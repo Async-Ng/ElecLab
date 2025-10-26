@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { DatePicker } from "antd";
 import {
+  DatePicker,
   Alert,
   Modal,
   Table,
@@ -22,6 +22,29 @@ interface ImportPreviewModalProps {
   onImport: (rows: Timetable[]) => void;
   rooms?: Array<{ room_id: string; _id: string; name: string }>;
   users?: Array<{ email: string; _id: string; name: string }>;
+}
+
+function normalizeDate(val: any): string {
+  let dateVal = String(val).trim();
+  if (/^\d+$/.test(dateVal)) {
+    // Excel serial
+    const serial = Number(dateVal);
+    const excelEpoch = new Date(1899, 11, 30);
+    const dateObj = new Date(
+      excelEpoch.getTime() + serial * 24 * 60 * 60 * 1000
+    );
+    const d = dateObj.getDate().toString().padStart(2, "0");
+    const m = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const y = dateObj.getFullYear();
+    dateVal = `${d}/${m}/${y}`;
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    // Convert YYYY-MM-DD to DD/MM/YYYY
+    const [y, m, d] = dateVal.split("-");
+    dateVal = `${d}/${m}/${y}`;
+  } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateVal)) {
+    dateVal = dateVal.replace(/-/g, "/");
+  }
+  return dateVal;
 }
 
 export default function ImportPreviewModal({
@@ -76,37 +99,15 @@ export default function ImportPreviewModal({
       title: "Năm học",
       dataIndex: "schoolYear",
       key: "schoolYear",
-      render: (val: string, record: any) => {
-        // Acceptable format: YYYY-YYYY
-        const validYear = /^\d{4}-\d{4}$/.test(val);
-        if (validYear) {
-          return (
-            <Input
-              value={val}
-              style={{ width: 100 }}
-              onChange={(e) =>
-                updateRow(record.key, { schoolYear: e.target.value })
-              }
-            />
-          );
-        }
-        // If invalid, show year picker
-        return (
-          <DatePicker
-            picker="year"
-            style={{ width: 100 }}
-            onChange={(date: dayjs.Dayjs | null) => {
-              if (date) {
-                const startYear = date.year();
-                updateRow(record.key, {
-                  schoolYear: `${startYear}-${startYear + 1}`,
-                });
-              }
-            }}
-            placeholder="Chọn năm học"
-          />
-        );
-      },
+      render: (val: string, record: any) => (
+        <Input
+          value={val}
+          style={{ width: 100 }}
+          onChange={(e) =>
+            updateRow(record.key, { schoolYear: e.target.value })
+          }
+        />
+      ),
     },
     {
       title: "Học kỳ",
@@ -129,28 +130,25 @@ export default function ImportPreviewModal({
       dataIndex: "date",
       key: "date",
       render: (val: string, record: any) => {
-        // Acceptable format: YYYY-MM-DD
-        const validDate =
-          /^\d{4}-\d{2}-\d{2}$/.test(val) && dayjs(val).isValid();
-        if (validDate) {
-          return (
-            <Input
-              value={val}
-              style={{ width: 110 }}
-              onChange={(e) => updateRow(record.key, { date: e.target.value })}
-            />
-          );
-        }
-        // If invalid, show date picker
+        const formatted = normalizeDate(val);
         return (
           <DatePicker
-            style={{ width: 110 }}
+            format="DD/MM/YYYY"
+            value={
+              dayjs(formatted, "DD/MM/YYYY", true).isValid()
+                ? dayjs(formatted, "DD/MM/YYYY", true)
+                : null
+            }
+            style={{ width: 120 }}
             onChange={(date) => {
-              if (date) {
-                updateRow(record.key, { date: date.format("YYYY-MM-DD") });
+              if (date && date.isValid()) {
+                updateRow(record.key, { date: date.format("DD/MM/YYYY") });
+              } else {
+                updateRow(record.key, { date: "" });
               }
             }}
             placeholder="Chọn ngày"
+            allowClear
           />
         );
       },
@@ -278,13 +276,15 @@ export default function ImportPreviewModal({
       title: "Trạng thái",
       key: "valid",
       render: (_: any, record: Timetable) => {
+        // Chuẩn hóa ngày
+        const dateVal = normalizeDate(record.date);
         if (!isValid(record)) return <Tag color="red">Thiếu trường</Tag>;
         if (!/^\d{4}-\d{4}$/.test(record.schoolYear)) {
           return <Tag color="orange">Năm học sai định dạng</Tag>;
         }
         if (
-          !/^\d{4}-\d{2}-\d{2}$/.test(record.date) ||
-          !dayjs(record.date).isValid()
+          !/^\d{2}\/\d{2}\/\d{4}$/.test(dateVal) ||
+          !dayjs(dateVal, "DD/MM/YYYY", true).isValid()
         ) {
           return <Tag color="orange">Ngày sai định dạng</Tag>;
         }
@@ -305,31 +305,18 @@ export default function ImportPreviewModal({
         return <Tag color="green">Hợp lệ</Tag>;
       },
     },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (_: any, record: any) => (
-        <Space>
-          <Popconfirm
-            title="Xóa bản ghi này?"
-            onConfirm={() => removeRow(record.key)}
-          >
-            <Button danger size="small">
-              Xóa
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
   ];
   const validCount = rows.filter(isValid).length;
-  // Check for invalid schoolYear and date format
   const invalidSchoolYearRows = rows.filter(
     (r) => !/^\d{4}-\d{4}$/.test(r.schoolYear)
   );
-  const invalidDateRows = rows.filter(
-    (r) => !/^\d{4}-\d{2}-\d{2}$/.test(r.date) || !dayjs(r.date).isValid()
-  );
+  const invalidDateRows = rows.filter((r) => {
+    const dateVal = normalizeDate(r.date);
+    return (
+      !/^\d{2}\/\d{2}\/\d{4}$/.test(dateVal) ||
+      !dayjs(dateVal, "DD/MM/YYYY", true).isValid()
+    );
+  });
 
   return (
     <Modal
@@ -365,12 +352,31 @@ export default function ImportPreviewModal({
         />
       )}
       {invalidDateRows.length > 0 && (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 12 }}
-          message={`Có ${invalidDateRows.length} bản ghi có ngày không đúng định dạng (YYYY-MM-DD). Vui lòng chọn lại ngày.`}
-        />
+        <>
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message={`Có ${invalidDateRows.length} bản ghi có ngày không đúng định dạng (DD/MM/YYYY). Vui lòng chọn lại ngày theo chuẩn ngày/tháng/năm.`}
+          />
+          <Alert
+            type="error"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message={
+              <div>
+                <b>Chi tiết bản ghi sai:</b>
+                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                  {invalidDateRows.map((row, idx) => (
+                    <li key={row.key || idx}>
+                      Dòng {idx + 1}: <b>{row.date}</b>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            }
+          />
+        </>
       )}
       {invalidRoomRows.length > 0 && (
         <Alert

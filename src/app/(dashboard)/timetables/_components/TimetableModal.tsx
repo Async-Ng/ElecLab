@@ -82,11 +82,7 @@ export default function TimetableModal({
       destroyOnClose
     >
       <Form form={form} layout="vertical">
-        <Form.Item
-          name="schoolYear"
-          label="Năm học"
-          rules={[{ required: true }]}
-        >
+        <Form.Item label="Năm học" rules={[{ required: true }]}>
           {" "}
           <Input />{" "}
         </Form.Item>
