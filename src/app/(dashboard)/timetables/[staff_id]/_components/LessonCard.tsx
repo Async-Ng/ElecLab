@@ -9,9 +9,15 @@ const { Text } = Typography;
 
 interface LessonCardProps {
   lesson: Timetable;
+  statusInfo?: {
+    color?: string;
+    text?: string;
+    canClick?: boolean;
+    isEdit?: boolean;
+  };
 }
 
-export default function LessonCard({ lesson }: LessonCardProps) {
+export default function LessonCard({ lesson, statusInfo }: LessonCardProps) {
   const [logModalOpen, setLogModalOpen] = useState(false);
   const { hasLog, isFuture } = useLessonLogStatus(
     lesson._id as string,
@@ -36,6 +42,14 @@ export default function LessonCard({ lesson }: LessonCardProps) {
           <BookOutlined style={{ fontSize: 32, color: "#1890ff" }} />
         </Col>
         <Col flex="auto">
+          {statusInfo?.text && (
+            <Tag
+              color={statusInfo.color || "default"}
+              style={{ marginBottom: 8 }}
+            >
+              {statusInfo.text}
+            </Tag>
+          )}
           <Text strong style={{ fontSize: 18 }}>
             {lesson.subject}
           </Text>

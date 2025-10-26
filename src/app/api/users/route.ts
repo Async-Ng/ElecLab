@@ -21,12 +21,10 @@ export async function GET() {
           // Lấy buffer từ Binary
           const buffer = avatar.buffer;
           userObj.avatar = buffer.toString("base64");
-          console.log("Converted avatar to base64 from Binary");
         }
         // Nếu avatar là Buffer thật
         else if (Buffer.isBuffer(avatar)) {
           userObj.avatar = avatar.toString("base64");
-          console.log("Converted avatar to base64 from Buffer");
         } else {
           userObj.avatar = null;
         }

@@ -1,6 +1,5 @@
 "use client";
-import dayjs from "dayjs";
-
+import { Typography } from "antd";
 import TimetableTable from "./_components/TimetableTable";
 import ImportButtons from "./_components/ImportButtons";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
@@ -72,41 +71,43 @@ export default function TimetablePage() {
 
   return (
     <div>
-      <h1>Thời khóa biểu</h1>
-      <ImportButtons />
-      <TimetableFilterBar
-        data={data}
-        schoolYear={schoolYear}
-        setSchoolYear={setSchoolYear}
-        semester={semester}
-        setSemester={setSemester}
-        date={date}
-        setDate={setDate}
-        period={period}
-        setPeriod={setPeriod}
-        time={time}
-        setTime={setTime}
-        subject={subject}
-        setSubject={setSubject}
-        room={room}
-        setRoom={setRoom}
-        className={className}
-        setClassName={setClassName}
-        lecturer={lecturer}
-        setLecturer={setLecturer}
-        handleClear={() => {
-          setSchoolYear("");
-          setSemester("");
-          setDate("");
-          setPeriod("");
-          setTime("");
-          setSubject("");
-          setRoom("");
-          setClassName("");
-          setLecturer("");
-          setFiltered(data);
-        }}
-      />
+      <Typography.Title level={3}>Thời khóa biểu</Typography.Title>
+      <div className="flex">
+        <TimetableFilterBar
+          data={data}
+          schoolYear={schoolYear}
+          setSchoolYear={setSchoolYear}
+          semester={semester}
+          setSemester={setSemester}
+          date={date}
+          setDate={setDate}
+          period={period}
+          setPeriod={setPeriod}
+          time={time}
+          setTime={setTime}
+          subject={subject}
+          setSubject={setSubject}
+          room={room}
+          setRoom={setRoom}
+          className={className}
+          setClassName={setClassName}
+          lecturer={lecturer}
+          setLecturer={setLecturer}
+          handleClear={() => {
+            setSchoolYear("");
+            setSemester("");
+            setDate("");
+            setPeriod("");
+            setTime("");
+            setSubject("");
+            setRoom("");
+            setClassName("");
+            setLecturer("");
+            setFiltered(data);
+          }}
+        />
+        <ImportButtons />
+      </div>
       <TimetableTable data={filtered} />
     </div>
   );

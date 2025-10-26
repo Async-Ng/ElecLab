@@ -131,14 +131,11 @@ export default function ImportPreviewModal({
       key: "date",
       render: (val: string, record: any) => {
         const formatted = normalizeDate(val);
+        const isValidDate = dayjs(formatted, "DD/MM/YYYY", true).isValid();
         return (
           <DatePicker
             format="DD/MM/YYYY"
-            value={
-              dayjs(formatted, "DD/MM/YYYY", true).isValid()
-                ? dayjs(formatted, "DD/MM/YYYY", true)
-                : null
-            }
+            value={isValidDate ? dayjs(formatted, "DD/MM/YYYY", true) : null}
             style={{ width: 120 }}
             onChange={(date) => {
               if (date && date.isValid()) {
@@ -147,7 +144,8 @@ export default function ImportPreviewModal({
                 updateRow(record.key, { date: "" });
               }
             }}
-            placeholder="Chọn ngày"
+            placeholder={isValidDate ? undefined : "Chọn ngày"}
+            open={isValidDate ? undefined : false}
             allowClear
           />
         );

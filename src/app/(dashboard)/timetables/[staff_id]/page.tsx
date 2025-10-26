@@ -100,7 +100,7 @@ export default function StaffTimetableWeekView() {
   const handleNextWeek = () => setWeekStart((prev) => prev.add(1, "week"));
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 16px" }}>
+    <div>
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>
         Thời khóa biểu cá nhân
       </h1>

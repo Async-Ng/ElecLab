@@ -19,11 +19,11 @@ export default function TimetableGrid({
   onDetail,
 }: TimetableGridProps) {
   return (
-    <div className="min-w-[900px]">
-      <Row gutter={[12, 12]}>
+    <div style={{ minWidth: 1200 }}>
+      <Row gutter={[16, 16]}>
         <Col span={3}></Col>
         {days.map((d) => (
-          <Col key={d.toString()} span={3}>
+          <Col key={d.toString()} span={3} style={{ minWidth: 160 }}>
             <div style={{ textAlign: "center", fontWeight: 500 }}>
               {d.format("DD/MM/YYYY")}
             </div>
@@ -31,30 +31,43 @@ export default function TimetableGrid({
         ))}
       </Row>
       {allPeriods.map((s) => (
-        <Row key={s} gutter={[12, 12]} align="top">
+        <Row key={s} gutter={[16, 16]} align="top">
           <Col
             span={3}
-            style={{ textAlign: "right", paddingRight: 8, fontWeight: 500 }}
+            style={{
+              textAlign: "right",
+              paddingRight: 8,
+              fontWeight: 500,
+              minWidth: 120,
+            }}
           >
             Ca {s}
           </Col>
           {days.map((d) => {
-            const cell = items.filter(
-              (it) =>
-                it.date === d.format("YYYY-MM-DD") && Number(it.period) === s
-            );
+            const cell = items.filter((it) => {
+              // Chuẩn hóa ngày về YYYY-MM-DD để so sánh
+              let itemDate = it.date;
+              if (/^\d{2}\/\d{2}\/\d{4}$/.test(itemDate)) {
+                // DD/MM/YYYY -> YYYY-MM-DD
+                const [dd, mm, yyyy] = itemDate.split("/");
+                itemDate = `${yyyy}-${mm}-${dd}`;
+              }
+              return (
+                itemDate === d.format("YYYY-MM-DD") && Number(it.period) === s
+              );
+            });
             return (
-              <Col key={d.toString() + s} span={3}>
+              <Col key={d.toString() + s} span={3} style={{ minWidth: 160 }}>
                 {cell.length === 0 ? (
                   <div
                     style={{
-                      minHeight: 80,
+                      minHeight: 100,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 16 }}>
                       —
                     </Typography.Text>
                   </div>
@@ -65,6 +78,7 @@ export default function TimetableGrid({
                       lesson={it}
                       statusInfo={statusInfo(it)}
                       onDetail={() => onDetail(it)}
+                      style={{ minWidth: 150 }}
                     />
                   ))
                 )}
