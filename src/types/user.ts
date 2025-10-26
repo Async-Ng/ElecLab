@@ -1,6 +1,6 @@
 export enum UserRole {
-  Head_of_deparment = "Trưởng bộ môn",
-  Lecture = "Giảng viên",
+  User = "Người dùng",
+  Admin = "Quản lý",
 }
 
 export interface User {
@@ -9,8 +9,10 @@ export interface User {
   name: string;
   email: string;
   password: string;
-  roles: string[];
+  roles: UserRole[];
   rooms_manage: string[];
+  avatar?: string;
+  position?: string;
 }
 
 export interface UserFormData extends Omit<User, "_id"> {}

@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { Button, Card, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { UsersTable } from "./_components/UsersTable";
-import { UserModal } from "./_components/UserModal";
+import UserModal from "./_components/UserModal";
 import { User, UserFormData, UserRole } from "@/types/user";
 
 const availableRoles = [
-  { value: UserRole.Lecture, label: UserRole.Lecture },
-  { value: UserRole.Head_of_deparment, label: UserRole.Head_of_deparment },
+  { value: UserRole.User, label: "Người dùng" },
+  { value: UserRole.Admin, label: "Quản lý" },
 ];
 
 import { Room } from "@/types/room";
@@ -29,6 +29,12 @@ export default function UsersPage() {
         throw new Error("Failed to fetch users");
       }
       const data = await response.json();
+      if (Array.isArray(data)) {
+        data.forEach((u) => {
+          if (u.avatar) {
+          }
+        });
+      }
       setUsers(data);
     } catch (error) {
       message.error("Lỗi khi tải danh sách người dùng");
@@ -40,6 +46,7 @@ export default function UsersPage() {
   const fetchRooms = async () => {
     try {
       const response = await fetch("/api/rooms");
+
       if (!response.ok) {
         throw new Error("Failed to fetch rooms");
       }
@@ -60,8 +67,24 @@ export default function UsersPage() {
     setModalOpen(true);
   };
 
+  // Sửa lại kiểu editingUser để avatar là UploadFile[] khi edit
   const handleEdit = (user: User) => {
-    setEditingUser(user);
+    let userForEdit: any = { ...user };
+    if (
+      user.avatar &&
+      typeof user.avatar === "string" &&
+      user.avatar.startsWith("data:image")
+    ) {
+      userForEdit.avatar = [
+        {
+          uid: "1",
+          name: "avatar.png",
+          status: "done",
+          url: user.avatar,
+        },
+      ];
+    }
+    setEditingUser(userForEdit);
     setModalOpen(true);
   };
 
@@ -89,37 +112,31 @@ export default function UsersPage() {
     try {
       setLoading(true);
       if (editingUser) {
+        if (values instanceof FormData) {
+          values.append("id", String(editingUser._id));
+        }
         const response = await fetch(`/api/users/${editingUser._id}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
+          body: values instanceof FormData ? values : JSON.stringify(values),
         });
 
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || "Failed to update user");
         }
-
         message.success("Cập nhật người dùng thành công");
       } else {
         const response = await fetch("/api/users", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
+          body: values instanceof FormData ? values : JSON.stringify(values),
         });
 
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || "Failed to create user");
         }
-
         message.success("Tạo người dùng thành công");
       }
-
       setModalOpen(false);
       await fetchUsers();
     } catch (error) {
@@ -161,7 +178,7 @@ export default function UsersPage() {
         loading={loading}
         editingUser={editingUser}
         onCancel={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit as any}
         roles={availableRoles}
         rooms={rooms}
       />

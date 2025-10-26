@@ -85,17 +85,17 @@ export default function LoginPage() {
       />
       <div className="absolute inset-0 bg-black/40 z-0" />{" "}
       <div className="relative z-10 w-[90%] h-[90%] flex bg-transparent shadow-lg rounded-xl overflow-hidden">
-        <Row className="w-full h-full">
+        <Row className="w-full h-full ">
           <Col
             xs={0}
-            md={14}
+            md={15}
             className="relative flex flex-col justify-center text-left p-12 "
           >
             <div className="relative z-10 w-full">
               <Title
                 level={1}
-                style={{ color: "#FFFFFF", fontSize: "4.2rem" }}
-                className="!mt-0 !mb-2 text-5xl"
+                style={{ color: "#FFFFFF", fontSize: "4rem" }}
+                className="!mt-0 !mb-2"
               >
                 Khoa kỹ thuật Điện - Điện tử
               </Title>
@@ -111,7 +111,6 @@ export default function LoginPage() {
               </Text>
             </div>
           </Col>
-
           <Col
             xs={24}
             md={10}
@@ -191,33 +190,6 @@ export default function LoginPage() {
                     {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                   </Button>
                 </Form.Item>
-
-                <Divider>Hoặc</Divider>
-
-                <Form.Item className="!mb-6">
-                  <Button
-                    icon={<GoogleOutlined />}
-                    className="w-full h-12 flex items-center justify-center font-semibold text-lg"
-                  >
-                    Đăng nhập với Google
-                  </Button>
-                </Form.Item>
-
-                <div className="flex justify-between items-center mt-6 text-sm">
-                  {" "}
-                  <Typography.Link className="text-gray-600 hover:text-indigo-500 transition">
-                    Quên mật khẩu?
-                  </Typography.Link>
-                  <Text className="text-gray-500">
-                    Chưa có tài khoản?{" "}
-                    <Typography.Link
-                      onClick={() => router.push("/register")}
-                      className="font-medium text-indigo-500 hover:text-indigo-700 transition"
-                    >
-                      Đăng ký
-                    </Typography.Link>
-                  </Text>
-                </div>
               </Form>
             </div>
           </Col>

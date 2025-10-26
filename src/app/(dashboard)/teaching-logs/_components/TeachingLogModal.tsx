@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Form, Input, Select, Upload, Button } from "antd";
+import { message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import TeachingLogDetail from "./TeachingLogDetail";
@@ -29,11 +30,27 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   const [fileList, setFileList] = useState<any[]>([]);
   const [previewImage, setPreviewImage] = useState<string | undefined>();
   const [previewVisible, setPreviewVisible] = useState(false);
+  // Lấy user hiện tại
+  let currentUser: any = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  } catch {}
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
+      // Kiểm tra quyền: chỉ chủ sở hữu mới được edit
+      let lecturerId = "";
+      if (log && log.timetable && typeof log.timetable === "object") {
+        const lec = log.timetable.lecturer;
+        lecturerId = typeof lec === "object" ? lec._id || "" : lec || "";
+      }
+      if (log && lecturerId && currentUser?._id !== lecturerId) {
+        message.error("Bạn không có quyền chỉnh sửa nhật ký này!");
+        setLoading(false);
+        return;
+      }
       const formData = new FormData();
       formData.append("timetable", timetableId);
       formData.append("note", values.note || "");
@@ -44,7 +61,11 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         }
       });
       const method = log ? "PUT" : "POST";
-      const url = log ? `/api/teaching-logs/${log._id}` : "/api/teaching-logs";
+      const url = log
+        ? `/api/teaching-logs/${log._id}?userId=${encodeURIComponent(
+            currentUser?._id || ""
+          )}`
+        : "/api/teaching-logs";
       await fetch(url, {
         method,
         body: formData,
@@ -73,59 +94,70 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       width={900}
     >
       {log && <TeachingLogDetail log={log} />}
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          note: log?.note || "",
-          status: log?.status || TeachingLogStatus.NORMAL,
-        }}
-      >
-        <Form.Item
-          label="Trạng thái"
-          name="status"
-          rules={[{ required: true }]}
+      {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
+      {(!log ||
+        (log.timetable &&
+          typeof log.timetable === "object" &&
+          (() => {
+            const lec = log.timetable.lecturer;
+            const lecturerId =
+              typeof lec === "object" ? lec._id || "" : lec || "";
+            return currentUser?._id === lecturerId;
+          })())) && (
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            note: log?.note || "",
+            status: log?.status || TeachingLogStatus.NORMAL,
+          }}
         >
-          <Select options={statusOptions} />
-        </Form.Item>
-        <Form.Item label="Ghi chú" name="note">
-          <Input.TextArea rows={3} />
-        </Form.Item>
-        <Form.Item label="Ảnh minh họa">
-          <Upload
-            listType="picture-card"
-            fileList={fileList}
-            onChange={({ fileList }) => setFileList(fileList)}
-            beforeUpload={() => false}
-            multiple
-            showUploadList={{ showPreviewIcon: true }}
-            onPreview={async (file) => {
-              let src = file.url || file.thumbUrl;
-              if (!src && file.originFileObj) {
-                src = await new Promise<string>((resolve) => {
-                  const reader = new FileReader();
-                  if (file.originFileObj)
-                    reader.readAsDataURL(file.originFileObj);
-                  reader.onload = () => resolve(reader.result as string);
-                });
-              }
-              setPreviewImage(src);
-              setPreviewVisible(true);
-            }}
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true }]}
           >
-            <div>
-              <UploadOutlined /> Tải ảnh lên
-            </div>
-          </Upload>
-        </Form.Item>
-        <Modal
-          open={previewVisible}
-          footer={null}
-          onCancel={() => setPreviewVisible(false)}
-        >
-          <img alt="preview" style={{ width: "100%" }} src={previewImage} />
-        </Modal>
-      </Form>
+            <Select options={statusOptions} />
+          </Form.Item>
+          <Form.Item label="Ghi chú" name="note">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item label="Ảnh minh họa">
+            <Upload
+              listType="picture-card"
+              fileList={fileList}
+              onChange={({ fileList }) => setFileList(fileList)}
+              beforeUpload={() => false}
+              multiple
+              showUploadList={{ showPreviewIcon: true }}
+              onPreview={async (file) => {
+                let src = file.url || file.thumbUrl;
+                if (!src && file.originFileObj) {
+                  src = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    if (file.originFileObj)
+                      reader.readAsDataURL(file.originFileObj);
+                    reader.onload = () => resolve(reader.result as string);
+                  });
+                }
+                setPreviewImage(src);
+                setPreviewVisible(true);
+              }}
+            >
+              <div>
+                <UploadOutlined /> Tải ảnh lên
+              </div>
+            </Upload>
+          </Form.Item>
+          <Modal
+            open={previewVisible}
+            footer={null}
+            onCancel={() => setPreviewVisible(false)}
+          >
+            <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+          </Modal>
+        </Form>
+      )}
     </Modal>
   );
 };

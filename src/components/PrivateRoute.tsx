@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 
@@ -32,9 +33,9 @@ export default function PrivateRoute({
     }
 
     if (isAuthenticated && user) {
-      const isHead = user.roles.includes("Trưởng bộ môn");
-      const isLecture = user.roles.includes("Giảng viên");
-      if (!isHead && isLecture) {
+      const isAdmin = user.roles.includes(UserRole.Admin);
+      const isUser = user.roles.includes(UserRole.User);
+      if (!isAdmin && isUser) {
         if (!allowedRoutes.some((route) => pathname.startsWith(route))) {
           router.replace(`/timetables/${user._id}`);
         }
@@ -55,11 +56,11 @@ export default function PrivateRoute({
   }
 
   if (user) {
-    const isHead = user.roles.includes("Trưởng bộ môn");
-    const isLecture = user.roles.includes("Giảng viên");
+    const isAdmin = user.roles.includes(UserRole.Admin);
+    const isUser = user.roles.includes(UserRole.User);
     if (
-      !isHead &&
-      isLecture &&
+      !isAdmin &&
+      isUser &&
       !allowedRoutes.some((route) => pathname.startsWith(route))
     ) {
       return null;

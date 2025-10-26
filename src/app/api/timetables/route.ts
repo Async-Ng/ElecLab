@@ -6,11 +6,28 @@ import { connectToDatabase } from "@/lib/mongodb";
 export async function PATCH(request: Request) {
   await connectToDatabase();
   const body = await request.json();
-  const { _id, ...updateData } = body;
+  const { _id, userId, userRole, ...updateData } = body;
   if (!_id) {
     return NextResponse.json(
       { error: "Missing _id for update" },
       { status: 400 }
+    );
+  }
+  // Lấy thông tin TKB hiện tại
+  const timetable = await Timetable.findById(_id);
+  if (!timetable) {
+    return NextResponse.json({ error: "Timetable not found" }, { status: 404 });
+  }
+  // Ưu tiên quyền Admin nếu có nhiều roles
+  // Nếu userRole là mảng, kiểm tra có "Admin" không
+  const ADMIN_ROLES = ["Admin", "Quản lý"];
+  const isAdmin = Array.isArray(userRole)
+    ? userRole.some((r) => ADMIN_ROLES.includes(r))
+    : ADMIN_ROLES.includes(userRole);
+  if (!isAdmin && timetable.lecturer?.toString() !== userId) {
+    return NextResponse.json(
+      { error: "Bạn không có quyền chỉnh sửa TKB này" },
+      { status: 403 }
     );
   }
   try {
@@ -49,11 +66,11 @@ export async function GET(request: Request) {
   const userId = searchParams.get("userId");
   const userRole = searchParams.get("userRole");
   let query = {};
-  if (userRole === "Head_of_deparment") {
-    // Trưởng khoa xem toàn bộ
+  if (userRole === "Admin") {
+    // Quản lý xem toàn bộ
     query = {};
   } else if (userId) {
-    // Giảng viên chỉ xem thời khóa biểu của mình
+    // Người dùng chỉ xem thời khóa biểu của mình
     query = { lecturer: userId };
   }
   const timetables = await Timetable.find(query)

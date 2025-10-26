@@ -11,7 +11,7 @@ export default function ImportButtons() {
   const [users, setUsers] = useState<User[]>([]);
   useEffect(() => {
     // Lấy danh sách phòng
-    fetch("/api/rooms?userRole=Head_of_deparment")
+    fetch("/api/rooms?userRole=Admin")
       .then((res) => res.json())
       .then((data) =>
         setRooms(
@@ -56,17 +56,44 @@ export default function ImportButtons() {
       const sheet = workbook.Sheets[sheetName];
       const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
       // Map dữ liệu từ file sang type Timetable
-      const preview: Timetable[] = rows.map((r, idx) => ({
-        schoolYear: String(r["Năm học"] || "").trim(),
-        semester: Number(r["Học kỳ"] || Semester.First),
-        date: String(r["Ngày"] || "").trim(),
-        period: Number(r["Ca"] || Period.Period1),
-        time: String(r["Giờ học"] || StudyTime.Period1) as StudyTime,
-        subject: String(r["Môn học"] || "").trim(),
-        room: String(r["Phòng học"] || "").trim(),
-        className: String(r["Lớp"] || "").trim(),
-        lecturer: String(r["Giảng viên"] || "").trim(),
-      }));
+      const preview: Timetable[] = rows.map((r, idx) => {
+        // Parse date to DD/MM/YYYY if possible
+        let rawDate = r["Ngày"];
+        let formattedDate = String(rawDate).trim();
+        // Excel serial date detection and conversion
+        if (typeof rawDate === "number" && !isNaN(rawDate)) {
+          // Excel epoch: 1899-12-30
+          const excelEpoch = new Date(1899, 11, 30);
+          const dateObj = new Date(
+            excelEpoch.getTime() + rawDate * 24 * 60 * 60 * 1000
+          );
+          const d = dateObj.getDate().toString().padStart(2, "0");
+          const m = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+          const y = dateObj.getFullYear();
+          formattedDate = `${d}/${m}/${y}`;
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) {
+          // Convert YYYY-MM-DD to DD/MM/YYYY
+          const [y, m, d] = formattedDate.split("-");
+          formattedDate = `${d}/${m}/${y}`;
+        } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate)) {
+          // Already DD/MM/YYYY
+          formattedDate = formattedDate;
+        } else if (/^\d{2}-\d{2}-\d{4}$/.test(formattedDate)) {
+          // Convert DD-MM-YYYY to DD/MM/YYYY
+          formattedDate = formattedDate.replace(/-/g, "/");
+        }
+        return {
+          schoolYear: String(r["Năm học"] || "").trim(),
+          semester: Number(r["Học kỳ"] || Semester.First),
+          date: formattedDate,
+          period: Number(r["Ca"] || Period.Period1),
+          time: String(r["Giờ học"] || StudyTime.Period1) as StudyTime,
+          subject: String(r["Môn học"] || "").trim(),
+          room: String(r["Phòng học"] || "").trim(),
+          className: String(r["Lớp"] || "").trim(),
+          lecturer: String(r["Giảng viên"] || "").trim(),
+        };
+      });
       setPreviewRows(preview);
       setPreviewOpen(true);
     } catch (err) {
@@ -95,13 +122,13 @@ export default function ImportButtons() {
         [
           "2024-2025",
           1,
-          "2024-08-05",
+          "05/08/2024",
           1,
           "07:00-09:15",
           "TN Máy điện",
           "P.TNMĐ_CS3",
           "C23A.ĐL2",
-          "Thầy Phạm Hữu Tấn",
+          "abc@hcmct.edu.vn",
         ],
       ];
       const ws = XLSX.utils.aoa_to_sheet([...headers, ...sample]);

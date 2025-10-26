@@ -40,14 +40,15 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
   const userRole = searchParams.get("userRole");
+  const lessonId = searchParams.get("lessonId");
 
   try {
     let query: any = {};
-    if (userRole === "Head_of_deparment") {
+    if (lessonId) {
+      query.timetable = lessonId;
+    } else if (userRole === "Admin") {
       query = {};
     } else if (userId) {
-      // Giảng viên chỉ xem log liên quan đến các timetable mà họ là lecturer
-      // We'll fetch logs and populate timetable; filter by timetable.lecturer after populate is acceptable here.
       query = {};
     }
 
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
       .lean();
 
     let result = logs;
-    if (userRole !== "Head_of_deparment" && userId) {
+    if (!lessonId && userRole !== "Admin" && userId) {
       result = (logs as any[]).filter((log) => {
         const tt = log.timetable;
         if (!tt) return false;

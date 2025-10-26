@@ -1,6 +1,9 @@
 "use client";
 
 import { Table, Space, Button, Popconfirm, Tag } from "antd";
+import { UserOutlined } from "@ant-design/icons";
+import { Avatar as AntdAvatar } from "antd";
+import Image from "next/image";
 import type { ColumnsType } from "antd/es/table";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { User, UserRole } from "@/types/user";
@@ -23,6 +26,50 @@ export const UsersTable = ({
 }: UsersTableProps) => {
   const columns: ColumnsType<User> = [
     {
+      title: "Avatar",
+      dataIndex: "avatar",
+      key: "avatar",
+      width: "10%",
+      render: (avatar: string | undefined) => {
+        if (!avatar || typeof avatar !== "string") {
+          return (
+            <AntdAvatar
+              shape="square"
+              size={100}
+              icon={<UserOutlined style={{ fontSize: 64 }} />}
+            />
+          );
+        }
+        // FE tự ghép prefix nếu avatar là base64
+        const src = avatar.startsWith("data:image")
+          ? avatar
+          : `data:image/png;base64,${avatar}`;
+        return (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Image
+              src={src}
+              alt="avatar"
+              fill
+              style={{
+                objectFit: "contain",
+                borderRadius: "8px",
+                background: "#f0f0f0",
+              }}
+              unoptimized
+            />
+          </div>
+        );
+      },
+    },
+    {
       title: "Mã nhân viên",
       dataIndex: "staff_id",
       key: "staff_id",
@@ -42,14 +89,21 @@ export const UsersTable = ({
       width: "15%",
     },
     {
+      title: "Chức vụ",
+      dataIndex: "position",
+      key: "position",
+      width: "10%",
+      render: (position: string | undefined) => position || "-",
+    },
+    {
       title: "Vai trò",
       dataIndex: "roles",
       key: "roles",
       render: (roles: string[]) => (
         <>
           {roles.map((role) => (
-            <Tag color="blue" key={role}>
-              {UserRole[role as keyof typeof UserRole] || role}
+            <Tag color={role === UserRole.Admin ? "red" : "blue"} key={role}>
+              {role === UserRole.Admin ? "Quản lý" : "Người dùng"}
             </Tag>
           ))}
         </>

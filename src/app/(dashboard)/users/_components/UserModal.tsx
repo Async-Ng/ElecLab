@@ -1,8 +1,7 @@
-"use client";
-
-import { useEffect } from "react";
-import { Modal, Form, Input, Select, Button } from "antd";
-import { User, UserFormData, UserRole } from "@/types/user";
+import React, { useState, useEffect } from "react";
+import { Modal, Form, Input, Select, Upload, Button } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { User, UserRole } from "@/types/user";
 import { Room } from "@/types/room";
 
 interface UserModalProps {
@@ -10,12 +9,12 @@ interface UserModalProps {
   loading?: boolean;
   editingUser?: User;
   onCancel: () => void;
-  onSubmit: (values: UserFormData) => void;
+  onSubmit: (formData: FormData) => void;
   roles: { value: string; label: string }[];
   rooms: Room[];
 }
 
-export const UserModal = ({
+const UserModal: React.FC<UserModalProps> = ({
   open,
   loading,
   editingUser,
@@ -23,43 +22,64 @@ export const UserModal = ({
   onSubmit,
   roles,
   rooms,
-}: UserModalProps) => {
-  const [form] = Form.useForm<UserFormData>();
+}) => {
+  const [form] = Form.useForm();
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | undefined>();
+  const [previewVisible, setPreviewVisible] = useState(false);
 
-  const handleSubmit = () => {
-    form.validateFields().then((values) => {
-      // Đảm bảo roles là value enum UserRole
-      if (Array.isArray(values.roles)) {
-        values.roles = values.roles.map((role) => {
-          // Nếu là key enum thì chuyển sang label tiếng Việt
-          if (role === "Lecture") return UserRole.Lecture;
-          if (role === "Head_of_deparment") return UserRole.Head_of_deparment;
-          // Nếu đã là label thì giữ nguyên
-          if ((Object.values(UserRole) as string[]).includes(role)) return role;
-          return role;
-        });
-      }
-      onSubmit(values);
-    });
-  };
-
-  // Reset form when modal opens/closes
   useEffect(() => {
     if (open) {
-      form.setFieldsValue(
-        editingUser || {
-          staff_id: "",
-          name: "",
-          email: "",
-          password: "",
-          roles: [],
-          rooms_manage: [],
+      if (editingUser) {
+        form.setFieldsValue({
+          staff_id: editingUser.staff_id || "",
+          name: editingUser.name || "",
+          email: editingUser.email || "",
+          position: editingUser.position || "",
+          roles: editingUser.roles || [],
+          rooms_manage: editingUser.rooms_manage || [],
+        });
+        // Nếu có avatar dạng base64 thì set fileList để preview
+        if (
+          editingUser.avatar &&
+          typeof editingUser.avatar === "string" &&
+          editingUser.avatar.startsWith("data:image")
+        ) {
+          setFileList([
+            {
+              uid: "1",
+              name: "avatar.png",
+              status: "done",
+              url: editingUser.avatar,
+            },
+          ]);
+        } else {
+          setFileList([]);
         }
-      );
-    } else {
-      form.resetFields();
+      } else {
+        form.resetFields();
+        setFileList([]);
+      }
     }
   }, [open, editingUser, form]);
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const formData = new FormData();
+      formData.append("staff_id", values.staff_id);
+      formData.append("name", values.name);
+      formData.append("email", values.email);
+      formData.append("position", values.position || "");
+      if (values.password) formData.append("password", values.password);
+      formData.append("roles", JSON.stringify(values.roles));
+      formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
+      if (fileList.length && fileList[0].originFileObj) {
+        formData.append("avatar", fileList[0].originFileObj);
+      }
+      onSubmit(formData);
+    } catch (err) {}
+  };
 
   return (
     <Modal
@@ -79,8 +99,44 @@ export const UserModal = ({
           {editingUser ? "Cập nhật" : "Tạo mới"}
         </Button>,
       ]}
+      destroyOnHidden
+      width={600}
     >
-      <Form form={form} layout="vertical" initialValues={editingUser}>
+      <Form form={form} layout="vertical">
+        <Form.Item label="Avatar">
+          <Upload
+            listType="picture-card"
+            fileList={fileList}
+            onChange={({ fileList }) => setFileList(fileList)}
+            beforeUpload={() => false}
+            maxCount={1}
+            showUploadList={{ showPreviewIcon: true }}
+            onPreview={async (file) => {
+              let src = file.url || file.thumbUrl;
+              if (!src && file.originFileObj) {
+                src = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  if (file.originFileObj)
+                    reader.readAsDataURL(file.originFileObj);
+                  reader.onload = () => resolve(reader.result as string);
+                });
+              }
+              setPreviewImage(src);
+              setPreviewVisible(true);
+            }}
+          >
+            <div>
+              <UploadOutlined /> Chọn ảnh
+            </div>
+          </Upload>
+        </Form.Item>
+        <Modal
+          open={previewVisible}
+          footer={null}
+          onCancel={() => setPreviewVisible(false)}
+        >
+          <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+        </Modal>
         <Form.Item
           name="staff_id"
           label="Mã nhân viên"
@@ -88,7 +144,6 @@ export const UserModal = ({
         >
           <Input />
         </Form.Item>
-
         <Form.Item
           name="name"
           label="Tên"
@@ -96,7 +151,9 @@ export const UserModal = ({
         >
           <Input />
         </Form.Item>
-
+        <Form.Item name="position" label="Chức vụ">
+          <Input placeholder="Nhập chức vụ" />
+        </Form.Item>
         <Form.Item
           name="email"
           label="Email"
@@ -107,7 +164,6 @@ export const UserModal = ({
         >
           <Input />
         </Form.Item>
-
         {!editingUser && (
           <Form.Item
             name="password"
@@ -117,7 +173,6 @@ export const UserModal = ({
             <Input.Password />
           </Form.Item>
         )}
-
         <Form.Item
           name="roles"
           label="Vai trò"
@@ -128,14 +183,10 @@ export const UserModal = ({
           <Select
             mode="multiple"
             placeholder="Chọn vai trò"
-            options={Object.entries(UserRole).map(([key, label]) => ({
-              value: key,
-              label,
-            }))}
+            options={roles}
             optionLabelProp="label"
           />
         </Form.Item>
-
         <Form.Item name="rooms_manage" label="Quản lý phòng">
           <Select
             mode="multiple"
@@ -150,3 +201,5 @@ export const UserModal = ({
     </Modal>
   );
 };
+
+export default UserModal;

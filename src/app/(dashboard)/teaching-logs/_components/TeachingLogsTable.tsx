@@ -11,10 +11,31 @@ import TeachingLogsFilter from "./TeachingLogsFilter";
 function getColumns(isHead: boolean) {
   const base = [
     {
+      title: "Học kỳ",
+      dataIndex: ["timetable", "semester"],
+      key: "semester",
+      render: (value: string | number) => value,
+    },
+    {
+      title: "Năm học",
+      dataIndex: ["timetable", "schoolYear"],
+      key: "schoolYear",
+      render: (value: string | number) => value,
+    },
+    {
       title: "Ngày",
       dataIndex: ["timetable", "date"],
       key: "date",
-      render: (value: string) => value,
+      render: (value: string) => {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return value;
+        return d.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+      },
     },
     {
       title: "Ca học",
@@ -29,16 +50,10 @@ function getColumns(isHead: boolean) {
       render: (room: any) => room?.name || room,
     },
     {
-      title: "Học kỳ",
-      dataIndex: ["timetable", "semester"],
-      key: "semester",
-      render: (value: string | number) => value,
-    },
-    {
-      title: "Năm học",
-      dataIndex: ["timetable", "schoolYear"],
-      key: "schoolYear",
-      render: (value: string | number) => value,
+      title: "Môn học",
+      dataIndex: ["timetable", "subject"],
+      key: "subject",
+      render: (subject: any) => subject?.name || subject || "",
     },
   ];
   if (isHead) {
@@ -87,15 +102,16 @@ const TeachingLogsTable: React.FC = () => {
     const fetchLogs = async () => {
       setLoading(true);
       try {
-        const roleParam = user?.roles?.includes(UserRole.Head_of_deparment)
-          ? "Head_of_deparment"
-          : "Lecture";
+        const roleParam = user?.roles?.includes(UserRole.Admin)
+          ? "Admin"
+          : "User";
         const userId = user?._id;
         const q = new URLSearchParams();
         if (userId) q.set("userId", userId);
         if (roleParam) q.set("userRole", roleParam);
         const res = await fetch(`/api/teaching-logs?${q.toString()}`);
-        let data: TeachingLog[] = await res.json();
+        let data = await res.json();
+        if (!Array.isArray(data)) data = [];
         setLogs(data);
       } catch (err) {
         setLogs([]);
@@ -129,9 +145,7 @@ const TeachingLogsTable: React.FC = () => {
       <TeachingLogsFilter logs={logs} filters={filters} onChange={setFilters} />
       <ExportLogsButton logs={filteredLogs} />
       <Table
-        columns={getColumns(
-          !!user?.roles?.includes(UserRole.Head_of_deparment)
-        )}
+        columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
         dataSource={filteredLogs}
         rowKey={(record) => record._id}
         loading={loading}
