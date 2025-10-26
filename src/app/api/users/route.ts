@@ -1,23 +1,42 @@
 import { NextResponse } from "next/server";
+import { Binary } from "mongodb";
 import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
 
 // GET all users (only for admin)
+
 export async function GET() {
   try {
     await connectToDatabase();
     const users = await User.find({}).select("-password");
-    // Chuyển avatar Buffer sang base64 cho từng user
+
     const usersWithAvatar = users.map((u: any) => {
       const userObj = u.toObject();
-      if (userObj.avatar) {
-        userObj.avatar = `data:image/png;base64,${Buffer.from(
-          userObj.avatar
-        ).toString("base64")}`;
+      const avatar = userObj.avatar;
+      console.log("Avatar:", avatar);
+      if (avatar) {
+        // Nếu avatar là Binary của MongoDB
+        if (avatar instanceof Binary) {
+          // Lấy buffer từ Binary
+          const buffer = avatar.buffer;
+          userObj.avatar = buffer.toString("base64");
+          console.log("Converted avatar to base64 from Binary");
+        }
+        // Nếu avatar là Buffer thật
+        else if (Buffer.isBuffer(avatar)) {
+          userObj.avatar = avatar.toString("base64");
+          console.log("Converted avatar to base64 from Buffer");
+        } else {
+          userObj.avatar = null;
+        }
+      } else {
+        userObj.avatar = null;
       }
+
       return userObj;
     });
+
     return NextResponse.json(usersWithAvatar);
   } catch (error) {
     console.error("Failed to fetch users:", error);
@@ -50,7 +69,18 @@ export async function POST(request: Request) {
     const salt = await bcrypt.genSalt(10);
     body.password = await bcrypt.hash(body.password, salt);
 
-    // Nếu có avatar là base64, sẽ được lưu vào Buffer nhờ schema
+    // Nếu có avatar là base64, lưu đúng chuẩn như log
+    if (body.avatar) {
+      if (typeof body.avatar === "string") {
+        // Nếu có prefix thì tách, nếu không thì dùng luôn
+        const base64 = body.avatar.includes(",")
+          ? body.avatar.split(",")[1]
+          : body.avatar;
+        body.avatar = Buffer.from(base64, "base64");
+      } else if (body.avatar instanceof ArrayBuffer) {
+        body.avatar = Buffer.from(body.avatar);
+      }
+    }
     const user = await User.create(body);
     const userWithoutPassword = { ...user.toObject(), password: undefined };
     // Trả về avatar là base64 để frontend hiển thị
@@ -73,14 +103,16 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const { id, ...updateData } = await request.json();
-    // Nếu avatar là base64 thì chuyển sang Buffer
-    if (
-      updateData.avatar &&
-      typeof updateData.avatar === "string" &&
-      updateData.avatar.startsWith("data:image")
-    ) {
-      const base64 = updateData.avatar.split(",")[1];
-      updateData.avatar = Buffer.from(base64, "base64");
+    // Nếu avatar là base64, lưu đúng chuẩn như log
+    if (updateData.avatar) {
+      if (typeof updateData.avatar === "string") {
+        const base64 = updateData.avatar.includes(",")
+          ? updateData.avatar.split(",")[1]
+          : updateData.avatar;
+        updateData.avatar = Buffer.from(base64, "base64");
+      } else if (updateData.avatar instanceof ArrayBuffer) {
+        updateData.avatar = Buffer.from(updateData.avatar);
+      }
     }
     await connectToDatabase();
 
@@ -100,12 +132,12 @@ export async function PUT(request: Request) {
         { status: 404 }
       );
     }
-    // Trả về avatar là base64
+    // Trả về avatar là base64 (không prefix)
     const userObj = user.toObject();
-    if (userObj.avatar) {
-      userObj.avatar = `data:image/png;base64,${Buffer.from(
-        userObj.avatar
-      ).toString("base64")}`;
+    if (userObj.avatar && Buffer.from(userObj.avatar).length > 0) {
+      userObj.avatar = Buffer.from(userObj.avatar).toString("base64");
+    } else {
+      userObj.avatar = null;
     }
     return NextResponse.json(userObj);
   } catch (error) {

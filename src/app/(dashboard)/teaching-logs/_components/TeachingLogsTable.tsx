@@ -95,7 +95,8 @@ const TeachingLogsTable: React.FC = () => {
         if (userId) q.set("userId", userId);
         if (roleParam) q.set("userRole", roleParam);
         const res = await fetch(`/api/teaching-logs?${q.toString()}`);
-        let data: TeachingLog[] = await res.json();
+        let data = await res.json();
+        if (!Array.isArray(data)) data = [];
         setLogs(data);
       } catch (err) {
         setLogs([]);

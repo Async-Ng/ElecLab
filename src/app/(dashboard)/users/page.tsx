@@ -25,7 +25,6 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const response = await fetch("/api/users");
-      console.log("[API] GET /api/users", response.status);
       if (!response.ok) {
         throw new Error("Failed to fetch users");
       }
@@ -33,7 +32,6 @@ export default function UsersPage() {
       if (Array.isArray(data)) {
         data.forEach((u) => {
           if (u.avatar) {
-            console.log("[Avatar]", u.name, u.avatar.slice(0, 100));
           }
         });
       }
@@ -48,7 +46,7 @@ export default function UsersPage() {
   const fetchRooms = async () => {
     try {
       const response = await fetch("/api/rooms");
-      console.log("[API] GET /api/rooms", response.status);
+
       if (!response.ok) {
         throw new Error("Failed to fetch rooms");
       }
@@ -96,7 +94,7 @@ export default function UsersPage() {
       const response = await fetch(`/api/users/${id}`, {
         method: "DELETE",
       });
-      console.log(`[API] DELETE /api/users/${id}`, response.status);
+
       if (!response.ok) {
         throw new Error("Failed to delete user");
       }
@@ -121,7 +119,7 @@ export default function UsersPage() {
           method: "PUT",
           body: values instanceof FormData ? values : JSON.stringify(values),
         });
-        console.log(`[API] PUT /api/users/${editingUser._id}`, response.status);
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || "Failed to update user");
@@ -132,7 +130,7 @@ export default function UsersPage() {
           method: "POST",
           body: values instanceof FormData ? values : JSON.stringify(values),
         });
-        console.log("[API] POST /api/users", response.status);
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || "Failed to create user");

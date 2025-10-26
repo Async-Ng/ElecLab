@@ -1,6 +1,9 @@
 "use client";
 
 import { Table, Space, Button, Popconfirm, Tag } from "antd";
+import { UserOutlined } from "@ant-design/icons";
+import { Avatar as AntdAvatar } from "antd";
+import Image from "next/image";
 import type { ColumnsType } from "antd/es/table";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { User, UserRole } from "@/types/user";
@@ -27,16 +30,30 @@ export const UsersTable = ({
       dataIndex: "avatar",
       key: "avatar",
       width: "10%",
-      render: (avatar: string | undefined) =>
-        avatar ? (
+      render: (avatar: string | undefined) => {
+        if (!avatar || typeof avatar !== "string") {
+          return (
+            <AntdAvatar
+              shape="square"
+              size={100}
+              icon={<UserOutlined style={{ fontSize: 64 }} />}
+            />
+          );
+        }
+        // FE tự ghép prefix nếu avatar là base64
+        const src = avatar.startsWith("data:image")
+          ? avatar
+          : `data:image/png;base64,${avatar}`;
+        return (
           <img
-            src={avatar}
+            src={src}
             alt="avatar"
-            style={{ width: 32, height: 32, borderRadius: "50%" }}
+            width={32}
+            height={32}
+            style={{ objectFit: "cover", borderRadius: "50%" }}
           />
-        ) : (
-          <span>-</span>
-        ),
+        );
+      },
     },
     {
       title: "Mã nhân viên",

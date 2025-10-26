@@ -99,7 +99,7 @@ const UserModal: React.FC<UserModalProps> = ({
           {editingUser ? "Cập nhật" : "Tạo mới"}
         </Button>,
       ]}
-      destroyOnClose
+      destroyOnHidden
       width={600}
     >
       <Form form={form} layout="vertical">
