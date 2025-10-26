@@ -190,15 +190,17 @@ export default function Sidebar({ onClose }: Props) {
         </svg>
       </button>
 
-      <div className="flex flex-col items-center py-8 gap-2 border-b border-slate-800">
-        <Image
-          src="/images/logo.png"
-          alt="ElecLab logo"
-          className="object-contain rounded-md bg-white/10 p-4 shadow"
-          width={200}
-          height={200}
-          priority
-        />
+      <div className="flex flex-col items-center py-8 gap-2 border-b border-white-800">
+        <div className="rounded-md bg-white p-4 shadow">
+          <Image
+            src="/images/logo.png"
+            alt="ElecLab logo"
+            className="object-contain"
+            width={200}
+            height={200}
+            priority
+          />
+        </div>
         <h1 className="text-xl font-bold tracking-wide mt-2">ElecLab</h1>
         <div className="mt-4 mb-2 text-center">
           <p className="text-base font-semibold text-white mt-1">
