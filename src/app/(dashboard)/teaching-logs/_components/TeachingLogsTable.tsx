@@ -11,10 +11,31 @@ import TeachingLogsFilter from "./TeachingLogsFilter";
 function getColumns(isHead: boolean) {
   const base = [
     {
+      title: "Học kỳ",
+      dataIndex: ["timetable", "semester"],
+      key: "semester",
+      render: (value: string | number) => value,
+    },
+    {
+      title: "Năm học",
+      dataIndex: ["timetable", "schoolYear"],
+      key: "schoolYear",
+      render: (value: string | number) => value,
+    },
+    {
       title: "Ngày",
       dataIndex: ["timetable", "date"],
       key: "date",
-      render: (value: string) => value,
+      render: (value: string) => {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return value;
+        return d.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+      },
     },
     {
       title: "Ca học",
@@ -29,16 +50,10 @@ function getColumns(isHead: boolean) {
       render: (room: any) => room?.name || room,
     },
     {
-      title: "Học kỳ",
-      dataIndex: ["timetable", "semester"],
-      key: "semester",
-      render: (value: string | number) => value,
-    },
-    {
-      title: "Năm học",
-      dataIndex: ["timetable", "schoolYear"],
-      key: "schoolYear",
-      render: (value: string | number) => value,
+      title: "Môn học",
+      dataIndex: ["timetable", "subject"],
+      key: "subject",
+      render: (subject: any) => subject?.name || subject || "",
     },
   ];
   if (isHead) {
