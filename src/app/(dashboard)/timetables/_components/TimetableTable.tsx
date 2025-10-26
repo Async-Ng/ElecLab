@@ -71,8 +71,29 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       dataIndex: "date",
       key: "date",
       render: (value: string) => {
-        const date = new Date(value);
-        return date.toLocaleDateString("vi-VN");
+        let dateStr = String(value).trim();
+        // Excel serial
+        if (/^\d+$/.test(dateStr)) {
+          const serial = Number(dateStr);
+          const excelEpoch = new Date(1899, 11, 30);
+          const dateObj = new Date(
+            excelEpoch.getTime() + serial * 24 * 60 * 60 * 1000
+          );
+          const d = dateObj.getDate().toString().padStart(2, "0");
+          const m = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+          const y = dateObj.getFullYear();
+          dateStr = `${d}/${m}/${y}`;
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          const [y, m, d] = dateStr.split("-");
+          dateStr = `${d}/${m}/${y}`;
+        } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+          dateStr = dateStr.replace(/-/g, "/");
+        }
+        // Validate DD/MM/YYYY
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+          return dateStr;
+        }
+        return "";
       },
     },
     {
