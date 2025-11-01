@@ -6,6 +6,7 @@ import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { DataTable } from "@/components/common";
 import { Button } from "antd";
+import { useTimetables } from "@/hooks/stores";
 
 interface TimetableTableProps {
   data: Timetable[];
@@ -18,6 +19,10 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const { user, hasRole } = useAuth();
+  const { fetchTimetables } = useTimetables({
+    userRole: user?.roles?.[0],
+    userId: user?._id,
+  });
 
   // Kiểm tra xem user có phải Admin không
   const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
@@ -54,10 +59,12 @@ export default function TimetableTable({ data }: TimetableTableProps) {
     setEditRecord(record);
     setEditVisible(true);
   };
-  const handleEditSuccess = (updated: Timetable) => {
+  const handleEditSuccess = async (updated: Timetable) => {
     setTableData((prev) =>
       prev.map((item) => (item._id === updated._id ? updated : item))
     );
+    // Refetch timetables to get latest data (force bypass cache)
+    await fetchTimetables(user?.roles?.[0], user?._id, true);
   };
 
   const columns: ColumnsType<Timetable> = [

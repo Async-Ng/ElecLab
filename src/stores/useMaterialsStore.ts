@@ -5,7 +5,7 @@ interface MaterialsState {
   materials: Material[];
   loading: boolean;
   lastFetch: number | null;
-  fetchMaterials: () => Promise<void>;
+  fetchMaterials: (force?: boolean) => Promise<void>;
   addMaterial: (material: Material) => void;
   updateMaterial: (id: string, material: Partial<Material>) => void;
   deleteMaterial: (id: string) => void;
@@ -19,11 +19,11 @@ export const useMaterialsStore = create<MaterialsState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchMaterials: async () => {
+  fetchMaterials: async (force = false) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
 
-    if (lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
+    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
       return;
     }
 

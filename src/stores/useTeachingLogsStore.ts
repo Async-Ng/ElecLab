@@ -5,7 +5,7 @@ interface TeachingLogsState {
   teachingLogs: TeachingLog[];
   loading: boolean;
   lastFetch: number | null;
-  fetchTeachingLogs: (userId?: string) => Promise<void>;
+  fetchTeachingLogs: (userId?: string, force?: boolean) => Promise<void>;
   addTeachingLog: (teachingLog: TeachingLog) => void;
   updateTeachingLog: (id: string, teachingLog: Partial<TeachingLog>) => void;
   deleteTeachingLog: (id: string) => void;
@@ -19,11 +19,11 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchTeachingLogs: async (userId?: string) => {
+  fetchTeachingLogs: async (userId?: string, force = false) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
 
-    if (lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
+    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
       return;
     }
 

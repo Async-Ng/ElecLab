@@ -5,7 +5,11 @@ interface TimetablesState {
   timetables: Timetable[];
   loading: boolean;
   lastFetch: number | null;
-  fetchTimetables: (userRole?: string, userId?: string) => Promise<void>;
+  fetchTimetables: (
+    userRole?: string,
+    userId?: string,
+    force?: boolean
+  ) => Promise<void>;
   addTimetable: (timetable: Timetable) => void;
   updateTimetable: (id: string, timetable: Partial<Timetable>) => void;
   deleteTimetable: (id: string) => void;
@@ -19,11 +23,15 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchTimetables: async (userRole?: string, userId?: string) => {
+  fetchTimetables: async (
+    userRole?: string,
+    userId?: string,
+    force = false
+  ) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
 
-    if (lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
+    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
       return;
     }
 

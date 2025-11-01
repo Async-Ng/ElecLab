@@ -13,6 +13,7 @@ const RoomModal = lazy(() => import("./_components/RoomModal"));
 
 export default function RoomsClient() {
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [form] = Form.useForm<Room>();
@@ -34,6 +35,7 @@ export default function RoomsClient() {
     rooms,
     updateRoom,
     deleteRoom: removeRoom,
+    fetchRooms,
   } = useRooms({
     userRole: user?.roles?.[0],
     userId: user?._id,
@@ -56,15 +58,21 @@ export default function RoomsClient() {
     if (!id) return;
     try {
       const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Xóa thất bại");
-      message.success("Đã xóa");
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Xóa thất bại");
+      }
+
+      message.success("Xóa phòng thành công!");
       removeRoom(id);
-    } catch (err) {
-      message.error("Xóa thất bại");
+    } catch (err: any) {
+      message.error(err?.message || "Có lỗi xảy ra khi xóa phòng");
     }
   }
 
   async function handleOk() {
+    setSubmitting(true);
     try {
       const values = await form.validateFields();
       const method = editing ? "PUT" : "POST";
@@ -76,21 +84,24 @@ export default function RoomsClient() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Lưu thất bại");
+      }
 
       const savedRoom = await res.json();
 
-      message.success(editing ? "Đã cập nhật" : "Đã tạo");
+      message.success(
+        editing ? "Cập nhật phòng thành công!" : "Thêm phòng mới thành công!"
+      );
       setModalOpen(false);
 
-      if (editing && editing._id) {
-        updateRoom(editing._id, savedRoom);
-      } else {
-        // Force reload for new room
-        window.location.reload();
-      }
+      // Refetch rooms to get latest data (force bypass cache)
+      await fetchRooms(user?.roles?.[0], user?._id, true);
     } catch (err: any) {
-      message.error(err?.message || "Lưu thất bại");
+      message.error(err?.message || "Có lỗi xảy ra khi lưu phòng");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -129,6 +140,7 @@ export default function RoomsClient() {
             editing={editing}
             form={form}
             users={users}
+            loading={submitting}
           />
         </Suspense>
       )}

@@ -76,13 +76,8 @@ export default function FormField({
             showSearch={showSearch}
             optionFilterProp="children"
             disabled={disabled}
-          >
-            {options.map((opt) => (
-              <Select.Option key={opt.value} value={opt.value}>
-                {opt.label}
-              </Select.Option>
-            ))}
-          </Select>
+            options={options}
+          />
         );
 
       case "multiselect":
@@ -94,13 +89,8 @@ export default function FormField({
             optionFilterProp="children"
             disabled={disabled}
             allowClear
-          >
-            {options.map((opt) => (
-              <Select.Option key={opt.value} value={opt.value}>
-                {opt.label}
-              </Select.Option>
-            ))}
-          </Select>
+            options={options}
+          />
         );
 
       case "date":

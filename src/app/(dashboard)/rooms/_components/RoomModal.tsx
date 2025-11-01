@@ -11,6 +11,7 @@ interface RoomModalProps {
   editing: Room | null;
   form: FormInstance<Room>;
   users: User[];
+  loading?: boolean;
 }
 
 export default function RoomModal({
@@ -20,11 +21,16 @@ export default function RoomModal({
   editing,
   form,
   users,
+  loading = false,
 }: RoomModalProps) {
-  const userOptions = users.map((user) => ({
-    label: user.name,
-    value: user._id,
-  }));
+  const userOptions = useMemo(() => {
+    return users
+      .filter((user) => user._id) // Filter out users without _id
+      .map((user) => ({
+        label: user.name,
+        value: user._id,
+      }));
+  }, [users]);
 
   // Transform editing data: convert users_manage from objects to IDs
   const formInitialValues = useMemo(() => {
@@ -33,8 +39,8 @@ export default function RoomModal({
     return {
       ...editing,
       users_manage: Array.isArray(editing.users_manage)
-        ? editing.users_manage.map((user: any) => 
-            typeof user === 'object' && user !== null ? user._id : user
+        ? editing.users_manage.map((user: any) =>
+            typeof user === "object" && user !== null ? user._id : user
           )
         : editing.users_manage,
     };
@@ -50,6 +56,7 @@ export default function RoomModal({
       width={600}
       twoColumns={false}
       initialValues={formInitialValues}
+      loading={loading}
     >
       <FormField
         name="room_id"

@@ -43,7 +43,7 @@ export async function PUT(
     // Đảm bảo users_manage là mảng các chuỗi _id
     if (body.users_manage && Array.isArray(body.users_manage)) {
       body.users_manage = body.users_manage.map((u: any) =>
-        typeof u === 'string' ? u : (u._id || u.toString())
+        typeof u === "string" ? u : u._id || u.toString()
       );
     }
 

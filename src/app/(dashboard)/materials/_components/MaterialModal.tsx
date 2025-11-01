@@ -11,10 +11,11 @@ type Props = {
   onCancel: () => void;
   editing: Material | null;
   form: FormInstance;
+  loading?: boolean;
 };
 
 export default function MaterialModal(props: Props) {
-  const { open, onOk, onCancel, editing, form } = props;
+  const { open, onOk, onCancel, editing, form, loading = false } = props;
   const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export default function MaterialModal(props: Props) {
       onSubmit={onOk}
       onCancel={onCancel}
       width={600}
+      loading={loading}
     >
       <FormField
         name="material_id"

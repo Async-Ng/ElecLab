@@ -71,15 +71,25 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
             currentUser?._id || ""
           )}`
         : "/api/teaching-logs";
-      await fetch(url, {
+      const response = await fetch(url, {
         method,
         body: formData,
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Lưu thất bại");
+      }
+
+      message.success(
+        log ? "Cập nhật nhật ký thành công!" : "Tạo nhật ký mới thành công!"
+      );
+
       setLoading(false);
       onSuccess?.();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
+      message.error(err?.message || "Có lỗi xảy ra khi lưu nhật ký");
       setLoading(false);
     }
   };

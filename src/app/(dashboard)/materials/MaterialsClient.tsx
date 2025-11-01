@@ -18,9 +18,11 @@ export default function MaterialsClient() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
   const [form] = Form.useForm<Material>();
+  const [submitting, setSubmitting] = useState(false);
 
   // Use Zustand store with auto-fetch and caching
-  const { materials, loading, updateMaterial, deleteMaterial } = useMaterials();
+  const { materials, loading, updateMaterial, deleteMaterial, fetchMaterials } =
+    useMaterials();
 
   const filteredMaterials = useMemo(() => {
     return materials.filter((m) => {
@@ -58,19 +60,21 @@ export default function MaterialsClient() {
       const response = await fetch(`/api/materials?id=${id}`, {
         method: "DELETE",
       });
-      if (response.ok) {
-        message.success("Xóa thành công");
-        deleteMaterial(id);
-      } else {
+
+      if (!response.ok) {
         const error = await response.json();
-        message.error(error.message || "Xóa thất bại");
+        throw new Error(error.message || "Xóa thất bại");
       }
-    } catch (err) {
-      message.error("Xóa thất bại");
+
+      message.success("Xóa vật tư thành công!");
+      deleteMaterial(id);
+    } catch (err: any) {
+      message.error(err?.message || "Có lỗi xảy ra khi xóa vật tư");
     }
   };
 
   const handleOk = async () => {
+    setSubmitting(true);
     try {
       const values = await form.validateFields();
       const payload = { ...values };
@@ -90,23 +94,23 @@ export default function MaterialsClient() {
         });
       }
 
-      if (response.ok) {
-        const savedMaterial = await response.json();
-        message.success(editing ? "Cập nhật thành công" : "Tạo mới thành công");
-        setModalOpen(false);
-
-        if (editing && editing._id) {
-          updateMaterial(editing._id, savedMaterial);
-        } else {
-          // Force reload for new material
-          window.location.reload();
-        }
-      } else {
+      if (!response.ok) {
         const error = await response.json();
-        message.error(error.message || "Lưu thất bại");
+        throw new Error(error.message || "Lưu thất bại");
       }
-    } catch (err) {
-      message.error("Có lỗi xảy ra");
+
+      const savedMaterial = await response.json();
+      message.success(
+        editing ? "Cập nhật vật tư thành công!" : "Thêm vật tư mới thành công!"
+      );
+      setModalOpen(false);
+
+      // Refetch materials to get latest data (force bypass cache)
+      await fetchMaterials(true);
+    } catch (err: any) {
+      message.error(err?.message || "Có lỗi xảy ra khi lưu vật tư");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -158,6 +162,7 @@ export default function MaterialsClient() {
             form={form}
             onCancel={() => setModalOpen(false)}
             onOk={handleOk}
+            loading={submitting}
           />
         </Suspense>
       )}

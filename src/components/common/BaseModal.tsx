@@ -47,7 +47,7 @@ export default function BaseModal({
       onCancel={onCancel}
       footer={footer}
       width={width}
-      destroyOnClose={destroyOnClose}
+      destroyOnHidden={destroyOnClose}
       {...restProps}
     >
       {children}

@@ -101,7 +101,11 @@ const TeachingLogsTable: React.FC = () => {
   }>({});
 
   // Use Zustand store with auto-fetch and caching
-  const { teachingLogs: logs, loading } = useTeachingLogs({
+  const {
+    teachingLogs: logs,
+    loading,
+    fetchTeachingLogs,
+  } = useTeachingLogs({
     userId: user?._id,
   });
 
@@ -168,9 +172,11 @@ const TeachingLogsTable: React.FC = () => {
             : String(editLog?.timetable || "")
         }
         log={editLog}
-        onSuccess={() => {
+        onSuccess={async () => {
           setModalOpen(false);
           setEditLog(undefined);
+          // Refetch teaching logs to get latest data (force bypass cache)
+          await fetchTeachingLogs(user?._id, true);
         }}
       />
     </div>

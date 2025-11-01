@@ -5,7 +5,7 @@ interface UsersState {
   users: User[];
   loading: boolean;
   lastFetch: number | null;
-  fetchUsers: () => Promise<void>;
+  fetchUsers: (force?: boolean) => Promise<void>;
   addUser: (user: User) => void;
   updateUser: (id: string, user: Partial<User>) => void;
   deleteUser: (id: string) => void;
@@ -19,12 +19,12 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchUsers: async () => {
+  fetchUsers: async (force = false) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
 
-    // Check if cache is still valid
-    if (lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
+    // Check if cache is still valid (skip if force refresh)
+    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
       return; // Use cached data
     }
 

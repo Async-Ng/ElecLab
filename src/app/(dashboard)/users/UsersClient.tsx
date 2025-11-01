@@ -23,6 +23,7 @@ const availableRoles = [
 export default function UsersClient() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
+  const [submitting, setSubmitting] = useState(false);
 
   // Use Zustand stores with auto-fetch and caching
   const {
@@ -30,6 +31,7 @@ export default function UsersClient() {
     loading: usersLoading,
     updateUser,
     deleteUser: removeUser,
+    fetchUsers,
   } = useUsers();
   const { rooms } = useRooms();
 
@@ -50,17 +52,19 @@ export default function UsersClient() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete user");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Xóa thất bại");
       }
 
-      message.success("Xóa người dùng thành công");
+      message.success("Xóa giảng viên thành công!");
       removeUser(id);
-    } catch (error) {
-      message.error("Lỗi khi xóa người dùng");
+    } catch (error: any) {
+      message.error(error?.message || "Có lỗi xảy ra khi xóa giảng viên");
     }
   };
 
   const handleSave = async (formData: UserFormData) => {
+    setSubmitting(true);
     try {
       const url = editingUser ? `/api/users/${editingUser._id}` : "/api/users";
       const method = editingUser ? "PUT" : "POST";
@@ -75,27 +79,25 @@ export default function UsersClient() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save user");
+        throw new Error(errorData.message || "Lưu thất bại");
       }
 
       const savedUser = await response.json();
 
       message.success(
         editingUser
-          ? "Cập nhật người dùng thành công"
-          : "Tạo người dùng thành công"
+          ? "Cập nhật giảng viên thành công!"
+          : "Thêm giảng viên mới thành công!"
       );
 
-      if (editingUser && editingUser._id) {
-        updateUser(editingUser._id, savedUser);
-      } else {
-        // Force refetch for new user
-        window.location.reload();
-      }
-
       setModalOpen(false);
+
+      // Refetch users to get latest data (force bypass cache)
+      await fetchUsers(true);
     } catch (error: any) {
-      message.error(error.message || "Lỗi khi lưu người dùng");
+      message.error(error.message || "Có lỗi xảy ra khi lưu giảng viên");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -125,6 +127,7 @@ export default function UsersClient() {
         >
           <UserModal
             open={modalOpen}
+            loading={submitting}
             editingUser={editingUser}
             onSubmit={(formData) => {
               // Convert FormData to UserFormData

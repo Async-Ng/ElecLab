@@ -85,17 +85,20 @@ export default function TimetableModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        message.success("Đã cập nhật thời khóa biểu");
-        onSuccess(updated);
-        onClose();
-      } else {
+
+      if (!res.ok) {
         const errorData = await res.json();
-        message.error(errorData.error || "Cập nhật thất bại");
+        throw new Error(errorData.error || "Cập nhật thất bại");
       }
-    } catch (err) {
-      message.error("Vui lòng kiểm tra lại thông tin");
+
+      const updated = await res.json();
+      message.success("Cập nhật thời khóa biểu thành công!");
+      onSuccess(updated);
+      onClose();
+    } catch (err: any) {
+      message.error(
+        err?.message || "Có lỗi xảy ra khi cập nhật thời khóa biểu"
+      );
     } finally {
       setLoading(false);
     }
@@ -107,7 +110,7 @@ export default function TimetableModal({
       open={visible}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       width={800}
     >
       {!timetable || rooms.length === 0 || users.length === 0 ? (
