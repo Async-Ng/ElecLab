@@ -91,46 +91,90 @@ export async function PUT(
       );
     }
 
+    // Parse và xử lý rooms_manage
+    let parsedRoomsManage = body.rooms_manage;
+    if (parsedRoomsManage !== undefined) {
+      if (typeof parsedRoomsManage === "string") {
+        try {
+          parsedRoomsManage = JSON.parse(parsedRoomsManage);
+        } catch {
+          parsedRoomsManage = [];
+        }
+      }
+      if (!Array.isArray(parsedRoomsManage)) {
+        parsedRoomsManage = [];
+      }
+      // Update body với giá trị đã parse
+      body.rooms_manage = parsedRoomsManage;
+    }
+
     const user = await User.findByIdAndUpdate(
       id,
       { $set: body },
       { new: true }
     ).select("-password");
 
-    // Đồng bộ users_manage cho phòng
-    const mongoose = require("mongoose");
-    const RoomModel = mongoose.models.Room || mongoose.model("Room");
-    const userId = id;
-    const oldRoomIds: string[] = (oldUser.rooms_manage || []).map((r: any) =>
-      r.toString()
-    );
-    const newRoomIds: string[] = (body.rooms_manage || []).map((r: any) =>
-      r.toString()
-    );
+    // Đồng bộ users_manage cho phòng (chỉ khi có rooms_manage trong request)
+    if (parsedRoomsManage !== undefined) {
+      const mongoose = require("mongoose");
+      const RoomModel = mongoose.models.Room || mongoose.model("Room");
+      const userId = id;
 
-    // Phòng bị loại khỏi user
-    const removedRoomIds: string[] = oldRoomIds.filter(
-      (id: string) => !newRoomIds.includes(id)
-    );
-    // Phòng mới được thêm vào user
-    const addedRoomIds: string[] = newRoomIds.filter(
-      (id: string) => !oldRoomIds.includes(id)
-    );
+      // Helper function to check if string is valid ObjectId
+      const isValidObjectId = (id: string): boolean => {
+        return /^[0-9a-fA-F]{24}$/.test(id);
+      };
 
-    // Xóa user khỏi users_manage của phòng bị loại
-    await Promise.all(
-      removedRoomIds.map((roomId: string) =>
-        RoomModel.findByIdAndUpdate(roomId, { $pull: { users_manage: userId } })
-      )
-    );
-    // Thêm user vào users_manage của phòng mới
-    await Promise.all(
-      addedRoomIds.map((roomId: string) =>
-        RoomModel.findByIdAndUpdate(roomId, {
-          $addToSet: { users_manage: userId },
+      // Parse và filter ra các ObjectId hợp lệ từ oldUser.rooms_manage
+      const oldRoomIds: string[] = (oldUser.rooms_manage || [])
+        .map((r: any) => {
+          if (typeof r === "string") {
+            // Nếu là string JSON như "[]", parse nó
+            try {
+              const parsed = JSON.parse(r);
+              if (Array.isArray(parsed)) {
+                return parsed.map((item: any) => item.toString());
+              }
+              return parsed.toString();
+            } catch {
+              return r.toString();
+            }
+          }
+          return r.toString();
         })
-      )
-    );
+        .flat()
+        .filter(isValidObjectId);
+
+      const newRoomIds: string[] = (parsedRoomsManage || [])
+        .map((r: any) => r.toString())
+        .filter(isValidObjectId);
+
+      // Phòng bị loại khỏi user
+      const removedRoomIds: string[] = oldRoomIds.filter(
+        (id: string) => !newRoomIds.includes(id)
+      );
+      // Phòng mới được thêm vào user
+      const addedRoomIds: string[] = newRoomIds.filter(
+        (id: string) => !oldRoomIds.includes(id)
+      );
+
+      // Xóa user khỏi users_manage của phòng bị loại
+      await Promise.all(
+        removedRoomIds.map((roomId: string) =>
+          RoomModel.findByIdAndUpdate(roomId, {
+            $pull: { users_manage: userId },
+          })
+        )
+      );
+      // Thêm user vào users_manage của phòng mới
+      await Promise.all(
+        addedRoomIds.map((roomId: string) =>
+          RoomModel.findByIdAndUpdate(roomId, {
+            $addToSet: { users_manage: userId },
+          })
+        )
+      );
+    }
 
     return NextResponse.json(user);
   } catch (error) {
