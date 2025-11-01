@@ -58,7 +58,7 @@ export default React.memo(function MaterialFilters({
   );
 
   return (
-    <>
+    <div className="flex flex-wrap gap-4 items-center mb-8">
       <Input
         placeholder="Tìm theo mã hoặc tên"
         value={filters.q}
@@ -86,6 +86,6 @@ export default React.memo(function MaterialFilters({
       >
         {statusOptions}
       </Select>
-    </>
+    </div>
   );
 });

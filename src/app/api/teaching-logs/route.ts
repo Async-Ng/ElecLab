@@ -44,38 +44,44 @@ export async function GET(request: Request) {
 
   try {
     let query: any = {};
+
+    // Tối ưu: Build query trực tiếp thay vì filter sau
     if (lessonId) {
       query.timetable = lessonId;
-    } else if (userRole === "Admin") {
-      query = {};
-    } else if (userId) {
-      query = {};
+    } else if (userRole !== "Admin" && userId) {
+      // Join với timetable ngay trong query
+      const logs = await TeachingLog.find(query)
+        .populate({
+          path: "timetable",
+          match: { lecturer: userId }, // Filter ngay trong populate
+          populate: [
+            { path: "lecturer", select: "name email staff_id" },
+            { path: "room", select: "name room_id" },
+          ],
+        })
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec();
+
+      // Filter out logs where timetable is null (not matching lecturer)
+      const result = logs.filter((log) => log.timetable !== null);
+      return NextResponse.json(result);
     }
 
+    // Admin hoặc có lessonId cụ thể
     const logs = await TeachingLog.find(query)
       .populate({
         path: "timetable",
         populate: [
-          { path: "lecturer", select: "name" },
-          { path: "room", select: "name" },
+          { path: "lecturer", select: "name email staff_id" },
+          { path: "room", select: "name room_id" },
         ],
       })
       .sort({ createdAt: -1 })
-      .lean();
+      .lean()
+      .exec();
 
-    let result = logs;
-    if (!lessonId && userRole !== "Admin" && userId) {
-      result = (logs as any[]).filter((log) => {
-        const tt = log.timetable;
-        if (!tt) return false;
-        if (typeof tt.lecturer === "string") return tt.lecturer === userId;
-        return (
-          tt.lecturer?._id?.toString() === userId || tt.lecturer === userId
-        );
-      });
-    }
-
-    return NextResponse.json(result);
+    return NextResponse.json(logs);
   } catch (error) {
     console.error("GET TEACHING LOGS ERROR:", error);
     return NextResponse.json(

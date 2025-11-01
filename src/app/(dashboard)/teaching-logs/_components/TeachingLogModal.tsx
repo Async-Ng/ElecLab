@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Select, Upload, Button } from "antd";
+import { Form, Input, Upload, Modal as AntModal } from "antd";
 import { message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import TeachingLogDetail from "./TeachingLogDetail";
+import { BaseModal, FormField } from "@/components/common";
 
 interface TeachingLogModalProps {
   open: boolean;
@@ -30,6 +31,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   const [fileList, setFileList] = useState<any[]>([]);
   const [previewImage, setPreviewImage] = useState<string | undefined>();
   const [previewVisible, setPreviewVisible] = useState(false);
+
   // Lấy user hiện tại
   let currentUser: any = null;
   try {
@@ -40,6 +42,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
     try {
       const values = await form.validateFields();
       setLoading(true);
+
       // Kiểm tra quyền: chỉ chủ sở hữu mới được edit
       let lecturerId = "";
       if (log && log.timetable && typeof log.timetable === "object") {
@@ -51,6 +54,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         setLoading(false);
         return;
       }
+
       const formData = new FormData();
       formData.append("timetable", timetableId);
       formData.append("note", values.note || "");
@@ -60,50 +64,57 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
           formData.append("images", file.originFileObj);
         }
       });
+
       const method = log ? "PUT" : "POST";
       const url = log
         ? `/api/teaching-logs/${log._id}?userId=${encodeURIComponent(
             currentUser?._id || ""
           )}`
         : "/api/teaching-logs";
-      await fetch(url, {
+      const response = await fetch(url, {
         method,
         body: formData,
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Lưu thất bại");
+      }
+
+      message.success(
+        log ? "Cập nhật nhật ký thành công!" : "Tạo nhật ký mới thành công!"
+      );
+
       setLoading(false);
       onSuccess?.();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
+      message.error(err?.message || "Có lỗi xảy ra khi lưu nhật ký");
       setLoading(false);
     }
   };
 
-  const timetable =
-    log?.timetable && typeof log.timetable === "object"
-      ? log.timetable
-      : undefined;
+  const isOwner = (() => {
+    if (!log || !log.timetable || typeof log.timetable !== "object")
+      return true; // Tạo mới
+    const lec = log.timetable.lecturer;
+    const lecturerId = typeof lec === "object" ? lec._id || "" : lec || "";
+    return currentUser?._id === lecturerId;
+  })();
 
   return (
-    <Modal
+    <BaseModal
       open={open}
       title={log ? "Chi tiết nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
       onCancel={onClose}
       onOk={handleOk}
-      confirmLoading={loading}
-      destroyOnHidden
+      loading={loading}
       width={900}
     >
       {log && <TeachingLogDetail log={log} />}
+
       {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
-      {(!log ||
-        (log.timetable &&
-          typeof log.timetable === "object" &&
-          (() => {
-            const lec = log.timetable.lecturer;
-            const lecturerId =
-              typeof lec === "object" ? lec._id || "" : lec || "";
-            return currentUser?._id === lecturerId;
-          })())) && (
+      {isOwner && (
         <Form
           form={form}
           layout="vertical"
@@ -112,16 +123,18 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
             status: log?.status || TeachingLogStatus.NORMAL,
           }}
         >
-          <Form.Item
-            label="Trạng thái"
+          <FormField
             name="status"
+            label="Trạng thái"
+            type="select"
+            options={statusOptions}
             rules={[{ required: true }]}
-          >
-            <Select options={statusOptions} />
-          </Form.Item>
+          />
+
           <Form.Item label="Ghi chú" name="note">
             <Input.TextArea rows={3} />
           </Form.Item>
+
           <Form.Item label="Ảnh minh họa">
             <Upload
               listType="picture-card"
@@ -149,16 +162,17 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
               </div>
             </Upload>
           </Form.Item>
-          <Modal
+
+          <AntModal
             open={previewVisible}
             footer={null}
             onCancel={() => setPreviewVisible(false)}
           >
             <img alt="preview" style={{ width: "100%" }} src={previewImage} />
-          </Modal>
+          </AntModal>
         </Form>
       )}
-    </Modal>
+    </BaseModal>
   );
 };
 

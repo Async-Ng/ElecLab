@@ -18,8 +18,13 @@ export async function GET(request: Request) {
       // Người dùng chỉ xem phòng mình quản lý
       query = { users_manage: userId };
     }
-    // Nếu không truyền userId, trả về tất cả phòng
-    const rooms = await RoomModel.find(query).populate("users_manage");
+
+    // Tối ưu: Sử dụng lean() và chỉ populate fields cần thiết
+    const rooms = await RoomModel.find(query)
+      .populate("users_manage", "name email staff_id") // Chỉ lấy fields cần thiết
+      .lean()
+      .exec();
+
     return NextResponse.json({ rooms }, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch rooms:", error);

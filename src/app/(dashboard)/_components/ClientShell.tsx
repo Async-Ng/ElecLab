@@ -2,6 +2,9 @@
 
 import React from "react";
 import Sidebar from "./Sidebar";
+import { Button } from "antd";
+import { MenuOutlined } from "@ant-design/icons";
+import { brandColors } from "@/styles/theme";
 
 export default function ClientShell({
   children,
@@ -37,7 +40,28 @@ export default function ClientShell({
       </div>
 
       <div className="flex-1 flex flex-col">
-        <main className="p-6">{children}</main>
+        {/* Mobile header with menu button */}
+        <header
+          className="md:hidden sticky top-0 z-20 bg-white shadow-sm px-4 py-3 flex items-center justify-between"
+          style={{ borderBottom: `2px solid ${brandColors.primary}` }}
+        >
+          <h1
+            className="text-lg font-bold"
+            style={{ color: brandColors.primary }}
+          >
+            ElecLab
+          </h1>
+          <Button
+            type="primary"
+            icon={<MenuOutlined />}
+            onClick={() => setOpen(true)}
+            size="large"
+          >
+            Menu
+          </Button>
+        </header>
+
+        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

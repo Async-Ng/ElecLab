@@ -1,13 +1,13 @@
 "use client";
 
-import { Table, Space, Button, Popconfirm, Tag } from "antd";
+import { Tag } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { Avatar as AntdAvatar } from "antd";
 import Image from "next/image";
 import type { ColumnsType } from "antd/es/table";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { User, UserRole } from "@/types/user";
 import { Room } from "@/types/room";
+import { DataTable } from "@/components/common";
 
 export interface UsersTableProps {
   users: User[];
@@ -127,41 +127,15 @@ export const UsersTable = ({
         </>
       ),
     },
-    {
-      title: "Thao tác",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xóa người dùng"
-            description="Bạn có chắc muốn xóa người dùng này?"
-            onConfirm={() => record._id && onDelete(record._id)}
-            okText="Đồng ý"
-            cancelText="Hủy"
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
   ];
 
   return (
-    <Table
+    <DataTable
+      data={users}
       columns={columns}
-      dataSource={users}
+      onEdit={onEdit}
+      onDelete={(record) => record._id && onDelete(record._id)}
       loading={loading}
-      rowKey="_id"
-      pagination={{
-        pageSize: 10,
-        showSizeChanger: true,
-        showTotal: (total) => `Tổng cộng ${total} người dùng`,
-      }}
     />
   );
 };

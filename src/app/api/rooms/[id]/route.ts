@@ -4,11 +4,12 @@ import { RoomModel } from "@/models/Room";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
-    const room = await RoomModel.findOne({ _id: params.id });
+    const { id } = await params;
+    const room = await RoomModel.findOne({ _id: id });
 
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
@@ -26,14 +27,15 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
     await connectToDatabase();
+    const { id } = await params;
 
     // Lấy phòng cũ để so sánh users_manage
-    const oldRoom = await RoomModel.findOne({ _id: params.id });
+    const oldRoom = await RoomModel.findOne({ _id: id });
     if (!oldRoom) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
@@ -41,12 +43,12 @@ export async function PUT(
     // Đảm bảo users_manage là mảng các chuỗi _id
     if (body.users_manage && Array.isArray(body.users_manage)) {
       body.users_manage = body.users_manage.map((u: any) =>
-        typeof u === 'string' ? u : (u._id || u.toString())
+        typeof u === "string" ? u : u._id || u.toString()
       );
     }
 
     const updatedRoom = await RoomModel.findOneAndUpdate(
-      { _id: params.id },
+      { _id: id },
       { $set: body },
       { new: true }
     );
@@ -54,7 +56,7 @@ export async function PUT(
     // Đồng bộ rooms_manage cho user
     const mongoose = require("mongoose");
     const UserModel = mongoose.models.User || mongoose.model("User");
-    const roomId = params.id;
+    const roomId = id;
     const oldUserIds: string[] = (oldRoom.users_manage || []).map((u: any) =>
       u.toString()
     );
@@ -98,11 +100,12 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectToDatabase();
-    const deletedRoom = await RoomModel.findOneAndDelete({ _id: params.id });
+    const deletedRoom = await RoomModel.findOneAndDelete({ _id: id });
 
     if (!deletedRoom) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });

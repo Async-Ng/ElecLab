@@ -4,7 +4,7 @@ import { User } from "@/models/User";
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
   try {
@@ -33,7 +33,7 @@ export async function GET(
 }
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
   let body: any = {};
@@ -187,7 +187,7 @@ export async function PUT(
 }
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
   try {

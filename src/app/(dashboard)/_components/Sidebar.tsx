@@ -6,6 +6,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
+import { brandColors } from "@/styles/theme";
 
 type Props = {
   onClose?: () => void;
@@ -60,7 +61,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Admin],
+      roles: [UserRole.Admin, UserRole.User],
     },
 
     {
@@ -168,11 +169,17 @@ export default function Sidebar({ onClose }: Props) {
   const isActive = (path: string) => pathname?.startsWith(path);
 
   return (
-    <aside className="relative h-full flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100 shadow-lg w-full md:w-64 p-0">
+    <aside
+      className="relative h-full flex flex-col text-white shadow-xl w-full md:w-64 p-0"
+      style={{
+        background: `linear-gradient(180deg, ${brandColors.primary} 0%, ${brandColors.secondary} 100%)`,
+      }}
+    >
       {/* Close button for mobile */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 rounded bg-slate-800/60 md:hidden"
+        className="absolute top-4 right-4 p-2 rounded md:hidden"
+        style={{ background: "rgba(255, 255, 255, 0.15)" }}
         aria-label="Đóng menu"
       >
         <svg
@@ -190,8 +197,11 @@ export default function Sidebar({ onClose }: Props) {
         </svg>
       </button>
 
-      <div className="flex flex-col items-center py-8 gap-2 border-b border-white-800">
-        <div className="rounded-md bg-white p-4 shadow">
+      <div
+        className="flex flex-col items-center py-8 gap-2"
+        style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.15)" }}
+      >
+        <div className="rounded-md bg-white p-4 shadow-lg">
           <Image
             src="/images/logo.png"
             alt="ElecLab logo"
@@ -206,7 +216,7 @@ export default function Sidebar({ onClose }: Props) {
           <p className="text-base font-semibold text-white mt-1">
             {user?.name}
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
             {user?.roles
               .map((role) =>
                 role === UserRole.Admin ? "Quản lý" : "Người dùng"
@@ -222,10 +232,10 @@ export default function Sidebar({ onClose }: Props) {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-colors font-medium text-base ${
+                className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-all font-medium text-base ${
                   isActive(item.href)
-                    ? "bg-slate-700 text-white shadow"
-                    : "hover:bg-slate-800 text-slate-300"
+                    ? "bg-white/20 text-white shadow-md"
+                    : "hover:bg-white/10 text-white/90"
                 }`}
                 onClick={onClose}
               >
@@ -237,10 +247,27 @@ export default function Sidebar({ onClose }: Props) {
         </ul>
       </nav>
 
-      <div className="mt-auto border-t border-slate-800 px-6 py-6 bg-slate-900/80">
+      <div
+        className="mt-auto px-6 py-6"
+        style={{
+          borderTop: "1px solid rgba(255, 255, 255, 0.15)",
+          background: "rgba(0, 0, 0, 0.15)",
+        }}
+      >
         <button
           onClick={logout}
-          className="w-full text-sm bg-slate-800 border border-slate-700 rounded px-3 py-2 hover:bg-slate-700 transition-colors font-semibold"
+          className="w-full text-sm rounded px-3 py-2 transition-all font-semibold"
+          style={{
+            background: "rgba(255, 255, 255, 0.15)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
+            color: "white",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.25)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
+          }}
         >
           Đăng xuất
         </button>

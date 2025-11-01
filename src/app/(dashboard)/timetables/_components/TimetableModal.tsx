@@ -1,9 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Modal, Form, Input, Select, DatePicker, Button, message } from "antd";
+import React, { useState } from "react";
+import { Form, Input, Select, DatePicker, message, Col } from "antd";
 import dayjs from "dayjs";
 import viVN from "antd/es/date-picker/locale/vi_VN";
-import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
+import { Timetable, StudyTime } from "@/types/timetable";
+import FormModal from "@/components/common/FormModal";
 
 interface TimetableModalProps {
   visible: boolean;
@@ -25,33 +26,34 @@ export default function TimetableModal({
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (visible && timetable && rooms.length > 0 && users.length > 0) {
-      let d = timetable.date;
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
-        const [dd, mm, yyyy] = d.split("/");
-        d = `${yyyy}-${mm}-${dd}`;
-      }
-      form.resetFields();
-      form.setFieldsValue({
-        schoolYear: timetable.schoolYear || "",
-        semester: Number(timetable.semester) || undefined,
-        date: d ? dayjs(d, "YYYY-MM-DD") : null,
-        period: Number(timetable.period) || undefined,
-        time: timetable.time || undefined,
-        subject: timetable.subject || "",
-        room:
-          typeof timetable.room === "object"
-            ? timetable.room._id
-            : timetable.room,
-        className: timetable.className || "",
-        lecturer:
-          typeof timetable.lecturer === "object"
-            ? timetable.lecturer._id
-            : timetable.lecturer,
-      });
+  // Prepare initial values for form
+  const initialValues = React.useMemo(() => {
+    if (!timetable || rooms.length === 0 || users.length === 0) return null;
+
+    let d = timetable.date;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
+      const [dd, mm, yyyy] = d.split("/");
+      d = `${yyyy}-${mm}-${dd}`;
     }
-  }, [visible, timetable, rooms, users, form]);
+
+    return {
+      schoolYear: timetable.schoolYear || "",
+      semester: Number(timetable.semester) || undefined,
+      date: d ? dayjs(d, "YYYY-MM-DD") : null,
+      period: Number(timetable.period) || undefined,
+      time: timetable.time || undefined,
+      subject: timetable.subject || "",
+      room:
+        typeof timetable.room === "object"
+          ? timetable.room._id
+          : timetable.room,
+      className: timetable.className || "",
+      lecturer:
+        typeof timetable.lecturer === "object"
+          ? timetable.lecturer._id
+          : timetable.lecturer,
+    };
+  }, [timetable, rooms, users]);
 
   const handleOk = async () => {
     setLoading(true);
@@ -75,113 +77,180 @@ export default function TimetableModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        message.success("Đã cập nhật thời khóa biểu");
-        onSuccess(updated);
-        onClose();
-      } else {
+
+      if (!res.ok) {
         const errorData = await res.json();
-        message.error(errorData.error || "Cập nhật thất bại");
+        throw new Error(errorData.error || "Cập nhật thất bại");
       }
-    } catch (err) {
-      message.error("Vui lòng kiểm tra lại thông tin");
+
+      const updated = await res.json();
+      message.success("Cập nhật thời khóa biểu thành công!");
+      onSuccess(updated);
+      onClose();
+    } catch (err: any) {
+      message.error(
+        err?.message || "Có lỗi xảy ra khi cập nhật thời khóa biểu"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <Modal
-      title="Chỉnh sửa thời khóa biểu"
-      open={visible}
-      onCancel={onClose}
-      footer={null}
-      destroyOnClose
-    >
-      {!timetable || rooms.length === 0 || users.length === 0 ? (
+  if (!timetable || rooms.length === 0 || users.length === 0) {
+    return (
+      <FormModal
+        open={visible}
+        title="Chỉnh sửa thời khóa biểu"
+        onCancel={onClose}
+        onSubmit={() => {}}
+        form={form}
+        width={800}
+        twoColumns
+      >
         <div style={{ padding: 32, textAlign: "center" }}>
           <b>Đang tải dữ liệu...</b>
         </div>
-      ) : (
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="schoolYear"
-            label="Năm học"
-            rules={[{ required: true }]}
+      </FormModal>
+    );
+  }
+
+  return (
+    <FormModal
+      open={visible}
+      title="Chỉnh sửa thời khóa biểu"
+      onCancel={onClose}
+      onSubmit={handleOk}
+      loading={loading}
+      form={form}
+      width={800}
+      twoColumns
+      initialValues={initialValues}
+    >
+      <Col span={12}>
+        <Form.Item
+          name="schoolYear"
+          label="Năm học"
+          rules={[{ required: true, message: "Vui lòng nhập năm học" }]}
+        >
+          <Input placeholder="VD: 2024-2025" />
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item
+          name="semester"
+          label="Học kỳ"
+          rules={[{ required: true, message: "Vui lòng chọn học kỳ" }]}
+        >
+          <Select placeholder="Chọn học kỳ">
+            <Select.Option value={1}>HK1</Select.Option>
+            <Select.Option value={2}>HK2</Select.Option>
+            <Select.Option value={3}>HK3</Select.Option>
+          </Select>
+        </Form.Item>
+      </Col>
+
+      <Col span={12}>
+        <Form.Item
+          name="date"
+          label="Ngày"
+          rules={[{ required: true, message: "Vui lòng chọn ngày" }]}
+        >
+          <DatePicker
+            format="DD/MM/YYYY"
+            locale={viVN}
+            style={{ width: "100%" }}
+            placeholder="Chọn ngày"
+          />
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item
+          name="period"
+          label="Ca học"
+          rules={[{ required: true, message: "Vui lòng chọn ca học" }]}
+        >
+          <Select placeholder="Chọn ca học">
+            <Select.Option value={1}>Ca 1</Select.Option>
+            <Select.Option value={2}>Ca 2</Select.Option>
+            <Select.Option value={3}>Ca 3</Select.Option>
+            <Select.Option value={4}>Ca 4</Select.Option>
+          </Select>
+        </Form.Item>
+      </Col>
+
+      <Col span={12}>
+        <Form.Item
+          name="time"
+          label="Giờ học"
+          rules={[{ required: true, message: "Vui lòng chọn giờ học" }]}
+        >
+          <Select placeholder="Chọn giờ học">
+            {Object.values(StudyTime).map((t) => (
+              <Select.Option key={t} value={t}>
+                {t}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item
+          name="subject"
+          label="Môn học"
+          rules={[{ required: true, message: "Vui lòng nhập môn học" }]}
+        >
+          <Input placeholder="VD: TN Máy điện" />
+        </Form.Item>
+      </Col>
+
+      <Col span={12}>
+        <Form.Item
+          name="room"
+          label="Phòng học"
+          rules={[{ required: true, message: "Vui lòng chọn phòng học" }]}
+        >
+          <Select
+            showSearch
+            placeholder="Chọn phòng học"
+            optionFilterProp="children"
           >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="semester"
-            label="Học kỳ"
-            rules={[{ required: true }]}
+            {rooms.map((r) => (
+              <Select.Option key={r._id} value={r._id}>
+                {r.room_id} - {r.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item
+          name="className"
+          label="Lớp"
+          rules={[{ required: true, message: "Vui lòng nhập lớp" }]}
+        >
+          <Input placeholder="VD: C23A.ĐL2" />
+        </Form.Item>
+      </Col>
+
+      <Col span={24}>
+        <Form.Item
+          name="lecturer"
+          label="Giảng viên"
+          rules={[{ required: true, message: "Vui lòng chọn giảng viên" }]}
+        >
+          <Select
+            showSearch
+            placeholder="Chọn giảng viên"
+            optionFilterProp="children"
           >
-            <Select>
-              <Select.Option value={1}>HK1</Select.Option>
-              <Select.Option value={2}>HK2</Select.Option>
-              <Select.Option value={3}>HK3</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="date" label="Ngày" rules={[{ required: true }]}>
-            <DatePicker format="DD/MM/YYYY" locale={viVN} />
-          </Form.Item>
-          <Form.Item name="period" label="Ca học" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value={1}>Ca 1</Select.Option>
-              <Select.Option value={2}>Ca 2</Select.Option>
-              <Select.Option value={3}>Ca 3</Select.Option>
-              <Select.Option value={4}>Ca 4</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="time" label="Giờ học" rules={[{ required: true }]}>
-            <Select>
-              {Object.values(StudyTime).map((t) => (
-                <Select.Option key={t} value={t}>
-                  {t}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="subject"
-            label="Môn học"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="room" label="Phòng học" rules={[{ required: true }]}>
-            <Select showSearch>
-              {rooms.map((r) => (
-                <Select.Option key={r._id} value={r._id}>
-                  {r.room_id} - {r.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="className" label="Lớp" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="lecturer"
-            label="Giảng viên"
-            rules={[{ required: true }]}
-          >
-            <Select showSearch>
-              {users.map((u) => (
-                <Select.Option key={u._id} value={u._id}>
-                  {u.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" onClick={handleOk} loading={loading}>
-              Lưu
-            </Button>
-          </Form.Item>
-        </Form>
-      )}
-    </Modal>
+            {users.map((u) => (
+              <Select.Option key={u._id} value={u._id}>
+                {u.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+    </FormModal>
   );
 }

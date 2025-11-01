@@ -1,10 +1,15 @@
 "use client";
 
 import React from "react";
-import { Select, DatePicker } from "antd";
+import { DatePicker, Col } from "antd";
 import viVN from "antd/es/date-picker/locale/vi_VN";
 import { Semester } from "@/types/timetable";
 import { Dayjs } from "dayjs";
+import FilterBar from "@/components/common/FilterBar";
+import {
+  SemesterSelect,
+  SchoolYearSelect,
+} from "@/components/common/SelectFields";
 
 type FilterBarProps = {
   schoolYear: string;
@@ -16,7 +21,7 @@ type FilterBarProps = {
   setWeekStart: (d: Dayjs) => void;
 };
 
-export default function FilterBar({
+export default function TimetableWeekFilterBar({
   schoolYear,
   setSchoolYear,
   semester,
@@ -26,44 +31,37 @@ export default function FilterBar({
   setWeekStart,
 }: FilterBarProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 16,
-        marginBottom: 16,
-        flexWrap: "wrap",
-        alignItems: "center",
-      }}
-    >
-      <Select
-        style={{ minWidth: 120 }}
-        placeholder="Năm học"
-        value={schoolYear || undefined}
-        onChange={setSchoolYear}
-        options={schoolYearOptions.map((y: string) => ({ label: y, value: y }))}
-        allowClear
-      />
-      <Select
-        style={{ minWidth: 120 }}
-        placeholder="Học kỳ"
-        value={semester ?? undefined}
-        onChange={(v) => setSemester(v as Semester)}
-        options={[
-          { label: "HK1", value: Semester.First },
-          { label: "HK2", value: Semester.Second },
-          { label: "HK3", value: Semester.Third },
-        ]}
-        allowClear
-      />
-      <DatePicker
-        picker="week"
-        value={weekStart}
-        format="DD/MM/YYYY"
-        onChange={(d) => d && setWeekStart(d.startOf("week"))}
-        style={{ width: 120 }}
-        placeholder="Chọn tuần"
-        locale={viVN}
-      />
-    </div>
+    <FilterBar>
+      <Col xs={24} sm={12} md={8}>
+        <SchoolYearSelect
+          options={schoolYearOptions}
+          value={schoolYear}
+          onChange={setSchoolYear}
+          style={{ width: "100%" }}
+          allowClear
+        />
+      </Col>
+
+      <Col xs={24} sm={12} md={8}>
+        <SemesterSelect
+          value={semester}
+          onChange={setSemester as any}
+          style={{ width: "100%" }}
+          allowClear
+        />
+      </Col>
+
+      <Col xs={24} sm={12} md={8}>
+        <DatePicker
+          picker="week"
+          value={weekStart}
+          format="DD/MM/YYYY"
+          onChange={(d) => d && setWeekStart(d.startOf("week"))}
+          style={{ width: "100%" }}
+          placeholder="Chọn tuần"
+          locale={viVN}
+        />
+      </Col>
+    </FilterBar>
   );
 }

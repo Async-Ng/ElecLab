@@ -16,8 +16,8 @@ export default function PrivateRoute({
 
   // Array các route cho phép giảng viên truy cập
   const allowedRoutes = user
-    ? [`/timetables/${user._id}`, "/teaching-logs"]
-    : ["/teaching-logs"];
+    ? [`/timetables/${user._id}`, "/timetables", "/teaching-logs"]
+    : ["/timetables", "/teaching-logs"];
 
   useEffect(() => {
     if (loading) return;

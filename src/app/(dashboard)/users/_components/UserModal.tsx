@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Form, Input, Select, Upload, Button } from "antd";
+import { Form, Upload, Button } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { User, UserRole } from "@/types/user";
 import { Room } from "@/types/room";
 import Image from "next/image";
+import { FormModal, FormField } from "@/components/common";
 
 interface UserModalProps {
   open: boolean;
@@ -65,143 +66,164 @@ const UserModal: React.FC<UserModalProps> = ({
   }, [open, editingUser, form]);
 
   const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const formData = new FormData();
-      formData.append("staff_id", values.staff_id);
-      formData.append("name", values.name);
-      formData.append("email", values.email);
-      formData.append("position", values.position || "");
-      if (values.password) formData.append("password", values.password);
-      formData.append("roles", JSON.stringify(values.roles));
-      formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
-      if (fileList.length && fileList[0].originFileObj) {
-        formData.append("avatar", fileList[0].originFileObj);
-      }
-      onSubmit(formData);
-    } catch (err) {}
+    const values = await form.validateFields();
+    const formData = new FormData();
+    formData.append("staff_id", values.staff_id);
+    formData.append("name", values.name);
+    formData.append("email", values.email);
+    formData.append("position", values.position || "");
+    if (values.password) formData.append("password", values.password);
+    formData.append("roles", JSON.stringify(values.roles));
+    formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
+    if (fileList.length && fileList[0].originFileObj) {
+      formData.append("avatar", fileList[0].originFileObj);
+    }
+    onSubmit(formData);
   };
 
   return (
-    <Modal
+    <FormModal
       open={open}
       title={editingUser ? "Chỉnh sửa người dùng" : "Thêm người dùng mới"}
+      form={form}
+      onSubmit={handleSubmit}
       onCancel={onCancel}
-      footer={[
-        <Button key="cancel" onClick={onCancel}>
-          Hủy
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          loading={loading}
-          onClick={handleSubmit}
-        >
-          {editingUser ? "Cập nhật" : "Tạo mới"}
-        </Button>,
-      ]}
-      destroyOnHidden
-      width={600}
+      loading={loading}
+      width={800}
+      twoColumns={true}
+      initialValues={editingUser || undefined}
     >
-      <Form form={form} layout="vertical">
-        <Form.Item label="Avatar">
-          <Upload
-            listType="picture-card"
-            fileList={fileList}
-            onChange={({ fileList }) => setFileList(fileList)}
-            beforeUpload={() => false}
-            maxCount={1}
-            showUploadList={{ showPreviewIcon: true }}
-            onPreview={async (file) => {
-              let src = file.url || file.thumbUrl;
-              if (!src && file.originFileObj) {
-                src = await new Promise<string>((resolve) => {
-                  const reader = new FileReader();
-                  if (file.originFileObj)
-                    reader.readAsDataURL(file.originFileObj);
-                  reader.onload = () => resolve(reader.result as string);
-                });
-              }
-              setPreviewImage(src);
-              setPreviewVisible(true);
+      {/* Avatar Upload - Full width custom field */}
+      <Form.Item label="Avatar" style={{ gridColumn: "1 / -1" }}>
+        <Upload
+          listType="picture-card"
+          fileList={fileList}
+          onChange={({ fileList }) => setFileList(fileList)}
+          beforeUpload={() => false}
+          maxCount={1}
+          showUploadList={{ showPreviewIcon: true }}
+          onPreview={async (file) => {
+            let src = file.url || file.thumbUrl;
+            if (!src && file.originFileObj) {
+              src = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                if (file.originFileObj)
+                  reader.readAsDataURL(file.originFileObj);
+                reader.onload = () => resolve(reader.result as string);
+              });
+            }
+            setPreviewImage(src);
+            setPreviewVisible(true);
+          }}
+        >
+          <div>
+            <UploadOutlined /> Chọn ảnh
+          </div>
+        </Upload>
+        {/* Avatar preview modal */}
+        {previewVisible && previewImage && (
+          <div
+            onClick={() => setPreviewVisible(false)}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10000,
             }}
           >
-            <div>
-              <UploadOutlined /> Chọn ảnh
-            </div>
-          </Upload>
-        </Form.Item>
-        <Modal
-          open={previewVisible}
-          footer={null}
-          onCancel={() => setPreviewVisible(false)}
-        >
-          {previewImage ? (
-            <Image alt="preview" style={{ width: "100%" }} src={previewImage} />
-          ) : null}
-        </Modal>
-        <Form.Item
-          name="staff_id"
-          label="Mã nhân viên"
-          rules={[{ required: true, message: "Vui lòng nhập mã nhân viên!" }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="name"
-          label="Tên"
-          rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item name="position" label="Chức vụ">
-          <Input placeholder="Nhập chức vụ" />
-        </Form.Item>
-        <Form.Item
-          name="email"
-          label="Email"
-          rules={[
-            { required: true, message: "Vui lòng nhập email!" },
-            { type: "email", message: "Vui lòng nhập email hợp lệ!" },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        {!editingUser && (
-          <Form.Item
-            name="password"
-            label="Mật khẩu"
-            rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-          >
-            <Input.Password />
-          </Form.Item>
+            <Image
+              alt="preview"
+              style={{ width: "80%", maxWidth: "600px" }}
+              src={previewImage}
+              width={600}
+              height={600}
+            />
+          </div>
         )}
-        <Form.Item
-          name="roles"
-          label="Vai trò"
-          rules={[
-            { required: true, message: "Vui lòng chọn ít nhất một vai trò!" },
-          ]}
-        >
-          <Select
-            mode="multiple"
-            placeholder="Chọn vai trò"
-            options={roles}
-            optionLabelProp="label"
-          />
-        </Form.Item>
-        <Form.Item name="rooms_manage" label="Quản lý phòng">
-          <Select
-            mode="multiple"
-            placeholder="Chọn phòng"
-            options={rooms.map((room) => ({
-              label: room.name,
-              value: room._id,
-            }))}
-          />
-        </Form.Item>
-      </Form>
-    </Modal>
+      </Form.Item>
+
+      {/* Staff ID */}
+      <FormField
+        name="staff_id"
+        label="Mã nhân viên"
+        type="text"
+        span={12}
+        rules={[{ required: true, message: "Vui lòng nhập mã nhân viên!" }]}
+      />
+
+      {/* Name */}
+      <FormField
+        name="name"
+        label="Họ và tên"
+        type="text"
+        span={12}
+        rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
+      />
+
+      {/* Email */}
+      <FormField
+        name="email"
+        label="Email"
+        type="email"
+        span={12}
+        rules={[
+          { required: true, message: "Vui lòng nhập email!" },
+          { type: "email", message: "Vui lòng nhập email hợp lệ!" },
+        ]}
+      />
+
+      {/* Position */}
+      <FormField
+        name="position"
+        label="Chức vụ"
+        type="text"
+        placeholder="Nhập chức vụ"
+        span={12}
+      />
+
+      {/* Password - only for new users */}
+      {!editingUser && (
+        <FormField
+          name="password"
+          label="Mật khẩu"
+          type="password"
+          span={24}
+          rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+        />
+      )}
+
+      {/* Roles */}
+      <FormField
+        name="roles"
+        label="Vai trò"
+        type="multiselect"
+        placeholder="Chọn vai trò"
+        options={roles}
+        span={12}
+        rules={[
+          { required: true, message: "Vui lòng chọn ít nhất một vai trò!" },
+        ]}
+      />
+
+      {/* Rooms Manage */}
+      <FormField
+        name="rooms_manage"
+        label="Quản lý phòng"
+        type="multiselect"
+        placeholder="Chọn phòng"
+        options={rooms.map((room) => ({
+          label: room.name,
+          value: room._id,
+        }))}
+        span={24}
+      />
+    </FormModal>
   );
 };
 

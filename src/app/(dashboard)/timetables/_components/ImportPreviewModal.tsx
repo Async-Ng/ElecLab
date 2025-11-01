@@ -14,6 +14,7 @@ import {
   Popconfirm,
 } from "antd";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ImportPreviewModalProps {
   visible: boolean;
@@ -55,6 +56,9 @@ export default function ImportPreviewModal({
   rooms = [],
   users = [],
 }: ImportPreviewModalProps) {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
+
   const [rows, setRows] = useState<(Timetable & { key: string | number })[]>(
     []
   );
@@ -240,36 +244,41 @@ export default function ImportPreviewModal({
         />
       ),
     },
-    {
-      title: "Giảng viên",
-      dataIndex: "lecturer",
-      key: "lecturer",
-      render: (val: string, record: any) => (
-        <Select
-          showSearch
-          style={{ width: 150 }}
-          value={val || undefined}
-          placeholder="Chọn giảng viên theo email"
-          optionFilterProp="children"
-          onChange={(v) => updateRow(record.key, { lecturer: v })}
-          filterOption={(input, option) => {
-            const label =
-              typeof option?.children === "string" ? option.children : "";
-            const value = typeof option?.value === "string" ? option.value : "";
-            return (
-              label.toLowerCase().includes(input.toLowerCase()) ||
-              value.toLowerCase().includes(input.toLowerCase())
-            );
-          }}
-        >
-          {users.map((u) => (
-            <Select.Option key={u.email} value={u.email}>
-              {u.name}
-            </Select.Option>
-          ))}
-        </Select>
-      ),
-    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Giảng viên",
+            dataIndex: "lecturer",
+            key: "lecturer",
+            render: (val: string, record: any) => (
+              <Select
+                showSearch
+                style={{ width: 150 }}
+                value={val || undefined}
+                placeholder="Chọn giảng viên theo email"
+                optionFilterProp="children"
+                onChange={(v: string) => updateRow(record.key, { lecturer: v })}
+                filterOption={(input: string, option: any) => {
+                  const label =
+                    typeof option?.children === "string" ? option.children : "";
+                  const value =
+                    typeof option?.value === "string" ? option.value : "";
+                  return (
+                    label.toLowerCase().includes(input.toLowerCase()) ||
+                    value.toLowerCase().includes(input.toLowerCase())
+                  );
+                }}
+              >
+                {users.map((u) => (
+                  <Select.Option key={u.email} value={u.email}>
+                    {u.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            ),
+          },
+        ]
+      : []),
     {
       title: "Trạng thái",
       key: "valid",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Form,
@@ -10,20 +10,17 @@ import {
   Typography,
   Row,
   Col,
-  Space,
   Divider,
 } from "antd";
 import {
   UserOutlined,
   LockOutlined,
   ArrowRightOutlined,
-  GoogleOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
-// const PRIMARY_COLOR = '#1890ff'; // Không dùng nữa, sẽ dùng màu đen/xám đậm cho nút
 
 interface LoginForm {
   username: string;
@@ -35,8 +32,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { login: loginContext } = useAuth();
 
-  // Đã xoá useEffect kiểm tra localStorage để tránh xung đột redirect với PrivateRoute
-
   const onFinish = async (values: LoginForm) => {
     try {
       setLoading(true);
@@ -45,7 +40,7 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: values.username, // Since we're using email as username
+          email: values.username,
           password: values.password,
         }),
       });
@@ -57,13 +52,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Sử dụng context login để cập nhật trạng thái ngay lập tức
       loginContext(data.token, data.user);
-
-      // Show success message
       message.success("Đăng nhập thành công!");
-
-      // Redirect to lecturer's timetable page
       router.push(`/timetables/${data.user._id}`);
     } catch (error) {
       message.error("Đăng nhập thất bại, vui lòng thử lại");
@@ -73,22 +63,21 @@ export default function LoginPage() {
   };
 
   return (
-    // Toàn bộ màn hình, màu nền không gradient, chỉ để cho ảnh nền quyết định
     <div className="w-screen h-screen flex items-center justify-center p-0 overflow-hidden">
       <Image
-        src="/images/background.jpg" // Đổi thành ảnh nền bạn muốn
+        src="/images/background.jpg"
         alt="Login Background"
         fill
         className="object-cover"
         priority
       />
-      <div className="absolute inset-0 bg-black/40 z-0" />{" "}
+      <div className="absolute inset-0 bg-black/40 z-0" />
       <div className="relative z-10 w-[90%] h-[90%] flex bg-transparent shadow-lg rounded-xl overflow-hidden">
-        <Row className="w-full h-full ">
+        <Row className="w-full h-full">
           <Col
             xs={0}
             md={15}
-            className="relative flex flex-col justify-center text-left p-12 "
+            className="relative flex flex-col justify-center text-left p-12"
           >
             <div className="relative z-10 w-full">
               <Title
@@ -115,18 +104,17 @@ export default function LoginPage() {
             md={10}
             className="relative flex flex-col justify-center items-center p-8 sm:p-12 lg:p-16 bg-white overflow-hidden"
             style={{
-              borderTopLeftRadius: "50% 50%", // Cong theo hình ellipse
-              borderBottomLeftRadius: "50% 50%", // Cong theo hình ellipse
-              marginLeft: "-150px", // Đẩy lùi phần cong vào trong để lộ ảnh nền
-              paddingLeft: "180px", // Bù lại khoảng trống đã mất
+              borderTopLeftRadius: "50% 50%",
+              borderBottomLeftRadius: "50% 50%",
+              marginLeft: "-150px",
+              paddingLeft: "180px",
             }}
           >
             <div className="w-full max-w-md">
               <div className="flex flex-col items-center mb-10">
                 <div className="relative w-32 h-32 mb-4">
-                  {" "}
                   <Image
-                    src="/images/logo.png" // Thay bằng logo của bạn
+                    src="/images/logo.png"
                     alt="Logo"
                     fill
                     className="object-contain"
@@ -151,7 +139,7 @@ export default function LoginPage() {
                 <Form.Item
                   name="username"
                   rules={[{ required: true, message: "Vui lòng nhập email!" }]}
-                  className="!mb-6" // Khoảng cách giữa các item
+                  className="!mb-6"
                 >
                   <Input
                     prefix={<UserOutlined className="site-form-item-icon" />}
@@ -188,7 +176,7 @@ export default function LoginPage() {
                     {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                   </Button>
                 </Form.Item>
-                {/* Static info below login button */}
+
                 <div className="mt-6 text-center text-gray-500 text-sm">
                   <Divider plain className="!mb-4">
                     Thông tin hệ thống

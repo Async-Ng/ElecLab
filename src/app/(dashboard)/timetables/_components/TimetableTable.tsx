@@ -1,10 +1,12 @@
 "use client";
-import { Table, Button } from "antd";
 import TimetableModal from "./TimetableModal";
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
+import { DataTable } from "@/components/common";
+import { Button } from "antd";
+import { useTimetables } from "@/hooks/stores";
 
 interface TimetableTableProps {
   data: Timetable[];
@@ -17,6 +19,13 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const { user, hasRole } = useAuth();
+  const { fetchTimetables } = useTimetables({
+    userRole: user?.roles?.[0],
+    userId: user?._id,
+  });
+
+  // Kiểm tra xem user có phải Admin không
+  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
 
   React.useEffect(() => {
     setTableData(data);
@@ -50,10 +59,12 @@ export default function TimetableTable({ data }: TimetableTableProps) {
     setEditRecord(record);
     setEditVisible(true);
   };
-  const handleEditSuccess = (updated: Timetable) => {
+  const handleEditSuccess = async (updated: Timetable) => {
     setTableData((prev) =>
       prev.map((item) => (item._id === updated._id ? updated : item))
     );
+    // Refetch timetables to get latest data (force bypass cache)
+    await fetchTimetables(user?.roles?.[0], user?._id, true);
   };
 
   const columns: ColumnsType<Timetable> = [
@@ -126,19 +137,22 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       dataIndex: "className",
       key: "className",
     },
-    {
-      title: "Giảng viên",
-      dataIndex: "lecturer",
-      key: "lecturer",
-      render: (lecturer: any) =>
-        typeof lecturer === "string" ? lecturer : lecturer?.name,
-    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Giảng viên",
+            dataIndex: "lecturer",
+            key: "lecturer",
+            render: (lecturer: any) =>
+              typeof lecturer === "string" ? lecturer : lecturer?.name,
+          },
+        ]
+      : []),
     {
       title: "Chỉnh sửa",
       key: "actions",
       render: (_: any, record: Timetable) => {
         // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
-        const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
         const isOwner =
           user &&
           (record.lecturer === user._id ||
@@ -158,13 +172,11 @@ export default function TimetableTable({ data }: TimetableTableProps) {
 
   return (
     <>
-      <Table
+      <DataTable
+        data={tableData}
         columns={columns}
-        dataSource={tableData}
-        rowKey={(record) =>
-          record._id || record.className + record.date + record.period
-        }
-        pagination={{ pageSize: 10 }}
+        loading={false}
+        showActions={false}
       />
       <TimetableModal
         visible={editVisible}

@@ -49,4 +49,8 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// Tối ưu: Thêm indexes cho các trường thường query
+// Note: staff_id và email đã có unique:true nên tự động có index
+userSchema.index({ roles: 1 });
+
 export const User = mongoose.models.User || mongoose.model("User", userSchema);

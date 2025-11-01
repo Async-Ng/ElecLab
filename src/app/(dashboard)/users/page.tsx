@@ -9,7 +9,7 @@ export default function UsersPage() {
     <Suspense
       fallback={<LoadingSpinner tip="Đang tải danh sách giảng viên..." />}
     >
-      <UsersClient initialUsers={[]} />
+      <UsersClient />
     </Suspense>
   );
 }

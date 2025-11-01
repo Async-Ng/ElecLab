@@ -1,8 +1,8 @@
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
-import { Button, Popconfirm, Table, Tag } from "antd";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { DataTable } from "@/components/common";
 
 interface RoomTableProps {
   rooms: (Room & { users_manage?: User[] })[];
@@ -51,35 +51,15 @@ export default function RoomTable({
         </>
       ),
     },
-    {
-      title: "Thao tác",
-      key: "action",
-      width: "20%",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xác nhận xóa?"
-            onConfirm={() => onDelete(record._id)}
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
-          </Popconfirm>
-        </div>
-      ),
-    },
   ];
 
   return (
-    <Table
+    <DataTable
+      data={rooms}
       columns={columns}
-      dataSource={rooms}
+      onEdit={onEdit}
+      onDelete={(record) => onDelete(record._id)}
       loading={loading}
-      rowKey="_id"
-      scroll={{ x: 800 }}
     />
   );
 }
