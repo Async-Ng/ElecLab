@@ -27,7 +27,7 @@ export interface Timetable {
   _id?: string; // ID của lịch dạy
   schoolYear: string; // Năm học, ví dụ: "2025-2026"
   semester: Semester; // Học kỳ
-  date: string; // Ngày, định dạng ISO: "2025-10-24"
+  date: string; // Ngày, định dạng vi-VN: "DD/MM/YYYY" hoặc "DD-MM-YYYY"
   period: Period; // Ca học
   time: StudyTime; // Giờ học
   subject: string; // Môn học

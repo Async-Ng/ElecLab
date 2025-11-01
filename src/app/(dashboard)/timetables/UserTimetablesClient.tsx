@@ -109,18 +109,54 @@ export default function UserTimetablesClient() {
     return logMap;
   }, [teachingLogs]);
 
+  // Utility function to parse Vietnamese date format (DD/MM/YYYY or DD-MM-YYYY)
+  const parseVietnameseDate = (dateString: string): Date | null => {
+    if (!dateString) return null;
+
+    // Handle DD/MM/YYYY or DD-MM-YYYY format
+    let cleanDate = dateString.trim();
+
+    // Replace dash with slash for consistency
+    cleanDate = cleanDate.replace(/-/g, "/");
+
+    // Check if it matches DD/MM/YYYY format
+    const dateMatch = cleanDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+    if (dateMatch) {
+      const [, day, month, year] = dateMatch;
+      // Create date object (month is 0-indexed in JS)
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+      // Validate the date is real (not Feb 30th, etc.)
+      if (
+        date.getFullYear() === parseInt(year) &&
+        date.getMonth() === parseInt(month) - 1 &&
+        date.getDate() === parseInt(day)
+      ) {
+        return date;
+      }
+    }
+
+    console.warn("Invalid date format:", dateString);
+    return null;
+  };
+
   // Utility functions for date checking
   const isDateInPast = (dateString: string) => {
+    const timetableDate = parseVietnameseDate(dateString);
+    if (!timetableDate) return false;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to start of day
-    const timetableDate = new Date(dateString);
     return timetableDate < today;
   };
 
   const isDateInFuture = (dateString: string) => {
+    const timetableDate = parseVietnameseDate(dateString);
+    if (!timetableDate) return false;
+
     const today = new Date();
     today.setHours(23, 59, 59, 999); // Set to end of day
-    const timetableDate = new Date(dateString);
     return timetableDate > today;
   };
 
