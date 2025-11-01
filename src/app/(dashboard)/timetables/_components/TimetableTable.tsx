@@ -18,6 +18,9 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   const [users, setUsers] = useState<any[]>([]);
   const { user, hasRole } = useAuth();
 
+  // Kiểm tra xem user có phải Admin không
+  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
+
   React.useEffect(() => {
     setTableData(data);
   }, [data]);
@@ -126,19 +129,22 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       dataIndex: "className",
       key: "className",
     },
-    {
-      title: "Giảng viên",
-      dataIndex: "lecturer",
-      key: "lecturer",
-      render: (lecturer: any) =>
-        typeof lecturer === "string" ? lecturer : lecturer?.name,
-    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Giảng viên",
+            dataIndex: "lecturer",
+            key: "lecturer",
+            render: (lecturer: any) =>
+              typeof lecturer === "string" ? lecturer : lecturer?.name,
+          },
+        ]
+      : []),
     {
       title: "Chỉnh sửa",
       key: "actions",
       render: (_: any, record: Timetable) => {
         // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
-        const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
         const isOwner =
           user &&
           (record.lecturer === user._id ||
