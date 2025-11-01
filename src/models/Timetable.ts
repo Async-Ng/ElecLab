@@ -29,5 +29,11 @@ const TimetableSchema = new mongoose.Schema({
   },
 });
 
+// Tối ưu: Thêm indexes cho các trường thường query và sort
+TimetableSchema.index({ lecturer: 1 });
+TimetableSchema.index({ room: 1 });
+TimetableSchema.index({ date: -1, period: 1 }); // Compound index cho sorting
+TimetableSchema.index({ schoolYear: 1, semester: 1 });
+
 export default mongoose.models.Timetable ||
   mongoose.model("Timetable", TimetableSchema);

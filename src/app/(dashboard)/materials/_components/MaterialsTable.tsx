@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useMemo, useCallback } from "react";
-import { Table, Button, Popconfirm, Tag, Space } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Tag } from "antd";
 import { Material } from "@/types/material";
+import { DataTable } from "@/components/common";
 
 type Props = {
   materials: Material[];
@@ -61,41 +61,17 @@ export default React.memo(function MaterialsTable({
           return String(place_used);
         },
       },
-      {
-        title: "Hành động",
-        key: "actions",
-        width: 160,
-        render: (_: unknown, record: Material) => (
-          <Space>
-            <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-              Sửa
-            </Button>
-            <Popconfirm
-              title="Bạn có chắc muốn xóa?"
-              onConfirm={() => handleDelete(record._id)}
-            >
-              <Button danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          </Space>
-        ),
-      },
     ],
     [handleEdit, handleDelete]
   );
 
   return (
-    <Table
-      rowKey={(r: Material) => r._id || r.material_id}
-      dataSource={materials}
+    <DataTable
+      data={materials}
       columns={columns}
+      onEdit={handleEdit}
+      onDelete={(record) => handleDelete(record._id)}
       loading={loading}
-      pagination={{
-        pageSize: 10,
-        showSizeChanger: true,
-        showTotal: (total) => `Tổng ${total} vật tư`,
-      }}
     />
   );
 });

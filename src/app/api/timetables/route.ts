@@ -65,6 +65,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
   const userRole = searchParams.get("userRole");
+  
   let query = {};
   if (userRole === "Admin") {
     // Quản lý xem toàn bộ
@@ -73,9 +74,15 @@ export async function GET(request: Request) {
     // Người dùng chỉ xem thời khóa biểu của mình
     query = { lecturer: userId };
   }
+  
+  // Tối ưu: Sử dụng lean() và chỉ populate fields cần thiết
   const timetables = await Timetable.find(query)
     .populate("room", "name room_id")
-    .populate("lecturer", "name email");
+    .populate("lecturer", "name email staff_id")
+    .lean()
+    .sort({ date: -1, period: 1 }) // Sắp xếp ngay trong query
+    .exec();
+    
   return NextResponse.json(timetables);
 }
 

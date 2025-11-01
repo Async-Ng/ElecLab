@@ -1,78 +1,39 @@
 "use client";
 
-import { useEffect, useState, lazy, Suspense } from "react";
-import { Button, Form, message } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { useState, lazy, Suspense, useMemo } from "react";
+import { Form, message } from "antd";
 import { Room } from "@/types/room";
-import { User } from "@/types/user";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { PageHeader, ActionButtons } from "@/components/common";
+import { useRooms, useUsers } from "@/hooks/stores";
 
 // Lazy load components
 const RoomTable = lazy(() => import("./_components/RoomTable"));
 const RoomModal = lazy(() => import("./_components/RoomModal"));
 
-interface RoomsClientProps {
-  initialRooms: (Room & { users_manage?: User[] })[];
-  initialUsers: User[];
-}
-
-export default function RoomsClient({
-  initialRooms,
-  initialUsers,
-}: RoomsClientProps) {
-  const [rooms, setRooms] =
-    useState<(Room & { users_manage?: User[] })[]>(initialRooms);
-  const [users, setUsers] = useState<User[]>(initialUsers);
+export default function RoomsClient() {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [form] = Form.useForm<Room>();
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchRooms();
+  // Get user info from localStorage - memoized to prevent re-calculation
+  const user = useMemo(() => {
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem("user") : null;
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
   }, []);
 
-  async function fetchRooms() {
-    setLoading(true);
-    try {
-      const userStr = localStorage.getItem("user");
-      if (!userStr) {
-        message.error("Vui lòng đăng nhập lại");
-        return;
-      }
-
-      const user = JSON.parse(userStr);
-      const queryParams = new URLSearchParams({
-        userId: user._id,
-        userRole: user.roles[0],
-      }).toString();
-
-      const res = await fetch(`/api/rooms?${queryParams}`);
-      if (!res.ok) {
-        throw new Error("Không có quyền truy cập");
-      }
-      const data = await res.json();
-      const roomsData = Array.isArray(data.rooms) ? data.rooms : [];
-      const roomsWithUsers = roomsData.map((room: any) => ({
-        ...room,
-        users_manage: Array.isArray(room.users_manage)
-          ? room.users_manage.filter((u: any) => typeof u === "object")
-          : [],
-      }));
-      setRooms(roomsWithUsers);
-
-      const resUsers = await fetch("/api/users");
-      if (resUsers.ok) {
-        const dataUsers = await resUsers.json();
-        setUsers(Array.isArray(dataUsers) ? dataUsers : []);
-      }
-    } catch (err) {
-      message.error("Tải danh sách phòng thất bại");
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Use Zustand stores with auto-fetch and caching
+  const { rooms, updateRoom, deleteRoom: removeRoom } = useRooms({
+    userRole: user?.roles?.[0],
+    userId: user?._id,
+  });
+  const { users } = useUsers();
 
   function openCreate() {
     setEditing(null);
@@ -92,7 +53,7 @@ export default function RoomsClient({
       const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Xóa thất bại");
       message.success("Đã xóa");
-      fetchRooms();
+      removeRoom(id);
     } catch (err) {
       message.error("Xóa thất bại");
     }
@@ -111,21 +72,30 @@ export default function RoomsClient({
       });
 
       if (!res.ok) throw new Error("Lưu thất bại");
+      
+      const savedRoom = await res.json();
+      
       message.success(editing ? "Đã cập nhật" : "Đã tạo");
       setModalOpen(false);
-      fetchRooms();
+      
+      if (editing && editing._id) {
+        updateRoom(editing._id, savedRoom);
+      } else {
+        // Force reload for new room
+        window.location.reload();
+      }
     } catch (err: any) {
       message.error(err?.message || "Lưu thất bại");
     }
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Thêm phòng mới
-        </Button>
-      </div>
+    <div style={{ padding: "24px" }}>
+      <PageHeader
+        title="Phòng học"
+        description="Quản lý danh sách phòng học và thiết bị"
+        extra={<ActionButtons onAdd={openCreate} addText="Thêm phòng mới" />}
+      />
 
       <Suspense
         fallback={

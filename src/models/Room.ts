@@ -29,5 +29,9 @@ const roomSchema = new mongoose.Schema<Room>(
   }
 );
 
+// Tối ưu: Thêm indexes cho các trường thường query
+// Note: room_id đã có unique:true nên tự động có index
+roomSchema.index({ users_manage: 1 });
+
 export const RoomModel =
   mongoose.models.Room || mongoose.model<Room>("Room", roomSchema);

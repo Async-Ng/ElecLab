@@ -1,10 +1,11 @@
 "use client";
-import { Table, Button } from "antd";
 import TimetableModal from "./TimetableModal";
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
+import { DataTable } from "@/components/common";
+import { Button } from "antd";
 
 interface TimetableTableProps {
   data: Timetable[];
@@ -164,13 +165,11 @@ export default function TimetableTable({ data }: TimetableTableProps) {
 
   return (
     <>
-      <Table
+      <DataTable
+        data={tableData}
         columns={columns}
-        dataSource={tableData}
-        rowKey={(record) =>
-          record._id || record.className + record.date + record.period
-        }
-        pagination={{ pageSize: 10 }}
+        loading={false}
+        showActions={false}
       />
       <TimetableModal
         visible={editVisible}

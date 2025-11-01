@@ -19,4 +19,10 @@ const MaterialSchema = new Schema(
   { timestamps: true }
 );
 
+// Tối ưu: Thêm indexes cho các trường thường query
+// Note: material_id đã có unique:true nên tự động có index
+MaterialSchema.index({ category: 1 });
+MaterialSchema.index({ status: 1 });
+MaterialSchema.index({ place_used: 1 });
+
 export const Material = models.Material || model("Material", MaterialSchema);

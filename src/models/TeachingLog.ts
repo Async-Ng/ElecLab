@@ -22,5 +22,10 @@ const TeachingLogSchema: Schema = new Schema(
   }
 );
 
+// Tối ưu: Thêm indexes cho các trường thường query
+TeachingLogSchema.index({ timetable: 1 });
+TeachingLogSchema.index({ createdAt: -1 }); // Index cho sorting
+TeachingLogSchema.index({ status: 1 });
+
 export default mongoose.models.TeachingLog ||
   mongoose.model("TeachingLog", TeachingLogSchema);

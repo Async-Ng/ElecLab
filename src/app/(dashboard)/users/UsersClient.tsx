@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, lazy, Suspense } from "react";
-import { Button, message } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { useState, lazy, Suspense } from "react";
+import { message } from "antd";
 import { User, UserFormData, UserRole } from "@/types/user";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { Room } from "@/types/room";
+import { PageHeader, ActionButtons } from "@/components/common";
+import { useUsers, useRooms } from "@/hooks/stores";
 
 // Lazy load components
 const UsersTable = lazy(() =>
@@ -20,62 +20,13 @@ const availableRoles = [
   { value: UserRole.Admin, label: "Quản lý" },
 ];
 
-interface UsersClientProps {
-  initialUsers: User[];
-}
-
-export default function UsersClient({ initialUsers }: UsersClientProps) {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+export default function UsersClient() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
-  const [loading, setLoading] = useState(false);
-  const [rooms, setRooms] = useState<Room[]>([]);
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/users");
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        data.forEach((u) => {
-          if (u.avatar) {
-            // Avatar handling if needed
-          }
-        });
-      }
-      setUsers(data);
-    } catch (error) {
-      message.error("Lỗi khi tải danh sách người dùng");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRooms = async () => {
-    try {
-      const response = await fetch("/api/rooms");
-      if (!response.ok) {
-        throw new Error("Failed to fetch rooms");
-      }
-      const data = await response.json();
-      const roomsData = data.rooms || [];
-      setRooms(roomsData);
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchRooms();
-  }, []);
+  // Use Zustand stores with auto-fetch and caching
+  const { users, loading: usersLoading, updateUser, deleteUser: removeUser } = useUsers();
+  const { rooms } = useRooms();
 
   const handleCreate = () => {
     setEditingUser(undefined);
@@ -98,7 +49,7 @@ export default function UsersClient({ initialUsers }: UsersClientProps) {
       }
 
       message.success("Xóa người dùng thành công");
-      fetchUsers();
+      removeUser(id);
     } catch (error) {
       message.error("Lỗi khi xóa người dùng");
     }
@@ -122,13 +73,22 @@ export default function UsersClient({ initialUsers }: UsersClientProps) {
         throw new Error(errorData.message || "Failed to save user");
       }
 
+      const savedUser = await response.json();
+
       message.success(
         editingUser
           ? "Cập nhật người dùng thành công"
           : "Tạo người dùng thành công"
       );
+      
+      if (editingUser && editingUser._id) {
+        updateUser(editingUser._id, savedUser);
+      } else {
+        // Force refetch for new user
+        window.location.reload();
+      }
+      
       setModalOpen(false);
-      fetchUsers();
     } catch (error: any) {
       message.error(error.message || "Lỗi khi lưu người dùng");
     }
@@ -136,21 +96,11 @@ export default function UsersClient({ initialUsers }: UsersClientProps) {
 
   return (
     <div style={{ padding: "24px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
-        }}
-      >
-        <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>
-          Giảng viên
-        </h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Thêm giảng viên
-        </Button>
-      </div>
+      <PageHeader
+        title="Giảng viên"
+        description="Quản lý danh sách giảng viên trong hệ thống"
+        extra={<ActionButtons onAdd={handleCreate} addText="Thêm giảng viên" />}
+      />
 
       <Suspense
         fallback={<LoadingSpinner tip="Đang tải danh sách giảng viên..." />}
@@ -159,7 +109,7 @@ export default function UsersClient({ initialUsers }: UsersClientProps) {
           users={users}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          loading={loading}
+          loading={usersLoading}
           rooms={rooms}
         />
       </Suspense>

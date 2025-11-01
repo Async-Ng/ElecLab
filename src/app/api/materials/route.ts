@@ -5,7 +5,13 @@ import { Material } from "@/models/Material";
 // GET all materials
 export async function GET() {
   await connectToDatabase();
-  const materials = await Material.find().populate("place_used", "name");
+  // Tối ưu: Sử dụng lean() và chỉ populate fields cần thiết
+  const materials = await Material.find()
+    .populate("place_used", "name room_id")
+    .lean()
+    .sort({ material_id: 1 }) // Sắp xếp theo material_id
+    .exec();
+    
   return NextResponse.json(materials);
 }
 

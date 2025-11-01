@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Table, Tag } from "antd";
+import React, { useState, useMemo } from "react";
+import { Tag } from "antd";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { useAuth } from "../../../../hooks/useAuth";
 import { UserRole } from "../../../../types/user";
@@ -8,6 +8,9 @@ import ExportLogsButton from "./ExportLogsButton";
 import TeachingLogModal from "./TeachingLogModal";
 import TeachingLogsFilter from "./TeachingLogsFilter";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { PageHeader } from "@/components/common";
+import { DataTable } from "@/components/common";
+import { useTeachingLogs } from "@/hooks/stores";
 
 function getColumns(isHead: boolean) {
   const base = [
@@ -88,8 +91,6 @@ function getColumns(isHead: boolean) {
 
 const TeachingLogsTable: React.FC = () => {
   const { user } = useAuth();
-  const [logs, setLogs] = useState<TeachingLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editLog, setEditLog] = useState<TeachingLog | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [filters, setFilters] = useState<{
@@ -99,69 +100,60 @@ const TeachingLogsTable: React.FC = () => {
     lecturer?: string;
   }>({});
 
-  useEffect(() => {
-    const fetchLogs = async () => {
-      setLoading(true);
-      try {
-        const roleParam = user?.roles?.includes(UserRole.Admin)
-          ? "Admin"
-          : "User";
-        const userId = user?._id;
-        const q = new URLSearchParams();
-        if (userId) q.set("userId", userId);
-        if (roleParam) q.set("userRole", roleParam);
-        const res = await fetch(`/api/teaching-logs?${q.toString()}`);
-        let data = await res.json();
-        if (!Array.isArray(data)) data = [];
-        setLogs(data);
-      } catch (err) {
-        setLogs([]);
-      }
-      setLoading(false);
-    };
-    fetchLogs();
-  }, [user]);
+  // Use Zustand store with auto-fetch and caching
+  const { teachingLogs: logs, loading } = useTeachingLogs({
+    userId: user?._id,
+  });
 
   // Lọc logs theo các trường filter
-  const filteredLogs = logs.filter((log) => {
-    const t = (log.timetable as any) || {};
-    if (filters.semester && t.semester !== filters.semester) return false;
-    if (filters.schoolYear && t.schoolYear !== filters.schoolYear) return false;
-    if (filters.room) {
-      const room = t.room;
-      if (typeof room === "object" && room?._id !== filters.room) return false;
-      if (typeof room === "string" && room !== filters.room) return false;
-    }
-    if (filters.lecturer) {
-      const lec = t.lecturer;
-      if (typeof lec === "object" && lec?._id !== filters.lecturer)
-        return false;
-      if (typeof lec === "string" && lec !== filters.lecturer) return false;
-    }
-    return true;
-  });
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const t = (log.timetable as any) || {};
+      if (filters.semester && t.semester !== filters.semester) return false;
+      if (filters.schoolYear && t.schoolYear !== filters.schoolYear) return false;
+      if (filters.room) {
+        const room = t.room;
+        if (typeof room === "object" && room?._id !== filters.room) return false;
+        if (typeof room === "string" && room !== filters.room) return false;
+      }
+      if (filters.lecturer) {
+        const lec = t.lecturer;
+        if (typeof lec === "object" && lec?._id !== filters.lecturer)
+          return false;
+        if (typeof lec === "string" && lec !== filters.lecturer) return false;
+      }
+      return true;
+    });
+  }, [logs, filters]);
 
   if (loading) {
     return <LoadingSpinner tip="Đang tải nhật ký ca dạy..." />;
   }
 
   return (
-    <>
+    <div style={{ padding: "24px" }}>
+      <PageHeader
+        title="Nhật ký giảng dạy"
+        description="Quản lý nhật ký các ca giảng dạy"
+        extra={<ExportLogsButton logs={filteredLogs} />}
+      />
+      
       <TeachingLogsFilter logs={logs} filters={filters} onChange={setFilters} />
-      <ExportLogsButton logs={filteredLogs} />
-      <Table
+      
+      <DataTable
+        data={filteredLogs}
         columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
-        dataSource={filteredLogs}
-        rowKey={(record) => record._id}
         loading={false}
-        pagination={{ pageSize: 10 }}
+        showActions={false}
         onRow={(record) => ({
           onClick: () => {
             setEditLog(record);
             setModalOpen(true);
           },
+          style: { cursor: 'pointer' },
         })}
       />
+      
       <TeachingLogModal
         open={modalOpen}
         onClose={() => {
@@ -179,7 +171,7 @@ const TeachingLogsTable: React.FC = () => {
           setEditLog(undefined);
         }}
       />
-    </>
+    </div>
   );
 };
 

@@ -9,29 +9,33 @@ import bcrypt from "bcryptjs";
 export async function GET() {
   try {
     await connectToDatabase();
-    const users = await User.find({}).select("-password");
+    // Tối ưu: Sử dụng lean() để trả về plain objects thay vì Mongoose documents
+    // Chỉ select các fields cần thiết
+    const users = await User.find({})
+      .select("-password")
+      .lean()
+      .exec();
 
     const usersWithAvatar = users.map((u: any) => {
-      const userObj = u.toObject();
-      const avatar = userObj.avatar;
+      const avatar = u.avatar;
       if (avatar) {
         // Nếu avatar là Binary của MongoDB
         if (avatar instanceof Binary) {
           // Lấy buffer từ Binary
-          const buffer = avatar.buffer;
-          userObj.avatar = buffer.toString("base64");
+          const buffer = avatar.buffer as Buffer;
+          u.avatar = buffer.toString("base64");
         }
         // Nếu avatar là Buffer thật
         else if (Buffer.isBuffer(avatar)) {
-          userObj.avatar = avatar.toString("base64");
+          u.avatar = avatar.toString("base64");
         } else {
-          userObj.avatar = null;
+          u.avatar = null;
         }
       } else {
-        userObj.avatar = null;
+        u.avatar = null;
       }
 
-      return userObj;
+      return u;
     });
 
     return NextResponse.json(usersWithAvatar);

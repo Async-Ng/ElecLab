@@ -1,7 +1,7 @@
 import { Room } from "@/types/room";
-import { Form, Input, Modal, FormInstance } from "antd";
-import { Select } from "antd";
+import { FormInstance } from "antd";
 import { User } from "@/types/user";
+import { FormModal, FormField } from "@/components/common";
 interface RoomModalProps {
   open: boolean;
   onOk: () => void;
@@ -19,65 +19,53 @@ export default function RoomModal({
   form,
   users,
 }: RoomModalProps) {
+  const userOptions = users.map((user) => ({
+    label: user.name,
+    value: user._id,
+  }));
+
   return (
-    <Modal
+    <FormModal
       open={open}
       title={editing ? "Sửa phòng" : "Thêm phòng"}
-      okText={editing ? "Cập nhật" : "Thêm"}
-      cancelText="Hủy"
-      onOk={onOk}
+      form={form}
+      onSubmit={onOk}
       onCancel={onCancel}
+      width={600}
+      twoColumns={false}
+      initialValues={editing || undefined}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        className="mt-4"
-        initialValues={editing || undefined}
-      >
-        <Form.Item
-          name="room_id"
-          label="Mã phòng"
-          rules={[{ required: true, message: "Vui lòng nhập mã phòng" }]}
-        >
-          <Input placeholder="Nhập mã phòng" />
-        </Form.Item>
+      <FormField
+        name="room_id"
+        label="Mã phòng"
+        type="text"
+        placeholder="Nhập mã phòng"
+        rules={[{ required: true, message: "Vui lòng nhập mã phòng" }]}
+      />
 
-        <Form.Item
-          name="name"
-          label="Tên phòng"
-          rules={[{ required: true, message: "Vui lòng nhập tên phòng" }]}
-        >
-          <Input placeholder="Nhập tên phòng" />
-        </Form.Item>
+      <FormField
+        name="name"
+        label="Tên phòng"
+        type="text"
+        placeholder="Nhập tên phòng"
+        rules={[{ required: true, message: "Vui lòng nhập tên phòng" }]}
+      />
 
-        <Form.Item
-          name="location"
-          label="Vị trí"
-          rules={[{ required: true, message: "Vui lòng nhập vị trí" }]}
-        >
-          <Input placeholder="Nhập vị trí phòng" />
-        </Form.Item>
+      <FormField
+        name="location"
+        label="Vị trí"
+        type="text"
+        placeholder="Nhập vị trí phòng"
+        rules={[{ required: true, message: "Vui lòng nhập vị trí" }]}
+      />
 
-        <Form.Item
-          name="users_manage"
-          label="Người quản lý phòng"
-          rules={[{ required: false }]}
-        >
-          <Select
-            mode="multiple"
-            placeholder="Chọn người quản lý"
-            optionFilterProp="children"
-            showSearch
-            allowClear
-          >
-            {users.map((user) => (
-              <Select.Option key={user._id} value={user._id}>
-                {user.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </Form>
-    </Modal>
+      <FormField
+        name="users_manage"
+        label="Người quản lý phòng"
+        type="multiselect"
+        placeholder="Chọn người quản lý"
+        options={userOptions}
+      />
+    </FormModal>
   );
 }

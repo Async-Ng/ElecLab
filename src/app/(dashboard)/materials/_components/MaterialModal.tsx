@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Select, FormInstance } from "antd";
+import { FormInstance } from "antd";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
-
-const { Option } = Select;
+import { FormModal, FormField } from "@/components/common";
 
 type Props = {
   open: boolean;
@@ -17,6 +16,7 @@ type Props = {
 export default function MaterialModal(props: Props) {
   const { open, onOk, onCancel, editing, form } = props;
   const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
+
   useEffect(() => {
     if (!form) return;
     if (open) {
@@ -45,70 +45,67 @@ export default function MaterialModal(props: Props) {
       });
   }, []);
 
+  const categoryOptions = Object.values(MaterialCategory).map((v) => ({
+    label: v,
+    value: v,
+  }));
+
+  const statusOptions = Object.values(MaterialStatus).map((v) => ({
+    label: v,
+    value: v,
+  }));
+
+  const roomOptions = rooms.map((room) => ({
+    label: room.name,
+    value: room._id,
+  }));
+
   return (
-    <Modal
-      title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
+    <FormModal
       open={open}
-      onOk={onOk}
+      title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
+      form={form}
+      onSubmit={onOk}
       onCancel={onCancel}
-      okText="Lưu"
-      destroyOnHidden={true}
+      width={600}
     >
-      <Form form={form} layout="vertical">
-        <Form.Item
-          name="material_id"
-          label="Mã vật tư"
-          rules={[{ required: true, message: "Vui lòng nhập mã vật tư" }]}
-        >
-          <Input placeholder="Ví dụ: MAT-001" />
-        </Form.Item>
+      <FormField
+        name="material_id"
+        label="Mã vật tư"
+        type="text"
+        placeholder="Ví dụ: MAT-001"
+        rules={[{ required: true, message: "Vui lòng nhập mã vật tư" }]}
+      />
 
-        <Form.Item
-          name="name"
-          label="Tên"
-          rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-        >
-          <Input />
-        </Form.Item>
+      <FormField
+        name="name"
+        label="Tên"
+        type="text"
+        rules={[{ required: true, message: "Vui lòng nhập tên" }]}
+      />
 
-        <Form.Item
-          name="category"
-          label="Danh mục"
-          rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
-        >
-          <Select style={{ width: "100%" }}>
-            {Object.values(MaterialCategory).map((v) => (
-              <Option key={v} value={v}>
-                {v}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
+      <FormField
+        name="category"
+        label="Danh mục"
+        type="select"
+        options={categoryOptions}
+        rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
+      />
 
-        <Form.Item name="status" label="Tình trạng">
-          <Select style={{ width: "100%" }}>
-            {Object.values(MaterialStatus).map((v) => (
-              <Option key={v} value={v}>
-                {v}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
+      <FormField
+        name="status"
+        label="Tình trạng"
+        type="select"
+        options={statusOptions}
+      />
 
-        <Form.Item name="place_used" label="Vị trí sử dụng">
-          <Select
-            showSearch
-            optionFilterProp="children"
-            placeholder="Chọn phòng"
-          >
-            {rooms.map((room) => (
-              <Option key={room._id} value={room._id}>
-                {room.name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </Form>
-    </Modal>
+      <FormField
+        name="place_used"
+        label="Vị trí sử dụng"
+        type="select"
+        placeholder="Chọn phòng"
+        options={roomOptions}
+      />
+    </FormModal>
   );
 }
