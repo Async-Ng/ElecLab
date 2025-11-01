@@ -60,7 +60,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Admin],
+      roles: [UserRole.Admin, UserRole.User],
     },
 
     {

@@ -4,6 +4,8 @@ import { Typography } from "antd";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { useEffect, useState, lazy, Suspense } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
 
 // Lazy load components
 const TimetableTable = lazy(() => import("./_components/TimetableTable"));
@@ -19,6 +21,7 @@ interface TimetablesClientProps {
 export default function TimetablesClient({
   initialData,
 }: TimetablesClientProps) {
+  const { user } = useAuth();
   const [data, setData] = useState<Timetable[]>(initialData);
   const [filtered, setFiltered] = useState<Timetable[]>(initialData);
   const [loading, setLoading] = useState(false);
@@ -36,14 +39,35 @@ export default function TimetablesClient({
 
   // Fetch data on mount
   useEffect(() => {
-    fetchTimetables();
-  }, []);
+    if (user?._id) {
+      fetchTimetables();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?._id]);
 
   // Client-side refresh function
   const fetchTimetables = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/timetables`);
+      // Truyền userRole để API biết có phải Admin hay không
+      const params = new URLSearchParams();
+      if (user?.roles && user.roles.length > 0) {
+        // Kiểm tra cả enum value và string value
+        const isAdmin = user.roles.some((role) => {
+          const roleStr = String(role);
+          return (
+            roleStr === UserRole.Admin ||
+            roleStr === "Quản lý" ||
+            roleStr === "Admin"
+          );
+        });
+        const userRole = isAdmin ? "Admin" : "User";
+        params.append("userRole", userRole);
+      }
+      if (user?._id) {
+        params.append("userId", user._id);
+      }
+      const res = await fetch(`/api/timetables?${params.toString()}`);
       const rows = await res.json();
       setData(rows);
       setFiltered(rows);
