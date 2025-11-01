@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Button, Form, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
-import RoomTable from "./_components/RoomTable";
-import RoomModal from "./_components/RoomModal";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
+// Lazy load components
+const RoomTable = lazy(() => import("./_components/RoomTable"));
+const RoomModal = lazy(() => import("./_components/RoomModal"));
 
 export default function RoomPage() {
   const [rooms, setRooms] = useState<(Room & { users_manage?: User[] })[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [form] = Form.useForm<Room>();
@@ -53,7 +56,6 @@ export default function RoomPage() {
         setUsers(Array.isArray(dataUsers) ? dataUsers : []);
       }
     } catch (err) {
-      console.error(err);
       message.error("Tải danh sách phòng thất bại");
     } finally {
       setLoading(false);
@@ -91,7 +93,6 @@ export default function RoomPage() {
       message.success("Đã xóa phòng");
       fetchRooms();
     } catch (err) {
-      console.error(err);
       message.error("Xóa phòng thất bại");
     } finally {
       setLoading(false);
@@ -146,11 +147,14 @@ export default function RoomPage() {
       setModalOpen(false);
       fetchRooms();
     } catch (err: any) {
-      console.error(err);
       message.error(err?.message || "Lưu thất bại");
     } finally {
       setLoading(false);
     }
+  }
+
+  if (loading && rooms.length === 0) {
+    return <LoadingSpinner tip="Đang tải danh sách phòng thí nghiệm..." />;
   }
 
   return (
@@ -171,22 +175,28 @@ export default function RoomPage() {
       </div>
 
       <div className="mt-6">
-        <RoomTable
-          rooms={rooms}
-          loading={loading}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-        />
+        <Suspense fallback={<LoadingSpinner tip="Đang tải bảng dữ liệu..." />}>
+          <RoomTable
+            rooms={rooms}
+            loading={loading}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+          />
+        </Suspense>
       </div>
 
-      <RoomModal
-        open={modalOpen}
-        onOk={handleOk}
-        onCancel={() => setModalOpen(false)}
-        editing={editing}
-        form={form}
-        users={users}
-      />
+      {modalOpen && (
+        <Suspense fallback={null}>
+          <RoomModal
+            open={modalOpen}
+            onOk={handleOk}
+            onCancel={() => setModalOpen(false)}
+            editing={editing}
+            form={form}
+            users={users}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -46,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error("Invalid user JSON");
         }
       } catch (error) {
-        console.error("Failed to parse stored user:", error);
         // Clear invalid storage
         localStorage.removeItem("auth_token");
         localStorage.removeItem("user");

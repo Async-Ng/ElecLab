@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Button, Form, message, Popconfirm } from "antd";
 
 import { Material } from "@/types/material";
-import MaterialFilters from "./_components/MaterialFilters";
-import MaterialsTable from "./_components/MaterialsTable";
-import MaterialModal from "./_components/MaterialModal";
-import ImportButtons from "./_components/ImportButtons";
 import { PlusOutlined } from "@ant-design/icons";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
+// Lazy load components
+const MaterialFilters = lazy(() => import("./_components/MaterialFilters"));
+const MaterialsTable = lazy(() => import("./_components/MaterialsTable"));
+const MaterialModal = lazy(() => import("./_components/MaterialModal"));
+const ImportButtons = lazy(() => import("./_components/ImportButtons"));
 
 export default function MaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [filters, setFilters] = useState({ q: "", category: "", status: "" });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
   const [form] = Form.useForm<Material>();
@@ -25,7 +28,6 @@ export default function MaterialsPage() {
       const data = await res.json();
       setMaterials(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
       message.error("Tải danh sách vật tư thất bại");
     } finally {
       setLoading(false);
@@ -78,7 +80,6 @@ export default function MaterialsPage() {
       message.success("Đã xóa");
       fetchMaterials();
     } catch (err) {
-      console.error(err);
       message.error("Xóa thất bại");
     } finally {
       setLoading(false);
@@ -101,11 +102,14 @@ export default function MaterialsPage() {
       setModalOpen(false);
       fetchMaterials();
     } catch (err: any) {
-      console.error(err);
       message.error(err?.message || "Lưu thất bại");
     } finally {
       setLoading(false);
     }
+  }
+
+  if (loading && materials.length === 0) {
+    return <LoadingSpinner tip="Đang tải danh sách vật tư..." />;
   }
 
   return (
@@ -120,13 +124,21 @@ export default function MaterialsPage() {
 
         <div className="flex justify-between mb-6 p-4 rounded-lg shadow">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            <MaterialFilters filters={filters} setFilters={setFilters} />
+            <Suspense
+              fallback={
+                <LoadingSpinner size="small" tip="Đang tải bộ lọc..." />
+              }
+            >
+              <MaterialFilters filters={filters} setFilters={setFilters} />
+            </Suspense>
           </div>
           <div className=" ml-auto flex gap-2">
-            <ImportButtons
-              onImported={fetchMaterials}
-              setLoading={setLoading}
-            />
+            <Suspense fallback={null}>
+              <ImportButtons
+                onImported={fetchMaterials}
+                setLoading={setLoading}
+              />
+            </Suspense>
 
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
               Thêm
@@ -134,20 +146,26 @@ export default function MaterialsPage() {
           </div>
         </div>
       </div>
-      <MaterialsTable
-        materials={filteredMaterials}
-        loading={loading}
-        onEdit={openEdit}
-        onDelete={handleDelete}
-      />
+      <Suspense fallback={<LoadingSpinner tip="Đang tải bảng dữ liệu..." />}>
+        <MaterialsTable
+          materials={filteredMaterials}
+          loading={loading}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+        />
+      </Suspense>
 
-      <MaterialModal
-        open={modalOpen}
-        onOk={handleOk}
-        onCancel={() => setModalOpen(false)}
-        editing={editing}
-        form={form}
-      />
+      {modalOpen && (
+        <Suspense fallback={null}>
+          <MaterialModal
+            open={modalOpen}
+            onOk={handleOk}
+            onCancel={() => setModalOpen(false)}
+            editing={editing}
+            form={form}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

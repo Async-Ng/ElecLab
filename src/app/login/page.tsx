@@ -66,7 +66,6 @@ export default function LoginPage() {
       // Redirect to lecturer's timetable page
       router.push(`/timetables/${data.user._id}`);
     } catch (error) {
-      console.error("Login error:", error);
       message.error("Đăng nhập thất bại, vui lòng thử lại");
     } finally {
       setLoading(false);

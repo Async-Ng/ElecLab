@@ -3,6 +3,7 @@ import { Modal, Form, Input, Select, Upload, Button } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { User, UserRole } from "@/types/user";
 import { Room } from "@/types/room";
+import Image from "next/image";
 
 interface UserModalProps {
   open: boolean;
@@ -135,7 +136,9 @@ const UserModal: React.FC<UserModalProps> = ({
           footer={null}
           onCancel={() => setPreviewVisible(false)}
         >
-          <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+          {previewImage ? (
+            <Image alt="preview" style={{ width: "100%" }} src={previewImage} />
+          ) : null}
         </Modal>
         <Form.Item
           name="staff_id"

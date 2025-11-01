@@ -64,7 +64,6 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
       setPreviewRows(preview);
       setPreviewOpen(true);
     } catch (err) {
-      console.error(err);
       message.error("Import thất bại");
     } finally {
       setLoading?.(false);
@@ -121,7 +120,6 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error(err);
       message.error("Không thể tạo file mẫu");
     }
   }
@@ -189,11 +187,10 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
               onImported?.();
             } else {
               const err = await res.json().catch(() => ({}));
-              console.error(err);
+
               message.error("Import thất bại");
             }
           } catch (err) {
-            console.error(err);
             message.error("Import thất bại");
           } finally {
             setLoading?.(false);

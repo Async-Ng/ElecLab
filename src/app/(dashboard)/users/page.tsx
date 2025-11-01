@@ -1,24 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Button, Card, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { UsersTable } from "./_components/UsersTable";
-import UserModal from "./_components/UserModal";
 import { User, UserFormData, UserRole } from "@/types/user";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { Room } from "@/types/room";
+
+// Lazy load components
+const UsersTable = lazy(() =>
+  import("./_components/UsersTable").then((module) => ({
+    default: module.UsersTable,
+  }))
+);
+const UserModal = lazy(() => import("./_components/UserModal"));
 
 const availableRoles = [
   { value: UserRole.User, label: "Người dùng" },
   { value: UserRole.Admin, label: "Quản lý" },
 ];
 
-import { Room } from "@/types/room";
-
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
 
   const fetchUsers = async () => {
@@ -150,6 +156,10 @@ export default function UsersPage() {
     }
   };
 
+  if (loading && users.length === 0) {
+    return <LoadingSpinner tip="Đang tải danh sách giảng viên..." />;
+  }
+
   return (
     <div>
       <div className="flex flex-col gap-4">
@@ -166,22 +176,29 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <UsersTable
-        users={users}
-        loading={loading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        rooms={rooms}
-      />
-      <UserModal
-        open={modalOpen}
-        loading={loading}
-        editingUser={editingUser}
-        onCancel={() => setModalOpen(false)}
-        onSubmit={handleSubmit as any}
-        roles={availableRoles}
-        rooms={rooms}
-      />
+      <Suspense fallback={<LoadingSpinner tip="Đang tải bảng dữ liệu..." />}>
+        <UsersTable
+          users={users}
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          rooms={rooms}
+        />
+      </Suspense>
+
+      {modalOpen && (
+        <Suspense fallback={null}>
+          <UserModal
+            open={modalOpen}
+            loading={loading}
+            editingUser={editingUser}
+            onCancel={() => setModalOpen(false)}
+            onSubmit={handleSubmit as any}
+            roles={availableRoles}
+            rooms={rooms}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

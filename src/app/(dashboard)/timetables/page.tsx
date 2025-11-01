@@ -1,16 +1,22 @@
 "use client";
 import { Typography } from "antd";
-import TimetableTable from "./_components/TimetableTable";
-import ImportButtons from "./_components/ImportButtons";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
-import TimetableFilterBar from "./_components/TimetableFilterBar";
+import { useEffect, useState, lazy, Suspense } from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
+// Lazy load components
+const TimetableTable = lazy(() => import("./_components/TimetableTable"));
+const ImportButtons = lazy(() => import("./_components/ImportButtons"));
+const TimetableFilterBar = lazy(
+  () => import("./_components/TimetableFilterBar")
+);
 
 export default function TimetablePage() {
   const { user } = useAuth();
   const [data, setData] = useState<Timetable[]>([]);
   const [filtered, setFiltered] = useState<Timetable[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Filter states
   const [schoolYear, setSchoolYear] = useState<string>("");
@@ -24,12 +30,14 @@ export default function TimetablePage() {
   const [lecturer, setLecturer] = useState<string>("");
 
   useEffect(() => {
+    setLoading(true);
     fetch(`/api/timetables`)
       .then((res) => res.json())
       .then((rows) => {
         setData(rows);
         setFiltered(rows);
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   // Auto filter when any filter state changes
@@ -69,46 +77,62 @@ export default function TimetablePage() {
     data,
   ]);
 
+  if (loading) {
+    return <LoadingSpinner tip="Đang tải thời khóa biểu..." />;
+  }
+
   return (
     <div>
       <Typography.Title level={3}>Thời khóa biểu</Typography.Title>
       <div className="flex">
-        <TimetableFilterBar
-          data={data}
-          schoolYear={schoolYear}
-          setSchoolYear={setSchoolYear}
-          semester={semester}
-          setSemester={setSemester}
-          date={date}
-          setDate={setDate}
-          period={period}
-          setPeriod={setPeriod}
-          time={time}
-          setTime={setTime}
-          subject={subject}
-          setSubject={setSubject}
-          room={room}
-          setRoom={setRoom}
-          className={className}
-          setClassName={setClassName}
-          lecturer={lecturer}
-          setLecturer={setLecturer}
-          handleClear={() => {
-            setSchoolYear("");
-            setSemester("");
-            setDate("");
-            setPeriod("");
-            setTime("");
-            setSubject("");
-            setRoom("");
-            setClassName("");
-            setLecturer("");
-            setFiltered(data);
-          }}
-        />
-        <ImportButtons />
+        <Suspense
+          fallback={
+            <LoadingSpinner fullScreen={false} tip="Đang tải bộ lọc..." />
+          }
+        >
+          <TimetableFilterBar
+            data={data}
+            schoolYear={schoolYear}
+            setSchoolYear={setSchoolYear}
+            semester={semester}
+            setSemester={setSemester}
+            date={date}
+            setDate={setDate}
+            period={period}
+            setPeriod={setPeriod}
+            time={time}
+            setTime={setTime}
+            subject={subject}
+            setSubject={setSubject}
+            room={room}
+            setRoom={setRoom}
+            className={className}
+            setClassName={setClassName}
+            lecturer={lecturer}
+            setLecturer={setLecturer}
+            handleClear={() => {
+              setSchoolYear("");
+              setSemester("");
+              setDate("");
+              setPeriod("");
+              setTime("");
+              setSubject("");
+              setRoom("");
+              setClassName("");
+              setLecturer("");
+              setFiltered(data);
+            }}
+          />
+        </Suspense>
+        <Suspense fallback={<LoadingSpinner tip="Đang tải nút import..." />}>
+          <ImportButtons />
+        </Suspense>
       </div>
-      <TimetableTable data={filtered} />
+      <Suspense
+        fallback={<LoadingSpinner tip="Đang tải bảng thời khóa biểu..." />}
+      >
+        <TimetableTable data={filtered} />
+      </Suspense>
     </div>
   );
 }

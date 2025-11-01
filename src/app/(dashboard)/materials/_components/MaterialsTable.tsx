@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { Table, Button, Popconfirm, Tag, Space } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Material } from "@/types/material";
@@ -12,61 +12,78 @@ type Props = {
   onDelete: (id?: string) => void;
 };
 
-export default function MaterialsTable({
+export default React.memo(function MaterialsTable({
   materials,
   loading,
   onEdit,
   onDelete,
 }: Props) {
-  const columns = [
-    { title: "Mã", dataIndex: "material_id", key: "material_id", width: 160 },
-    { title: "Tên", dataIndex: "name", key: "name", width: 600 },
-    { title: "Danh mục", dataIndex: "category", key: "category", width: 150 },
-    {
-      title: "Tình trạng",
-      dataIndex: "status",
-      key: "status",
-      width: 140,
-      render: (status: unknown) => {
-        const s = String(status || "");
-        const color =
-          s === "Có sẵn" ? "green" : s === "Đang sử dụng" ? "blue" : "red";
-        return <Tag color={color}>{s || "-"}</Tag>;
-      },
+  const handleEdit = useCallback(
+    (material: Material) => {
+      onEdit(material);
     },
-    {
-      title: "Vị trí",
-      dataIndex: "place_used",
-      key: "place_used",
-      width: 180,
-      render: (place_used: any) => {
-        if (!place_used) return "-";
-        if (typeof place_used === "object" && place_used.name)
-          return place_used.name;
-        return String(place_used);
-      },
+    [onEdit]
+  );
+
+  const handleDelete = useCallback(
+    (id?: string) => {
+      onDelete(id);
     },
-    {
-      title: "Hành động",
-      key: "actions",
-      width: 160,
-      render: (_: unknown, record: Material) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Bạn có chắc muốn xóa?"
-            onConfirm={() => onDelete(record._id)}
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              Xóa
+    [onDelete]
+  );
+
+  const columns = useMemo(
+    () => [
+      { title: "Mã", dataIndex: "material_id", key: "material_id", width: 160 },
+      { title: "Tên", dataIndex: "name", key: "name", width: 600 },
+      { title: "Danh mục", dataIndex: "category", key: "category", width: 150 },
+      {
+        title: "Tình trạng",
+        dataIndex: "status",
+        key: "status",
+        width: 140,
+        render: (status: unknown) => {
+          const s = String(status || "");
+          const color =
+            s === "Có sẵn" ? "green" : s === "Đang sử dụng" ? "blue" : "red";
+          return <Tag color={color}>{s || "-"}</Tag>;
+        },
+      },
+      {
+        title: "Vị trí",
+        dataIndex: "place_used",
+        key: "place_used",
+        width: 180,
+        render: (place_used: any) => {
+          if (!place_used) return "-";
+          if (typeof place_used === "object" && place_used.name)
+            return place_used.name;
+          return String(place_used);
+        },
+      },
+      {
+        title: "Hành động",
+        key: "actions",
+        width: 160,
+        render: (_: unknown, record: Material) => (
+          <Space>
+            <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+              Sửa
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+            <Popconfirm
+              title="Bạn có chắc muốn xóa?"
+              onConfirm={() => handleDelete(record._id)}
+            >
+              <Button danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    ],
+    [handleEdit, handleDelete]
+  );
 
   return (
     <Table
@@ -74,7 +91,11 @@ export default function MaterialsTable({
       dataSource={materials}
       columns={columns}
       loading={loading}
-      pagination={{ pageSize: 10 }}
+      pagination={{
+        pageSize: 10,
+        showSizeChanger: true,
+        showTotal: (total) => `Tổng ${total} vật tư`,
+      }}
     />
   );
-}
+});

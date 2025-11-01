@@ -90,7 +90,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={loading}
-      destroyOnClose
+      destroyOnHidden
       width={900}
     >
       {log && <TeachingLogDetail log={log} />}
