@@ -5,6 +5,8 @@ import { Button, message, Space } from "antd";
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import { MaterialCategory, MaterialStatus } from "@/types/material";
 import ImportPreviewModal from "./ImportPreviewModal";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 type Props = {
   onImported?: () => void;
@@ -18,15 +20,25 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
     { room_id: string; _id: string; name: string }[]
   >([]);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     // Lấy danh sách phòng để map mã phòng sang _id
-    fetch("/api/rooms?userRole=Admin")
-      .then((res) => res.json())
-      .then((data) => {
+    if (!user) return;
+
+    const fetchRooms = async () => {
+      try {
+        const endpoint = getApiEndpoint("rooms", user.roles);
+        const res = await authFetch(endpoint, user._id!, user.roles);
+        const data = await res.json();
         setRooms(data.rooms || []);
-      });
-  }, []);
+      } catch (error) {
+        console.error("Failed to fetch rooms:", error);
+      }
+    };
+
+    fetchRooms();
+  }, [user]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -165,9 +177,14 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
             );
           }
           try {
-            const res = await fetch("/api/materials", {
+            if (!user) {
+              message.error("Vui lòng đăng nhập để thực hiện import");
+              return;
+            }
+
+            const endpoint = getApiEndpoint("materials", user.roles);
+            const res = await authFetch(endpoint, user._id!, user.roles, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
               body: JSON.stringify(
                 mappedRows.map(({ _room_id_input, ...rest }) => rest)
               ),

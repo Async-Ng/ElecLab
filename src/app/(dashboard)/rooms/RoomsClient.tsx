@@ -7,6 +7,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { PageHeader, ActionButtons } from "@/components/common";
 import { useRooms, useUsers } from "@/hooks/stores";
 import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 // Lazy load components
 const RoomTable = lazy(() => import("./_components/RoomTable"));
@@ -19,20 +20,11 @@ export default function RoomsClient() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [form] = Form.useForm<Room>();
 
-  // Get user from auth hook - ưu tiên role Admin
-  const { user, isAdmin, getPrimaryRole } = useAuth();
-  const userRole = getPrimaryRole();
+  // Get user from auth hook
+  const { user } = useAuth();
 
   // Use Zustand stores with auto-fetch and caching
-  const {
-    rooms,
-    updateRoom,
-    deleteRoom: removeRoom,
-    fetchRooms,
-  } = useRooms({
-    userRole: isAdmin() ? "Admin" : "User",
-    userId: user?._id,
-  });
+  const { rooms, deleteRoom: removeRoom, fetchRooms } = useRooms();
   const { users } = useUsers();
 
   function openCreate() {
@@ -48,9 +40,13 @@ export default function RoomsClient() {
   }
 
   async function handleDelete(id?: string) {
-    if (!id) return;
+    if (!id || !user) return;
     try {
-      const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
+      const endpoint = `${getApiEndpoint("rooms", user.roles)}`;
+      const res = await authFetch(endpoint, user._id!, user.roles, {
+        method: "DELETE",
+        body: JSON.stringify({ id }),
+      });
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -65,16 +61,16 @@ export default function RoomsClient() {
   }
 
   async function handleOk() {
+    if (!user) return;
     setSubmitting(true);
     try {
       const values = await form.validateFields();
-      const method = editing ? "PUT" : "POST";
-      const url = editing ? `/api/rooms/${editing._id}` : "/api/rooms";
+      const payload = editing ? { id: editing._id, ...values } : values;
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+      const endpoint = getApiEndpoint("rooms", user.roles);
+      const res = await authFetch(endpoint, user._id!, user.roles, {
+        method: editing ? "PUT" : "POST",
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -82,15 +78,13 @@ export default function RoomsClient() {
         throw new Error(errorData.error || "Lưu thất bại");
       }
 
-      const savedRoom = await res.json();
-
       message.success(
         editing ? "Cập nhật phòng thành công!" : "Thêm phòng mới thành công!"
       );
       setModalOpen(false);
 
       // Refetch rooms to get latest data (force bypass cache)
-      await fetchRooms(isAdmin() ? "Admin" : "User", user?._id, true);
+      await fetchRooms(user._id!, user.roles, true);
     } catch (err: any) {
       message.error(err?.message || "Có lỗi xảy ra khi lưu phòng");
     } finally {

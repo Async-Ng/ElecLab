@@ -2,17 +2,25 @@
 import React, { useState } from "react";
 import { Form, Input, Select, DatePicker, message, Col } from "antd";
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 import viVN from "antd/es/date-picker/locale/vi_VN";
 import { Timetable, StudyTime } from "@/types/timetable";
+import { Room } from "@/types/room";
+import { User } from "@/types/user";
 import FormModal from "@/components/common/FormModal";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
+
+// Configure dayjs
+dayjs.extend(customParseFormat);
 
 interface TimetableModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess: (updated: Timetable) => void;
   timetable: Timetable | null;
-  rooms: Array<{ _id: string; name: string; room_id: string }>;
-  users: Array<{ _id: string; name: string; email: string }>;
+  rooms: Room[];
+  users: User[];
 }
 
 export default function TimetableModal({
@@ -25,35 +33,50 @@ export default function TimetableModal({
 }: TimetableModalProps) {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const { user } = useAuth();
+
+  // Debug: Kiểm tra dữ liệu nhận được
+  React.useEffect(() => {
+    console.log("TimetableModal received:", {
+      hasTimetable: !!timetable,
+      roomsCount: rooms.length,
+      usersCount: users.length,
+      timetable,
+    });
+  }, [timetable, rooms, users]);
 
   // Prepare initial values for form
   const initialValues = React.useMemo(() => {
-    if (!timetable || rooms.length === 0 || users.length === 0) return null;
+    if (!timetable) return null; // Không có data prefill
+    if (rooms.length === 0) return null; // Chưa load xong rooms
 
     let d = timetable.date;
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
-      const [dd, mm, yyyy] = d.split("/");
-      d = `${yyyy}-${mm}-${dd}`;
+    // Chuyển đổi format ngày nếu cần
+    if (typeof d === "string") {
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
+        const [dd, mm, yyyy] = d.split("/");
+        d = `${yyyy}-${mm}-${dd}`;
+      }
     }
 
     return {
       schoolYear: timetable.schoolYear || "",
-      semester: Number(timetable.semester) || undefined,
+      semester: timetable.semester ? Number(timetable.semester) : undefined,
       date: d ? dayjs(d, "YYYY-MM-DD") : null,
-      period: Number(timetable.period) || undefined,
+      period: timetable.period ? Number(timetable.period) : undefined,
       time: timetable.time || undefined,
       subject: timetable.subject || "",
       room:
         typeof timetable.room === "object"
           ? timetable.room._id
-          : timetable.room,
+          : timetable.room || undefined,
       className: timetable.className || "",
       lecturer:
         typeof timetable.lecturer === "object"
           ? timetable.lecturer._id
-          : timetable.lecturer,
+          : timetable.lecturer || user?._id, // Auto fill với user hiện tại nếu không có
     };
-  }, [timetable, rooms, users]);
+  }, [timetable, rooms, user]);
 
   const handleOk = async () => {
     // Nếu không phải chủ sở hữu, chỉ đóng modal
@@ -62,35 +85,46 @@ export default function TimetableModal({
       return;
     }
 
-    setLoading(true);
-    let user = null;
-    try {
-      user = JSON.parse(localStorage.getItem("user") || "null");
-    } catch (e) {
-      user = null;
+    if (!user) {
+      message.error("Vui lòng đăng nhập để thực hiện cập nhật");
+      onClose();
+      return;
     }
+
+    setLoading(true);
     try {
       const values = await form.validateFields();
+
+      // Xác định method: POST (tạo mới) hoặc PUT (cập nhật)
+      const isUpdate = !!timetable?._id;
+      const method = isUpdate ? "PUT" : "POST";
+
       const payload = {
         ...values,
-        _id: timetable?._id,
+        ...(isUpdate && { _id: timetable._id }), // Chỉ thêm _id khi update
         date: values.date.format("YYYY-MM-DD"),
-        userId: user && user._id,
-        userRole: user && user.roles ? user.roles : [],
       };
-      const res = await fetch("/api/timetables", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+
+      const endpoint = getApiEndpoint("timetables", user.roles);
+      const res = await authFetch(endpoint, user._id!, user.roles, {
+        method,
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Cập nhật thất bại");
+        throw new Error(
+          errorData.error ||
+            (isUpdate ? "Cập nhật thất bại" : "Tạo mới thất bại")
+        );
       }
 
       const updated = await res.json();
-      message.success("Cập nhật thời khóa biểu thành công!");
+      message.success(
+        isUpdate
+          ? "Cập nhật thời khóa biểu thành công!"
+          : "Tạo mới thời khóa biểu thành công!"
+      );
       onSuccess(updated);
       onClose();
     } catch (err: any) {
@@ -112,7 +146,7 @@ export default function TimetableModal({
   }, []);
 
   const isOwner = React.useMemo(() => {
-    if (!timetable) return true; // Tạo mới
+    if (!timetable || !timetable._id) return true; // Tạo mới (không có _id)
     const lecturerId =
       typeof timetable.lecturer === "object"
         ? timetable.lecturer._id
@@ -120,11 +154,13 @@ export default function TimetableModal({
     return currentUser?._id === lecturerId;
   }, [timetable, currentUser]);
 
-  if (!timetable || rooms.length === 0 || users.length === 0) {
+  // Chỉ hiển thị loading khi đang xem/sửa TKB nhưng chưa có đủ dữ liệu rooms
+  // Khi tạo mới (không có _id), cũng cần chờ rooms load xong
+  if (rooms.length === 0) {
     return (
       <FormModal
         open={visible}
-        title="Chỉnh sửa thời khóa biểu"
+        title={timetable?._id ? "Xem thời khóa biểu" : "Thêm thời khóa biểu"}
         onCancel={onClose}
         onSubmit={() => {}}
         form={form}
@@ -132,7 +168,7 @@ export default function TimetableModal({
         twoColumns
       >
         <div style={{ padding: 32, textAlign: "center" }}>
-          <b>Đang tải dữ liệu...</b>
+          <b>Đang tải dữ liệu phòng học...</b>
         </div>
       </FormModal>
     );
@@ -141,7 +177,13 @@ export default function TimetableModal({
   return (
     <FormModal
       open={visible}
-      title={isOwner ? "Chỉnh sửa thời khóa biểu" : "Xem thời khóa biểu"}
+      title={
+        !timetable?._id
+          ? "Thêm thời khóa biểu"
+          : isOwner
+          ? "Chỉnh sửa thời khóa biểu"
+          : "Xem thời khóa biểu"
+      }
       onCancel={onClose}
       onSubmit={handleOk}
       loading={loading}

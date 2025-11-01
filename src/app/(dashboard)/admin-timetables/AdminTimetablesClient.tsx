@@ -1,21 +1,28 @@
 "use client";
 
-import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
-import { useEffect, useState, lazy, Suspense, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
+import { Semester, Period, StudyTime, Timetable } from "@/types/timetable";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/common";
-import { useTimetables } from "@/hooks/stores";
+import { useTimetables, useRooms, useUsers } from "@/hooks/stores";
 
 // Lazy load components
-const TimetableTable = lazy(() => import("./_components/TimetableTable"));
-const ImportButtons = lazy(() => import("./_components/ImportButtons"));
+const TimetableTable = lazy(
+  () => import("../timetables/_components/TimetableTable")
+);
 const TimetableFilterBar = lazy(
-  () => import("./_components/TimetableFilterBar")
+  () => import("../timetables/_components/TimetableFilterBar")
+);
+const ImportButtons = lazy(
+  () => import("../timetables/_components/ImportButtons")
+);
+const TimetableModal = lazy(
+  () => import("../timetables/_components/TimetableModal")
 );
 
-export default function TimetablesClient() {
-  const { user, isAdmin } = useAuth();
+export default function AdminTimetablesClient() {
+  const { user } = useAuth();
 
   // Filter states
   const [schoolYear, setSchoolYear] = useState<string>("");
@@ -28,14 +35,18 @@ export default function TimetablesClient() {
   const [className, setClassName] = useState<string>("");
   const [lecturer, setLecturer] = useState<string>("");
 
-  // Ưu tiên role Admin
-  const userRole = isAdmin() ? "Admin" : "User";
+  // Modal states
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingTimetable, setEditingTimetable] = useState<Timetable | null>(
+    null
+  );
 
-  // Use Zustand store with auto-fetch and caching
-  const { timetables: data } = useTimetables({
-    userRole,
-    userId: user?._id,
-  });
+  // Fetch ALL timetables (admin endpoint - no forceUserEndpoint)
+  const { timetables: data } = useTimetables();
+
+  // Fetch rooms and users for modal
+  const { rooms } = useRooms();
+  const { users } = useUsers();
 
   // Auto filter when any filter state changes
   const filtered = useMemo(() => {
@@ -72,25 +83,42 @@ export default function TimetablesClient() {
     data,
   ]);
 
+  const handleClear = () => {
+    setSchoolYear("");
+    setSemester("");
+    setDate("");
+    setPeriod("");
+    setTime("");
+    setSubject("");
+    setRoom("");
+    setClassName("");
+    setLecturer("");
+  };
+
+  const handleEdit = (timetable: Timetable) => {
+    setEditingTimetable(timetable);
+    setModalOpen(true);
+  };
+
+  const handleModalSuccess = (updated: Timetable) => {
+    setModalOpen(false);
+    setEditingTimetable(null);
+    // Refresh will happen automatically via Zustand
+  };
+
   return (
     <div style={{ padding: "24px" }}>
       <PageHeader
-        title="Thời khóa biểu"
-        description="Quản lý thời khóa biểu giảng dạy"
+        title="Quản lý thời khóa biểu"
+        description="Quản lý tất cả thời khóa biểu giảng dạy"
         extra={
-          <Suspense
-            fallback={<LoadingSpinner fullScreen={false} tip="Đang tải..." />}
-          >
+          <Suspense fallback={null}>
             <ImportButtons />
           </Suspense>
         }
       />
 
-      <Suspense
-        fallback={
-          <LoadingSpinner fullScreen={false} tip="Đang tải bộ lọc..." />
-        }
-      >
+      <Suspense fallback={<LoadingSpinner />}>
         <TimetableFilterBar
           data={data}
           schoolYear={schoolYear}
@@ -111,30 +139,28 @@ export default function TimetablesClient() {
           setClassName={setClassName}
           lecturer={lecturer}
           setLecturer={setLecturer}
-          handleClear={() => {
-            setSchoolYear("");
-            setSemester("");
-            setDate("");
-            setPeriod("");
-            setTime("");
-            setSubject("");
-            setRoom("");
-            setClassName("");
-            setLecturer("");
-          }}
+          handleClear={handleClear}
+        />
+
+        <TimetableTable
+          data={filtered}
+          onEdit={handleEdit}
+          isUserView={false}
         />
       </Suspense>
 
-      <Suspense
-        fallback={
-          <LoadingSpinner
-            fullScreen={false}
-            tip="Đang tải bảng thời khóa biểu..."
+      {modalOpen && (
+        <Suspense fallback={null}>
+          <TimetableModal
+            visible={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onSuccess={handleModalSuccess}
+            timetable={editingTimetable}
+            rooms={rooms}
+            users={users}
           />
-        }
-      >
-        <TimetableTable data={filtered} />
-      </Suspense>
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import React, { useMemo, useEffect, useState, useCallback } from "react";
 import { Row, Col, Select } from "antd";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 export interface TeachingLogsFilterProps {
   logs: any[];
@@ -14,6 +16,7 @@ export interface TeachingLogsFilterProps {
 
 const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
   ({ logs, filters, onChange }) => {
+    const { user } = useAuth();
     const semesters = useMemo(
       () => [
         { value: 1, label: "Học kỳ 1" },
@@ -37,26 +40,87 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
     >([]);
 
     useEffect(() => {
-      Promise.all([
-        fetch("/api/rooms").then((res) => res.json()),
-        fetch("/api/users?role=Lecture").then((res) => res.json()),
-      ])
-        .then(([roomsData, usersData]) => {
+      if (!user) return;
+
+      const fetchData = async () => {
+        try {
+          const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+
+          console.log(
+            "TeachingLogsFilter - Calling rooms endpoint:",
+            roomsEndpoint
+          );
+
+          const roomsRes = await authFetch(
+            roomsEndpoint,
+            user._id!,
+            user.roles
+          );
+
+          console.log("TeachingLogsFilter - Rooms API response:", {
+            status: roomsRes.status,
+            ok: roomsRes.ok,
+          });
+
+          let roomsData = { rooms: [] };
+
+          // Check if response is OK and is JSON
+          if (roomsRes.ok) {
+            const roomsText = await roomsRes.text();
+            try {
+              roomsData = JSON.parse(roomsText);
+            } catch (e) {
+              console.error(
+                "TeachingLogsFilter - Invalid JSON from rooms API:",
+                roomsText.substring(0, 100)
+              );
+              roomsData = { rooms: [] };
+            }
+          } else {
+            console.error(
+              "TeachingLogsFilter - Rooms API error:",
+              roomsRes.status,
+              roomsRes.statusText
+            );
+          }
+
+          // Extract lecturers from existing logs data instead of API call
+          const lecturerList = Array.from(
+            new Set(
+              logs
+                .map((log) => {
+                  const timetable = log.timetable;
+                  if (timetable?.lecturer) {
+                    const lecturer = timetable.lecturer;
+                    return typeof lecturer === "object"
+                      ? { id: lecturer._id || lecturer.id, name: lecturer.name }
+                      : null;
+                  }
+                  return null;
+                })
+                .filter(Boolean)
+            )
+          );
+
           const roomList = Array.isArray(roomsData.rooms)
             ? roomsData.rooms
             : [];
           setRooms(roomList.map((r: any) => ({ value: r._id, label: r.name })));
           setLecturers(
-            Array.isArray(usersData)
-              ? usersData.map((u: any) => ({ value: u._id, label: u.name }))
-              : []
+            lecturerList.map((lecturer: any) => ({
+              value: lecturer.id,
+              label: lecturer.name,
+            }))
           );
-        })
-        .catch(() => {
+        } catch (error) {
+          console.error("Error fetching filter data:", error);
           setRooms([]);
           setLecturers([]);
-        });
-    }, []);
+        }
+      };
+
+      fetchData();
+    }, [user, logs]);
 
     const handleChange = useCallback(
       (key: string) => (v: any) => {

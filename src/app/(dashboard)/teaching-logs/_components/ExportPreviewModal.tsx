@@ -9,12 +9,12 @@ interface ExportPreviewModalProps {
 }
 
 const columns = [
-  { title: "Học kỳ", dataIndex: ["timetable", "semester"], key: "semester" },
   {
     title: "Năm học",
     dataIndex: ["timetable", "schoolYear"],
     key: "schoolYear",
   },
+  { title: "Học kỳ", dataIndex: ["timetable", "semester"], key: "semester" },
   {
     title: "Ngày",
     dataIndex: ["timetable", "date"],
@@ -53,8 +53,8 @@ const columns = [
     key: "lecturer",
     render: (lec: any) => lec?.name || lec,
   },
-  { title: "Ghi chú", dataIndex: "note", key: "note" },
   { title: "Trạng thái", dataIndex: "status", key: "status" },
+  { title: "Ghi chú", dataIndex: "note", key: "note" },
 ];
 
 const ExportPreviewModal: React.FC<ExportPreviewModalProps> = ({

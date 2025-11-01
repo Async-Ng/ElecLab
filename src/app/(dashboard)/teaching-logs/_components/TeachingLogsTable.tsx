@@ -15,15 +15,15 @@ import { useTeachingLogs } from "@/hooks/stores";
 function getColumns(isHead: boolean) {
   const base = [
     {
-      title: "Học kỳ",
-      dataIndex: ["timetable", "semester"],
-      key: "semester",
-      render: (value: string | number) => value,
-    },
-    {
       title: "Năm học",
       dataIndex: ["timetable", "schoolYear"],
       key: "schoolYear",
+      render: (value: string | number) => value,
+    },
+    {
+      title: "Học kỳ",
+      dataIndex: ["timetable", "semester"],
+      key: "semester",
       render: (value: string | number) => value,
     },
     {
@@ -70,12 +70,6 @@ function getColumns(isHead: boolean) {
   }
   base.push(
     {
-      title: "Ghi chú",
-      dataIndex: ["note"],
-      key: "note",
-      render: (value: string) => value,
-    },
-    {
       title: "Trạng thái",
       dataIndex: ["status"],
       key: "status",
@@ -84,6 +78,12 @@ function getColumns(isHead: boolean) {
           {status}
         </Tag>
       ),
+    },
+    {
+      title: "Ghi chú",
+      dataIndex: ["note"],
+      key: "note",
+      render: (value: string) => value,
     }
   );
   return base;
@@ -101,15 +101,7 @@ const TeachingLogsTable: React.FC = () => {
   }>({});
 
   // Use Zustand store with auto-fetch and caching
-  // Ưu tiên role Admin - nếu user là Admin thì lấy toàn bộ logs
-  const {
-    teachingLogs: logs,
-    loading,
-    fetchTeachingLogs,
-  } = useTeachingLogs({
-    userId: user?._id,
-    isAdmin: isAdmin(),
-  });
+  const { teachingLogs: logs, loading, fetchTeachingLogs } = useTeachingLogs();
 
   // Lọc logs theo các trường filter
   const filteredLogs = useMemo(() => {
@@ -156,11 +148,23 @@ const TeachingLogsTable: React.FC = () => {
         onRow={(record) => {
           // Kiểm tra xem user có phải là owner của log này không
           const timetable = record.timetable as any;
-          const lecturerId =
-            typeof timetable?.lecturer === "object"
-              ? timetable?.lecturer?._id
-              : timetable?.lecturer;
+          let lecturerId = "";
+
+          if (timetable?.lecturer) {
+            lecturerId =
+              typeof timetable.lecturer === "object"
+                ? timetable.lecturer._id || ""
+                : timetable.lecturer || "";
+          }
+
           const isOwner = user?._id === lecturerId;
+
+          console.log("TeachingLogsTable - Row click:", {
+            recordId: record._id,
+            userId: user?._id,
+            lecturerId,
+            isOwner,
+          });
 
           return {
             onClick: () => {
@@ -189,10 +193,11 @@ const TeachingLogsTable: React.FC = () => {
         }
         log={editLog}
         onSuccess={async () => {
+          if (!user) return;
           setModalOpen(false);
           setEditLog(undefined);
           // Refetch teaching logs to get latest data (force bypass cache)
-          await fetchTeachingLogs(user?._id, true, isAdmin());
+          await fetchTeachingLogs(user._id!, user.roles, true);
         }}
       />
     </div>

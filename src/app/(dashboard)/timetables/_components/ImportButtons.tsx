@@ -7,21 +7,43 @@ import { Room } from "@/types/room";
 import { User } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
 import ActionButtons from "@/components/common/ActionButtons";
-import { cachedFetch } from "@/lib/requestCache";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
+import { useTimetablesStore } from "@/stores/useTimetablesStore";
+import { useTeachingLogsStore } from "@/stores/useTeachingLogsStore";
 
 export default function ImportButtons() {
   const { isAdmin, user } = useAuth();
   const isUserAdmin = isAdmin();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const { fetchTimetables } = useTimetablesStore();
+  const { fetchTeachingLogs } = useTeachingLogsStore();
 
   useEffect(() => {
-    // Tối ưu: Gộp 2 fetch calls thành Promise.all + sử dụng cachedFetch để lấy phòng và giảng viên
-    Promise.all([
-      cachedFetch("/api/rooms?userRole=Admin"),
-      cachedFetch("/api/users"),
-    ])
-      .then(([roomsData, usersData]) => {
+    if (!user) return;
+
+    const fetchData = async () => {
+      try {
+        const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+
+        // Chỉ admin mới cần fetch danh sách users
+        // User thường không có quyền truy cập /api/user/users
+        const shouldFetchUsers = isUserAdmin;
+
+        const roomsRes = await authFetch(roomsEndpoint, user._id!, user.roles);
+        const roomsData = await roomsRes.json();
+
+        let usersData: any[] = [];
+        if (shouldFetchUsers) {
+          const usersEndpoint = getApiEndpoint("users", user.roles);
+          const usersRes = await authFetch(
+            usersEndpoint,
+            user._id!,
+            user.roles
+          );
+          usersData = await usersRes.json();
+        }
+
         // Xử lý rooms
         setRooms(
           (roomsData.rooms || []).map((r: any) => ({
@@ -33,7 +55,7 @@ export default function ImportButtons() {
           }))
         );
 
-        // Xử lý users
+        // Xử lý users (chỉ admin mới có danh sách đầy đủ)
         setUsers(
           (usersData || []).map((u: any) => ({
             _id: u._id,
@@ -45,13 +67,16 @@ export default function ImportButtons() {
             rooms_manage: u.rooms_manage || [],
           }))
         );
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching rooms and users:", error);
         setRooms([]);
         setUsers([]);
-      });
-  }, []);
+      }
+    };
+
+    fetchData();
+  }, [user, isUserAdmin]);
+
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRows, setPreviewRows] = useState<Timetable[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -342,13 +367,27 @@ export default function ImportButtons() {
       return { ...row, room: roomId, lecturer: lecturerId };
     });
     try {
-      const res = await fetch("/api/timetables", {
+      if (!user) {
+        message.error("Vui lòng đăng nhập để thực hiện import");
+        return;
+      }
+
+      const endpoint = getApiEndpoint("timetables", user.roles);
+      const res = await authFetch(endpoint, user._id!, user.roles, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(mappedRows),
       });
+
       if (res.ok) {
         message.success("Đã import thời khóa biểu");
+
+        // Refresh both timetables and teaching logs data sau khi import thành công
+        if (user._id && user.roles) {
+          await Promise.all([
+            fetchTimetables(user._id, user.roles, true), // Force refresh
+            fetchTeachingLogs(user._id, user.roles, true), // Force refresh teaching logs
+          ]);
+        }
       } else {
         const errorData = await res.json();
 

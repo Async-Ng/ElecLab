@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Form, Input, Upload, Modal as AntModal } from "antd";
-import { message } from "antd";
+import { Form, Input, Upload, Modal as AntModal, App, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import TeachingLogDetail from "./TeachingLogDetail";
 import { BaseModal, FormField } from "@/components/common";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 interface TeachingLogModalProps {
   open: boolean;
@@ -26,22 +27,31 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   log,
   onSuccess,
 }) => {
+  const { user } = useAuth();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState<any[]>([]);
   const [previewImage, setPreviewImage] = useState<string | undefined>();
   const [previewVisible, setPreviewVisible] = useState(false);
 
-  // Lấy user hiện tại
-  let currentUser: any = null;
-  try {
-    currentUser = JSON.parse(localStorage.getItem("user") || "null");
-  } catch {}
+  console.log("TeachingLogModal - Props:", {
+    open,
+    timetableId,
+    hasLog: !!log,
+    userId: user?._id,
+  });
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
+
+      console.log("TeachingLogModal - Creating log:", {
+        timetableId,
+        values,
+        user: user?._id,
+        roles: user?.roles,
+      });
 
       // Kiểm tra quyền: chỉ chủ sở hữu mới được edit
       let lecturerId = "";
@@ -49,7 +59,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         const lec = log.timetable.lecturer;
         lecturerId = typeof lec === "object" ? lec._id || "" : lec || "";
       }
-      if (log && lecturerId && currentUser?._id !== lecturerId) {
+      if (log && lecturerId && user?._id !== lecturerId) {
         message.error("Bạn không có quyền chỉnh sửa nhật ký này!");
         setLoading(false);
         return;
@@ -66,40 +76,91 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       });
 
       const method = log ? "PUT" : "POST";
-      const url = log
-        ? `/api/teaching-logs/${log._id}?userId=${encodeURIComponent(
-            currentUser?._id || ""
-          )}`
-        : "/api/teaching-logs";
-      const response = await fetch(url, {
+      // Sử dụng user endpoint (không có dấu / ở đầu resource)
+      const endpoint = getApiEndpoint("teaching-logs", user?.roles || []);
+      const url = log ? `${endpoint}/${log._id}` : endpoint;
+
+      console.log("TeachingLogModal - Calling API:", {
         method,
-        body: formData,
+        url,
+        timetableId,
+        hasImages: fileList.length > 0,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Lưu thất bại");
+      try {
+        // Encode roles to base64 to avoid ISO-8859-1 encoding issues with Vietnamese characters
+        const roleString = JSON.stringify(user?.roles || []);
+        const encodedRole = btoa(unescape(encodeURIComponent(roleString)));
+
+        const response = await fetch(url, {
+          method,
+          body: formData,
+          headers: {
+            "x-user-id": user?._id || "",
+            "x-user-role": encodedRole,
+          },
+        });
+
+        console.log("TeachingLogModal - Response:", {
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("TeachingLogModal - Error response:", errorData);
+          throw new Error(errorData.error || "Lưu thất bại");
+        }
+
+        const result = await response.json();
+        console.log("TeachingLogModal - Success result:", result);
+
+        message.success(
+          log ? "Cập nhật nhật ký thành công!" : "Tạo nhật ký mới thành công!"
+        );
+
+        setLoading(false);
+        onSuccess?.();
+        onClose();
+      } catch (fetchError: any) {
+        console.error("TeachingLogModal - Fetch error:", fetchError);
+        throw fetchError;
       }
-
-      message.success(
-        log ? "Cập nhật nhật ký thành công!" : "Tạo nhật ký mới thành công!"
-      );
-
-      setLoading(false);
-      onSuccess?.();
-      onClose();
     } catch (err: any) {
+      console.error("TeachingLogModal - Outer error:", err);
       message.error(err?.message || "Có lỗi xảy ra khi lưu nhật ký");
       setLoading(false);
     }
   };
 
   const isOwner = (() => {
-    if (!log || !log.timetable || typeof log.timetable !== "object")
+    if (!log || !log.timetable) {
+      console.log("TeachingLogModal - isOwner: true (new log)");
       return true; // Tạo mới
-    const lec = log.timetable.lecturer;
-    const lecturerId = typeof lec === "object" ? lec._id || "" : lec || "";
-    return currentUser?._id === lecturerId;
+    }
+
+    const timetable = log.timetable;
+    let lecturerId = "";
+
+    if (typeof timetable === "object" && timetable.lecturer) {
+      const lec = timetable.lecturer;
+      lecturerId = typeof lec === "object" ? lec._id || "" : lec || "";
+    } else if (typeof timetable === "string") {
+      // Handle case where timetable is just an ID
+      lecturerId = "";
+    }
+
+    const isOwnerResult = user?._id === lecturerId;
+
+    console.log("TeachingLogModal - isOwner check:", {
+      userId: user?._id,
+      lecturerId,
+      isOwner: isOwnerResult,
+      timetableType: typeof timetable,
+    });
+
+    return isOwnerResult;
   })();
 
   return (
@@ -107,11 +168,31 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       open={open}
       title={log ? "Chi tiết nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
       onCancel={onClose}
-      onOk={handleOk}
+      onOk={isOwner ? handleOk : undefined}
       loading={loading}
       width={900}
+      okText={log && !isOwner ? undefined : log ? "Cập nhật" : "Tạo mới"}
+      cancelText={log && !isOwner ? "Đóng" : "Hủy"}
     >
       {log && <TeachingLogDetail log={log} />}
+
+      {/* Thông báo nếu không phải owner */}
+      {log && !isOwner && (
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "#f0f0f0",
+            borderRadius: "4px",
+            marginTop: "16px",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ margin: 0, color: "#595959" }}>
+            Bạn chỉ có thể xem nhật ký này. Chỉ giảng viên phụ trách mới có thể
+            chỉnh sửa.
+          </p>
+        </div>
+      )}
 
       {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
       {isOwner && (

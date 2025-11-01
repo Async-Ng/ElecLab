@@ -22,7 +22,7 @@ export default function Sidebar({ onClose }: Props) {
     roles: UserRole[];
   }> = [
     {
-      href: `/timetables/${user?._id}`,
+      href: "/timetables",
       label: "TKB của tôi",
       icon: (
         <svg
@@ -43,8 +43,8 @@ export default function Sidebar({ onClose }: Props) {
       roles: [UserRole.Admin, UserRole.User],
     },
     {
-      href: "/timetables",
-      label: "Thời khóa biểu",
+      href: "/admin-timetables",
+      label: "Quản lý TKB",
       icon: (
         <svg
           className="w-5 h-5"
@@ -57,11 +57,11 @@ export default function Sidebar({ onClose }: Props) {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M16 2v4M8 2v4"
+            d="M16 2v4M8 2v4M3 10h18"
           />
         </svg>
       ),
-      roles: [UserRole.Admin, UserRole.User],
+      roles: [UserRole.Admin],
     },
 
     {

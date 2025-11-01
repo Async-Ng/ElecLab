@@ -7,23 +7,39 @@ import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { DataTable } from "@/components/common";
 import { Button } from "antd";
 import { useTimetables } from "@/hooks/stores";
-import { cachedFetch } from "@/lib/requestCache";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
+
+// Extended type for timetable with hasLog and date status properties
+type TimetableWithLog = Timetable & {
+  hasLog?: boolean;
+  isPast?: boolean;
+  isFuture?: boolean;
+  isOverdue?: boolean;
+  canLog?: boolean;
+};
 
 interface TimetableTableProps {
-  data: Timetable[];
+  data: TimetableWithLog[];
+  onEdit?: (record: TimetableWithLog) => void; // Click row → ghi log
+  onEditTimetable?: (record: TimetableWithLog) => void; // Nút "Chỉnh sửa" → edit TKB
+  isUserView?: boolean; // true = user view (limited actions), false = admin view (full actions)
+  loading?: boolean;
 }
 
-export default function TimetableTable({ data }: TimetableTableProps) {
+export default function TimetableTable({
+  data,
+  onEdit: externalOnEdit,
+  onEditTimetable: externalOnEditTimetable,
+  isUserView = false,
+  loading = false,
+}: TimetableTableProps) {
   const [editVisible, setEditVisible] = useState(false);
   const [editRecord, setEditRecord] = useState<Timetable | null>(null);
   const [tableData, setTableData] = useState<Timetable[]>(data);
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const { user, isAdmin } = useAuth();
-  const { fetchTimetables } = useTimetables({
-    userRole: isAdmin() ? "Admin" : "User",
-    userId: user?._id,
-  });
+  const { fetchTimetables } = useTimetables();
 
   // Kiểm tra xem user có phải Admin không - ưu tiên role Admin
   const isUserAdmin = isAdmin();
@@ -33,12 +49,17 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   }, [data]);
 
   React.useEffect(() => {
-    // Tối ưu: Gộp 2 fetch calls thành Promise.all + sử dụng cachedFetch
+    // Fetch rooms and users data
+    if (!user) return;
+
     Promise.all([
-      cachedFetch("/api/rooms?userRole=Admin"),
-      cachedFetch("/api/users"),
+      authFetch(getApiEndpoint("rooms", user.roles), user._id!, user.roles),
+      authFetch(getApiEndpoint("users", user.roles), user._id!, user.roles),
     ])
-      .then(([roomsData, usersData]) => {
+      .then(async ([roomsRes, usersRes]) => {
+        const roomsData = await roomsRes.json();
+        const usersData = await usersRes.json();
+
         // Xử lý rooms
         setRooms(
           (roomsData.rooms || []).map((r: any) => ({
@@ -62,21 +83,41 @@ export default function TimetableTable({ data }: TimetableTableProps) {
         setRooms([]);
         setUsers([]);
       });
-  }, []);
+  }, [user]);
 
-  const handleEdit = (record: Timetable) => {
-    setEditRecord(record);
-    setEditVisible(true);
+  // Handler cho nút "Chỉnh sửa" - dùng để edit TKB
+  const handleEditTimetable = (record: TimetableWithLog) => {
+    console.log("🔧 TimetableTable - Button Edit clicked:", record._id);
+    if (externalOnEditTimetable) {
+      // Use external timetable edit handler
+      externalOnEditTimetable(record);
+    } else {
+      // Use internal modal for TKB editing
+      setEditRecord(record);
+      setEditVisible(true);
+    }
   };
+
+  // Handler cho click row - dùng để ghi log
+  const handleRowClick = (record: TimetableWithLog) => {
+    console.log("📋 TimetableTable - Row clicked:", record._id);
+    if (externalOnEdit) {
+      // Use external handler for logging
+      externalOnEdit(record);
+    }
+  };
+
   const handleEditSuccess = async (updated: Timetable) => {
+    if (!user) return;
     setTableData((prev) =>
       prev.map((item) => (item._id === updated._id ? updated : item))
     );
     // Refetch timetables to get latest data (force bypass cache)
-    await fetchTimetables(isAdmin() ? "Admin" : "User", user?._id, true);
+    const forceUserEndpoint = isUserView;
+    await fetchTimetables(user._id!, user.roles, true, forceUserEndpoint);
   };
 
-  const columns: ColumnsType<Timetable> = [
+  const columns: ColumnsType<TimetableWithLog> = [
     {
       title: "Năm học",
       dataIndex: "schoolYear",
@@ -134,6 +175,57 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       title: "Môn học",
       dataIndex: "subject",
       key: "subject",
+      render: (value: string, record: any) => (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span>{value}</span>
+          {/* Badge for different statuses */}
+          {record.hasLog && (
+            <span
+              style={{
+                backgroundColor: "#52c41a",
+                color: "white",
+                fontSize: "10px",
+                padding: "2px 6px",
+                borderRadius: "10px",
+                fontWeight: "normal",
+              }}
+              title="Đã có nhật ký giảng dạy"
+            >
+              ✓ ĐÃ GHI
+            </span>
+          )}
+          {record.isOverdue && (
+            <span
+              style={{
+                backgroundColor: "#ff7a45",
+                color: "white",
+                fontSize: "10px",
+                padding: "2px 6px",
+                borderRadius: "10px",
+                fontWeight: "normal",
+              }}
+              title="Quá hạn ghi log"
+            >
+              ⚠ QUÁ HẠN
+            </span>
+          )}
+          {record.isFuture && (
+            <span
+              style={{
+                backgroundColor: "#91d5ff",
+                color: "#1890ff",
+                fontSize: "10px",
+                padding: "2px 6px",
+                borderRadius: "10px",
+                fontWeight: "normal",
+              }}
+              title="Tiết học trong tương lai"
+            >
+              ⏳ TƯƠNG LAI
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       title: "Phòng học",
@@ -161,20 +253,31 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       title: "Chỉnh sửa",
       key: "actions",
       render: (_: any, record: Timetable) => {
-        // Chỉ hiển thị nếu là lecturer của TKB (chủ sở hữu)
-        const isOwner =
-          user &&
-          (record.lecturer === user._id ||
-            (typeof record.lecturer === "object" &&
-              record.lecturer._id === user._id));
-        if (isOwner) {
-          return (
-            <Button type="link" onClick={() => handleEdit(record)}>
-              Chỉnh sửa
-            </Button>
-          );
+        // User view: chỉ hiển thị nếu là owner
+        // Admin view: hiển thị cho tất cả
+        if (isUserView) {
+          const isOwner =
+            user &&
+            (record.lecturer === user._id ||
+              (typeof record.lecturer === "object" &&
+                record.lecturer._id === user._id));
+          if (!isOwner) return null;
+        } else {
+          // Admin view - kiểm tra có quyền admin
+          if (!isUserAdmin) return null;
         }
-        return null;
+
+        return (
+          <Button
+            type="link"
+            onClick={(e) => {
+              e.stopPropagation(); // Ngăn event bubbling lên row click
+              handleEditTimetable(record);
+            }}
+          >
+            Chỉnh sửa
+          </Button>
+        );
       },
     },
   ];
@@ -184,17 +287,33 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       <DataTable
         data={tableData}
         columns={columns}
-        loading={false}
+        loading={loading}
         showActions={false}
+        onRow={(record) => {
+          const recordWithLog = record as TimetableWithLog;
+          return {
+            onClick: () => handleRowClick(record),
+            style: {
+              cursor: recordWithLog.canLog
+                ? "pointer"
+                : recordWithLog.isFuture
+                ? "not-allowed"
+                : "pointer",
+              backgroundColor: recordWithLog.isOverdue ? "#fff7e6" : undefined,
+            },
+          };
+        }}
       />
-      <TimetableModal
-        visible={editVisible}
-        onClose={() => setEditVisible(false)}
-        onSuccess={handleEditSuccess}
-        timetable={editRecord}
-        rooms={rooms}
-        users={users}
-      />
+      {!externalOnEditTimetable && (
+        <TimetableModal
+          visible={editVisible}
+          onClose={() => setEditVisible(false)}
+          onSuccess={handleEditSuccess}
+          timetable={editRecord}
+          rooms={rooms}
+          users={users}
+        />
+      )}
     </>
   );
 }

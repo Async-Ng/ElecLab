@@ -1,14 +1,16 @@
 import { create } from "zustand";
 import { TeachingLog } from "@/types/teachingLog";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface TeachingLogsState {
   teachingLogs: TeachingLog[];
   loading: boolean;
   lastFetch: number | null;
   fetchTeachingLogs: (
-    userId?: string,
+    userId: string,
+    userRole: string | string[],
     force?: boolean,
-    isAdmin?: boolean
+    lessonId?: string
   ) => Promise<void>;
   addTeachingLog: (teachingLog: TeachingLog) => void;
   updateTeachingLog: (id: string, teachingLog: Partial<TeachingLog>) => void;
@@ -24,9 +26,10 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
   lastFetch: null,
 
   fetchTeachingLogs: async (
-    userId?: string,
+    userId: string,
+    userRole: string | string[],
     force = false,
-    isAdmin = false
+    lessonId?: string
   ) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
@@ -39,22 +42,13 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
 
     set({ loading: true });
     try {
-      let url = "/api/teaching-logs";
-      const params = new URLSearchParams();
+      let endpoint = getApiEndpoint("teaching-logs", userRole);
 
-      // Nếu là Admin thì không truyền userId để lấy toàn bộ logs
-      if (!isAdmin && userId) {
-        params.append("userId", userId);
-        params.append("userRole", "User");
-      } else if (isAdmin) {
-        params.append("userRole", "Admin");
+      if (lessonId) {
+        endpoint += `?lessonId=${lessonId}`;
       }
 
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const response = await fetch(url);
+      const response = await authFetch(endpoint, userId, userRole);
       if (!response.ok) throw new Error("Failed to fetch teaching logs");
       const data = await response.json();
 

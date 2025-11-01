@@ -1,15 +1,16 @@
 import { create } from "zustand";
 import { Timetable } from "@/types/timetable";
-import { cachedFetch } from "@/lib/requestCache";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface TimetablesState {
   timetables: Timetable[];
   loading: boolean;
   lastFetch: number | null;
   fetchTimetables: (
-    userRole?: string,
-    userId?: string,
-    force?: boolean
+    userId: string,
+    userRole: string | string[],
+    force?: boolean,
+    forceUserEndpoint?: boolean
   ) => Promise<void>;
   addTimetable: (timetable: Timetable) => void;
   updateTimetable: (id: string, timetable: Partial<Timetable>) => void;
@@ -25,9 +26,10 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
   lastFetch: null,
 
   fetchTimetables: async (
-    userRole?: string,
-    userId?: string,
-    force = false
+    userId: string,
+    userRole: string | string[],
+    force = false,
+    forceUserEndpoint = false
   ) => {
     const { loading } = get();
 
@@ -35,19 +37,33 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
 
     set({ loading: true });
     try {
-      let url = "/api/timetables";
-      const params = new URLSearchParams();
-      if (userRole) params.append("userRole", userRole);
-      if (userId) params.append("userId", userId);
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
+      const endpoint = getApiEndpoint(
+        "timetables",
+        userRole,
+        forceUserEndpoint
+      );
 
-      // Sử dụng cachedFetch để tự động deduplicate và cache
-      const data = await cachedFetch(url, {
-        skipCache: force,
-        cacheDuration: CACHE_DURATION,
+      console.log("Fetching timetables:", {
+        userId,
+        userRole,
+        endpoint,
+        forceUserEndpoint,
       });
+
+      const response = await authFetch(endpoint, userId, userRole);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to fetch timetables:", {
+          status: response.status,
+          statusText: response.statusText,
+          endpoint,
+          error: errorData,
+        });
+        throw new Error(
+          errorData.message || `Failed to fetch timetables: ${response.status}`
+        );
+      }
+      const data = await response.json();
 
       const processedData = Array.isArray(data)
         ? data.map((timetable) => ({

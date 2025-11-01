@@ -1,20 +1,22 @@
 import { useEffect, useRef } from "react";
 import { useUsersStore } from "@/stores/useUsersStore";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Custom hook to manage users data with automatic fetching and caching
  * @returns Users store state and actions
  */
 export const useUsers = () => {
+  const { user } = useAuth();
   const store = useUsersStore();
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (!hasFetched.current) {
+    if (!hasFetched.current && user?._id) {
       hasFetched.current = true;
-      store.fetchUsers();
+      store.fetchUsers(user._id, user.roles);
     }
-  }, [store]);
+  }, [user, store]);
 
   return store;
 };

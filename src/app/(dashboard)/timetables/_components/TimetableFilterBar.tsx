@@ -11,7 +11,8 @@ import {
   SubjectSelect,
   ClassNameSelect,
 } from "@/components/common/SelectFields";
-import { cachedFetch } from "@/lib/requestCache";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 interface TimetableFilterBarProps {
   data: Timetable[];
@@ -65,14 +66,54 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
     { label: string; value: string }[]
   >([]);
   const [lecturerOptions, setLecturerOptions] = React.useState<string[]>([]);
+  const { user } = useAuth();
 
   React.useEffect(() => {
-    // Tối ưu: Gộp 2 fetch calls thành Promise.all + sử dụng cachedFetch
-    Promise.all([
-      cachedFetch("/api/rooms"),
-      cachedFetch("/api/users?role=lecturer"),
-    ])
-      .then(([roomsData, lecturersData]) => {
+    if (!user) return;
+
+    const fetchData = async () => {
+      try {
+        const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+        const usersEndpoint = getApiEndpoint("users", user.roles);
+
+        const [roomsRes, lecturersRes] = await Promise.all([
+          authFetch(roomsEndpoint, user._id!, user.roles),
+          authFetch(`${usersEndpoint}?role=lecturer`, user._id!, user.roles),
+        ]);
+
+        let roomsData = { rooms: [] };
+        let lecturersData = [];
+
+        // Parse rooms response safely
+        if (roomsRes.ok) {
+          try {
+            roomsData = await roomsRes.json();
+          } catch (e) {
+            console.error("TimetableFilterBar - Invalid JSON from rooms API");
+          }
+        } else {
+          console.error(
+            "TimetableFilterBar - Rooms API error:",
+            roomsRes.status
+          );
+        }
+
+        // Parse lecturers response safely
+        if (lecturersRes.ok) {
+          try {
+            lecturersData = await lecturersRes.json();
+          } catch (e) {
+            console.error(
+              "TimetableFilterBar - Invalid JSON from lecturers API"
+            );
+          }
+        } else {
+          console.error(
+            "TimetableFilterBar - Lecturers API error:",
+            lecturersRes.status
+          );
+        }
+
         // Xử lý rooms
         if (Array.isArray(roomsData.rooms)) {
           setRoomOptions(
@@ -87,13 +128,15 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
 
         // Xử lý lecturers
         setLecturerOptions(lecturersData.map((l: any) => l.name));
-      })
-      .catch((error) => {
-        console.error("Error fetching filter data:", error);
+      } catch (error) {
+        console.error("Error fetching data:", error);
         setRoomOptions([]);
         setLecturerOptions([]);
-      });
-  }, []);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   return (
     <FilterBar onClear={handleClear} clearText="Xóa lọc">

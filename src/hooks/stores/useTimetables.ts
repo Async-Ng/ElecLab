@@ -1,36 +1,29 @@
 import { useEffect, useRef } from "react";
 import { useTimetablesStore } from "@/stores/useTimetablesStore";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UseTimetablesOptions {
-  userRole?: string;
-  userId?: string;
   autoFetch?: boolean;
+  forceUserEndpoint?: boolean; // Force dùng user endpoint ngay cả khi có admin role
 }
 
 /**
  * Custom hook to manage timetables data with automatic fetching and caching
- * @param options - Configuration options for filtering and auto-fetching
+ * @param options - Configuration options for auto-fetching
  * @returns Timetables store state and actions
  */
 export const useTimetables = (options: UseTimetablesOptions = {}) => {
-  const { userRole, userId, autoFetch = true } = options;
+  const { autoFetch = true, forceUserEndpoint = false } = options;
+  const { user } = useAuth();
   const store = useTimetablesStore();
   const hasFetched = useRef(false);
-  const prevParams = useRef({ userRole, userId });
 
   useEffect(() => {
-    if (!autoFetch) return;
-
-    const paramsChanged =
-      prevParams.current.userRole !== userRole ||
-      prevParams.current.userId !== userId;
-
-    if (!hasFetched.current || paramsChanged) {
+    if (autoFetch && !hasFetched.current && user?._id && user?.roles) {
       hasFetched.current = true;
-      prevParams.current = { userRole, userId };
-      store.fetchTimetables(userRole, userId);
+      store.fetchTimetables(user._id, user.roles, false, forceUserEndpoint);
     }
-  }, [userRole, userId, autoFetch, store]);
+  }, [autoFetch, user?._id, user?.roles, store, forceUserEndpoint]);
 
   return store;
 };

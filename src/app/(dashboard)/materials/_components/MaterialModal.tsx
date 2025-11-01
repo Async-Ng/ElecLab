@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { FormInstance } from "antd";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
 import { FormModal, FormField } from "@/components/common";
-import { cachedFetch } from "@/lib/requestCache";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 type Props = {
   open: boolean;
@@ -18,9 +19,10 @@ type Props = {
 export default function MaterialModal(props: Props) {
   const { open, onOk, onCancel, editing, form, loading = false } = props;
   const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!form) return;
+    if (!form || !user) return;
 
     // Tối ưu: Gộp logic xử lý form và fetch rooms trong 1 useEffect
     if (open) {
@@ -39,19 +41,23 @@ export default function MaterialModal(props: Props) {
         form.resetFields();
       }
 
-      // Fetch rooms nếu chưa có dữ liệu (sử dụng cachedFetch)
+      // Fetch rooms nếu chưa có dữ liệu
       if (rooms.length === 0) {
-        cachedFetch("/api/rooms?userRole=Admin")
-          .then((data) => {
+        const fetchRooms = async () => {
+          try {
+            const endpoint = getApiEndpoint("rooms", user.roles);
+            const res = await authFetch(endpoint, user._id!, user.roles);
+            const data = await res.json();
             setRooms(data.rooms || []);
-          })
-          .catch((error) => {
+          } catch (error) {
             console.error("Error fetching rooms:", error);
             setRooms([]);
-          });
+          }
+        };
+        fetchRooms();
       }
     }
-  }, [open, editing, form, rooms.length]);
+  }, [open, editing, form, rooms.length, user]);
 
   const categoryOptions = Object.values(MaterialCategory).map((v) => ({
     label: v,

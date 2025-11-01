@@ -6,6 +6,8 @@ import { Material } from "@/types/material";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PageHeader, ActionButtons } from "@/components/common";
 import { useMaterials } from "@/hooks/stores";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 // Lazy load components
 const MaterialFilters = lazy(() => import("./_components/MaterialFilters"));
@@ -20,9 +22,10 @@ export default function MaterialsClient() {
   const [form] = Form.useForm<Material>();
   const [submitting, setSubmitting] = useState(false);
 
+  const { user } = useAuth();
+
   // Use Zustand store with auto-fetch and caching
-  const { materials, loading, updateMaterial, deleteMaterial, fetchMaterials } =
-    useMaterials();
+  const { materials, loading, deleteMaterial, fetchMaterials } = useMaterials();
 
   const filteredMaterials = useMemo(() => {
     return materials.filter((m) => {
@@ -55,10 +58,12 @@ export default function MaterialsClient() {
   };
 
   const handleDelete = async (id?: string) => {
-    if (!id) return;
+    if (!id || !user) return;
     try {
-      const response = await fetch(`/api/materials?id=${id}`, {
+      const endpoint = getApiEndpoint("materials", user.roles);
+      const response = await authFetch(endpoint, user._id!, user.roles, {
         method: "DELETE",
+        body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {
@@ -74,39 +79,30 @@ export default function MaterialsClient() {
   };
 
   const handleOk = async () => {
+    if (!user) return;
     setSubmitting(true);
     try {
       const values = await form.validateFields();
-      const payload = { ...values };
+      const payload = editing ? { id: editing._id, ...values } : values;
 
-      let response;
-      if (editing) {
-        response = await fetch(`/api/materials?id=${editing._id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        response = await fetch("/api/materials", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
+      const endpoint = getApiEndpoint("materials", user.roles);
+      const response = await authFetch(endpoint, user._id!, user.roles, {
+        method: editing ? "PUT" : "POST",
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Lưu thất bại");
       }
 
-      const savedMaterial = await response.json();
       message.success(
         editing ? "Cập nhật vật tư thành công!" : "Thêm vật tư mới thành công!"
       );
       setModalOpen(false);
 
       // Refetch materials to get latest data (force bypass cache)
-      await fetchMaterials(true);
+      await fetchMaterials(user._id!, user.roles, true);
     } catch (err: any) {
       message.error(err?.message || "Có lỗi xảy ra khi lưu vật tư");
     } finally {

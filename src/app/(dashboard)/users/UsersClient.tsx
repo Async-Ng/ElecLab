@@ -6,6 +6,8 @@ import { User, UserFormData, UserRole } from "@/types/user";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PageHeader, ActionButtons } from "@/components/common";
 import { useUsers, useRooms } from "@/hooks/stores";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 // Lazy load components
 const UsersTable = lazy(() =>
@@ -25,11 +27,12 @@ export default function UsersClient() {
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const [submitting, setSubmitting] = useState(false);
 
+  const { user } = useAuth();
+
   // Use Zustand stores with auto-fetch and caching
   const {
     users,
     loading: usersLoading,
-    updateUser,
     deleteUser: removeUser,
     fetchUsers,
   } = useUsers();
@@ -46,9 +49,12 @@ export default function UsersClient() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!user) return;
     try {
-      const response = await fetch(`/api/users/${id}`, {
+      const endpoint = getApiEndpoint("users", user.roles);
+      const response = await authFetch(endpoint, user._id!, user.roles, {
         method: "DELETE",
+        body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {
@@ -64,25 +70,23 @@ export default function UsersClient() {
   };
 
   const handleSave = async (formData: UserFormData) => {
+    if (!user) return;
     setSubmitting(true);
     try {
-      const url = editingUser ? `/api/users/${editingUser._id}` : "/api/users";
-      const method = editingUser ? "PUT" : "POST";
+      const payload = editingUser
+        ? { id: editingUser._id, ...formData }
+        : formData;
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      const endpoint = getApiEndpoint("users", user.roles);
+      const response = await authFetch(endpoint, user._id!, user.roles, {
+        method: editingUser ? "PUT" : "POST",
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Lưu thất bại");
       }
-
-      const savedUser = await response.json();
 
       message.success(
         editingUser
@@ -93,7 +97,7 @@ export default function UsersClient() {
       setModalOpen(false);
 
       // Refetch users to get latest data (force bypass cache)
-      await fetchUsers(true);
+      await fetchUsers(user._id!, user.roles, true);
     } catch (error: any) {
       message.error(error.message || "Có lỗi xảy ra khi lưu giảng viên");
     } finally {

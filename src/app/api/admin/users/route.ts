@@ -2,28 +2,30 @@ import { NextResponse } from "next/server";
 import { Binary } from "mongodb";
 import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/models/User";
+import { requireAdmin } from "@/lib/apiMiddleware";
 import bcrypt from "bcryptjs";
 
-// GET all users (only for admin)
+/**
+ * GET /api/admin/users
+ * Lấy tất cả users (chỉ admin)
+ */
+export async function GET(request: Request) {
+  // Check admin authorization
+  const authError = requireAdmin(request);
+  if (authError) return authError;
 
-export async function GET() {
   try {
     await connectToDatabase();
-    // Tối ưu: Sử dụng lean() để trả về plain objects thay vì Mongoose documents
-    // Chỉ select các fields cần thiết
+
     const users = await User.find({}).select("-password").lean().exec();
 
     const usersWithAvatar = users.map((u: any) => {
       const avatar = u.avatar;
       if (avatar) {
-        // Nếu avatar là Binary của MongoDB
         if (avatar instanceof Binary) {
-          // Lấy buffer từ Binary
           const buffer = avatar.buffer as Buffer;
           u.avatar = buffer.toString("base64");
-        }
-        // Nếu avatar là Buffer thật
-        else if (Buffer.isBuffer(avatar)) {
+        } else if (Buffer.isBuffer(avatar)) {
           u.avatar = avatar.toString("base64");
         } else {
           u.avatar = null;
@@ -31,22 +33,28 @@ export async function GET() {
       } else {
         u.avatar = null;
       }
-
       return u;
     });
 
     return NextResponse.json(usersWithAvatar);
   } catch (error) {
-    console.error("Failed to fetch users:", error);
+    console.error("GET /api/admin/users error:", error);
     return NextResponse.json(
-      { message: "Lỗi khi lấy danh sách người dùng" },
+      { error: "Failed to fetch users" },
       { status: 500 }
     );
   }
 }
 
-// POST - Create new user
+/**
+ * POST /api/admin/users
+ * Tạo user mới (chỉ admin)
+ */
 export async function POST(request: Request) {
+  // Check admin authorization
+  const authError = requireAdmin(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     await connectToDatabase();
@@ -58,7 +66,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { message: "Mã nhân viên hoặc email đã tồn tại" },
+        { error: "Staff ID or email already exists" },
         { status: 400 }
       );
     }
@@ -67,10 +75,9 @@ export async function POST(request: Request) {
     const salt = await bcrypt.genSalt(10);
     body.password = await bcrypt.hash(body.password, salt);
 
-    // Nếu có avatar là base64, lưu đúng chuẩn như log
+    // Process avatar if provided
     if (body.avatar) {
       if (typeof body.avatar === "string") {
-        // Nếu có prefix thì tách, nếu không thì dùng luôn
         const base64 = body.avatar.includes(",")
           ? body.avatar.split(",")[1]
           : body.avatar;
@@ -79,29 +86,54 @@ export async function POST(request: Request) {
         body.avatar = Buffer.from(body.avatar);
       }
     }
+
     const user = await User.create(body);
     const userWithoutPassword = { ...user.toObject(), password: undefined };
-    // Trả về avatar là base64 để frontend hiển thị
+
     if (user.avatar) {
       userWithoutPassword.avatar = `data:image/png;base64,${user.avatar.toString(
         "base64"
       )}`;
     }
+
     return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {
-    console.error("Failed to create user:", error);
+    console.error("POST /api/admin/users error:", error);
     return NextResponse.json(
-      { message: "Lỗi khi tạo người dùng" },
+      { error: "Failed to create user" },
       { status: 500 }
     );
   }
 }
 
-// PUT - Update user
+/**
+ * PUT /api/admin/users
+ * Cập nhật user (chỉ admin)
+ */
 export async function PUT(request: Request) {
+  // Check admin authorization
+  const authError = requireAdmin(request);
+  if (authError) return authError;
+
   try {
     const { id, ...updateData } = await request.json();
-    // Nếu avatar là base64, lưu đúng chuẩn như log
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    await connectToDatabase();
+
+    // If password is being updated, hash it
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(updateData.password, salt);
+    }
+
+    // Process avatar if provided
     if (updateData.avatar) {
       if (typeof updateData.avatar === "string") {
         const base64 = updateData.avatar.includes(",")
@@ -112,61 +144,64 @@ export async function PUT(request: Request) {
         updateData.avatar = Buffer.from(updateData.avatar);
       }
     }
-    await connectToDatabase();
 
-    // If password is being updated, hash it
-    if (updateData.password) {
-      const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(updateData.password, salt);
-    }
-
-    const user = await User.findByIdAndUpdate(id, updateData, {
+    const updated = await User.findByIdAndUpdate(id, updateData, {
       new: true,
-      select: "-password",
-    });
-    if (!user) {
-      return NextResponse.json(
-        { message: "Không tìm thấy người dùng" },
-        { status: 404 }
-      );
+    }).select("-password");
+
+    if (!updated) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    // Trả về avatar là base64 (không prefix)
-    const userObj = user.toObject();
-    if (userObj.avatar && Buffer.from(userObj.avatar).length > 0) {
-      userObj.avatar = Buffer.from(userObj.avatar).toString("base64");
-    } else {
-      userObj.avatar = null;
+
+    const userObj = updated.toObject();
+    if (updated.avatar) {
+      userObj.avatar = `data:image/png;base64,${updated.avatar.toString(
+        "base64"
+      )}`;
     }
+
     return NextResponse.json(userObj);
   } catch (error) {
-    console.error("Error updating user:", error);
+    console.error("PUT /api/admin/users error:", error);
     return NextResponse.json(
-      { message: "Lỗi khi cập nhật người dùng" },
+      { error: "Failed to update user" },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Remove user
+/**
+ * DELETE /api/admin/users
+ * Xóa user (chỉ admin)
+ */
 export async function DELETE(request: Request) {
+  // Check admin authorization
+  const authError = requireAdmin(request);
+  if (authError) return authError;
+
   try {
     const { id } = await request.json();
-    await connectToDatabase();
 
-    const user = await User.findByIdAndDelete(id);
-
-    if (!user) {
+    if (!id) {
       return NextResponse.json(
-        { message: "Không tìm thấy người dùng" },
-        { status: 404 }
+        { error: "User ID is required" },
+        { status: 400 }
       );
     }
 
-    return NextResponse.json({ message: "Xóa người dùng thành công" });
+    await connectToDatabase();
+
+    const deleted = await User.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error("Error deleting user:", error);
+    console.error("DELETE /api/admin/users error:", error);
     return NextResponse.json(
-      { message: "Lỗi khi xóa người dùng" },
+      { error: "Failed to delete user" },
       { status: 500 }
     );
   }

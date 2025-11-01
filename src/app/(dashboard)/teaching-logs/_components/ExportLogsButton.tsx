@@ -4,6 +4,8 @@ import ExportPreviewModal from "./ExportPreviewModal";
 import { DownloadOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import { formatDateVN } from "@/shared/utils/date";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 interface ExportLogsButtonProps {
   logs: any[];
@@ -37,6 +39,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
   const [lecturer, setLecturer] = useState<string | undefined>();
   const [modalOpen, setModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const { user } = useAuth();
 
   // Fixed semester options
   const semesters = [
@@ -57,39 +60,59 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
   // Fetch rooms from API
   const [rooms, setRooms] = useState<{ value: string; label: string }[]>([]);
   useEffect(() => {
+    if (!user) return;
+
     const fetchRooms = async () => {
       try {
-        const res = await fetch("/api/rooms");
+        const endpoint = getApiEndpoint("rooms", user.roles);
+        const res = await authFetch(endpoint, user._id!, user.roles);
         const data = await res.json();
         const roomList = Array.isArray(data.rooms) ? data.rooms : [];
         setRooms(roomList.map((r: any) => ({ value: r._id, label: r.name })));
-      } catch {
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
         setRooms([]);
       }
     };
     fetchRooms();
-  }, []);
+  }, [user]);
 
-  // Fetch lecturers from API
+  // Extract lecturers from logs data instead of API call
   const [lecturers, setLecturers] = useState<
     { value: string; label: string }[]
   >([]);
   useEffect(() => {
-    const fetchLecturers = async () => {
-      try {
-        const res = await fetch("/api/users?role=Lecture");
-        const data = await res.json();
-        setLecturers(
-          Array.isArray(data)
-            ? data.map((u: any) => ({ value: u._id, label: u.name }))
-            : []
-        );
-      } catch {
-        setLecturers([]);
-      }
-    };
-    fetchLecturers();
-  }, []);
+    // Extract unique lecturers from logs data
+    const lecturerList = Array.from(
+      new Map(
+        logs
+          .map((log) => {
+            const timetable = log.timetable;
+            if (timetable?.lecturer) {
+              const lecturer = timetable.lecturer;
+              if (typeof lecturer === "object" && lecturer.name) {
+                return [
+                  lecturer._id || lecturer.id,
+                  {
+                    id: lecturer._id || lecturer.id,
+                    name: lecturer.name,
+                  },
+                ];
+              }
+            }
+            return null;
+          })
+          .filter(Boolean)
+      ).values()
+    );
+
+    setLecturers(
+      lecturerList.map((lecturer: any) => ({
+        value: lecturer.id,
+        label: lecturer.name,
+      }))
+    );
+  }, [logs]);
 
   // Filter logs using same logic as TeachingLogsTable
   const filteredLogs = useMemo(() => {

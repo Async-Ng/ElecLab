@@ -1,0 +1,107 @@
+/* Custom styles for timetable calendar grid */
+
+/* Calendar table styling */
+.timetable-calendar table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.timetable-calendar th {
+  padding: 12px;
+  background-color: #1890ff;
+  color: white;
+  font-weight: 600;
+  border: 1px solid #0050b3;
+  text-align: center;
+}
+
+.timetable-calendar td {
+  padding: 8px;
+  border: 1px solid #d9d9d9;
+  vertical-align: top;
+}
+
+/* Timetable cells */
+.timetable-cell {
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.timetable-cell.empty {
+  min-height: 80px;
+  border: 1px dashed #d9d9d9;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bfbfbf;
+}
+
+.timetable-cell.empty:hover {
+  background-color: #fafafa;
+  border-color: #1890ff;
+}
+
+.timetable-cell.filled {
+  min-height: 80px;
+  padding: 8px;
+  background-color: #e6f7ff;
+  border: 1px solid #1890ff;
+  cursor: pointer;
+}
+
+.timetable-cell.filled:hover {
+  background-color: #bae7ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Today highlight */
+.today-column {
+  background-color: #f6ffed !important;
+}
+
+.today-header {
+  background-color: #52c41a !important;
+}
+
+/* Period label */
+.period-label {
+  position: sticky;
+  left: 0;
+  background-color: #fafafa;
+  z-index: 5;
+}
+
+/* Week navigation */
+.week-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: #fafafa;
+  border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .timetable-calendar {
+    overflow-x: auto;
+  }
+
+  .timetable-calendar table {
+    min-width: 800px;
+  }
+
+  .timetable-cell {
+    min-height: 60px;
+    font-size: 12px;
+  }
+
+  .week-navigation {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

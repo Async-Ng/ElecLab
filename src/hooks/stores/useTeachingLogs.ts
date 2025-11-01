@@ -1,37 +1,35 @@
 import { useEffect, useRef } from "react";
 import { useTeachingLogsStore } from "@/stores/useTeachingLogsStore";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UseTeachingLogsOptions {
-  userId?: string;
   autoFetch?: boolean;
-  isAdmin?: boolean;
+  lessonId?: string;
 }
 
 /**
  * Custom hook to manage teaching logs data with automatic fetching and caching
- * @param options - Configuration options for filtering and auto-fetching
+ * @param options - Configuration options for auto-fetching
  * @returns Teaching logs store state and actions
  */
 export const useTeachingLogs = (options: UseTeachingLogsOptions = {}) => {
-  const { userId, autoFetch = true, isAdmin = false } = options;
+  const { autoFetch = true, lessonId } = options;
+  const { user } = useAuth();
   const store = useTeachingLogsStore();
   const hasFetched = useRef(false);
-  const prevUserId = useRef(userId);
-  const prevIsAdmin = useRef(isAdmin);
+  const prevLessonId = useRef(lessonId);
 
   useEffect(() => {
-    if (!autoFetch) return;
+    if (!autoFetch || !user?._id) return;
 
-    const userIdChanged = prevUserId.current !== userId;
-    const isAdminChanged = prevIsAdmin.current !== isAdmin;
+    const lessonIdChanged = prevLessonId.current !== lessonId;
 
-    if (!hasFetched.current || userIdChanged || isAdminChanged) {
+    if (!hasFetched.current || lessonIdChanged) {
       hasFetched.current = true;
-      prevUserId.current = userId;
-      prevIsAdmin.current = isAdmin;
-      store.fetchTeachingLogs(userId, false, isAdmin);
+      prevLessonId.current = lessonId;
+      store.fetchTeachingLogs(user._id, user.roles, false, lessonId);
     }
-  }, [userId, autoFetch, isAdmin, store]);
+  }, [autoFetch, user, lessonId, store]);
 
   return store;
 };
