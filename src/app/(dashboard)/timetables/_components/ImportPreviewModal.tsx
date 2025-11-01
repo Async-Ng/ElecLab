@@ -56,8 +56,8 @@ export default function ImportPreviewModal({
   rooms = [],
   users = [],
 }: ImportPreviewModalProps) {
-  const { hasRole } = useAuth();
-  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
+  const { isAdmin } = useAuth();
+  const isUserAdmin = isAdmin();
 
   const [rows, setRows] = useState<(Timetable & { key: string | number })[]>(
     []
@@ -244,7 +244,7 @@ export default function ImportPreviewModal({
         />
       ),
     },
-    ...(isAdmin
+    ...(isUserAdmin
       ? [
           {
             title: "Giảng viên",

@@ -150,10 +150,11 @@ export default function Sidebar({ onClose }: Props) {
   ];
 
   // Lọc menu theo role (sau khi lấy user)
+  // Ưu tiên role Admin - nếu user có role Admin thì hiển thị toàn bộ menu
 
   let menuItems: typeof allMenuItems = [];
   if (user?.roles?.includes(UserRole.Admin)) {
-    // Quản lý: thấy toàn bộ
+    // Quản lý: thấy toàn bộ (ưu tiên Admin)
     menuItems = allMenuItems;
   } else if (user?.roles?.includes(UserRole.User)) {
     // Người dùng: chỉ thấy các mục cho phép

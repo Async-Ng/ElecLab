@@ -1,6 +1,7 @@
 "use client";
 
 import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/vi";
 import { useState, useMemo, lazy, Suspense } from "react";
 import { Timetable } from "@/types/timetable";
 import { useParams } from "next/navigation";
@@ -9,6 +10,10 @@ import { Segmented } from "antd";
 import { CalendarOutlined, TableOutlined } from "@ant-design/icons";
 import { PageHeader } from "@/components/common";
 import { useTimetables } from "@/hooks/stores";
+import { useAuth } from "@/hooks/useAuth";
+
+// Set locale to Vietnamese
+dayjs.locale("vi");
 
 // Lazy load components
 const StaffFilterBar = lazy(() => import("../_components/StaffFilterBar"));
@@ -20,15 +25,17 @@ type ViewMode = "week" | "table";
 export default function StaffTimetablePage() {
   const params = useParams();
   const staffId = params?.staff_id as string;
+  const { user } = useAuth();
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [weekStart, setWeekStart] = useState<Dayjs>(dayjs().startOf("week"));
 
-  // Use Zustand store with auto-fetch for this staff
+  // QUAN TRỌNG: Trang TKB cá nhân luôn hiển thị TKB của người đang đăng nhập
+  // Sử dụng user._id từ auth context thay vì staffId từ URL
   const { timetables, loading } = useTimetables({
-    userRole: "User",
-    userId: staffId,
+    userRole: "User", // Luôn dùng role User để lấy TKB cá nhân
+    userId: user?._id, // Lấy theo user đang đăng nhập, không theo URL
   });
 
   // Week view helpers - memoized
@@ -40,18 +47,54 @@ export default function StaffTimetablePage() {
 
   // Status info helper
   const statusInfo = (row: Timetable) => {
-    const todayISO = dayjs().format("YYYY-MM-DD");
-    const isFuture = row.date > todayISO;
-    if (isFuture)
+    const today = dayjs().startOf("day");
+
+    // Normalize date format - convert DD/MM/YYYY to YYYY-MM-DD for comparison
+    let dateStr = row.date;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      // Convert DD/MM/YYYY to YYYY-MM-DD
+      const [dd, mm, yyyy] = dateStr.split("/");
+      dateStr = `${yyyy}-${mm}-${dd}`;
+    }
+
+    const rowDate = dayjs(dateStr).startOf("day");
+
+    if (!rowDate.isValid()) {
+      return {
+        color: undefined,
+        text: "Ngày không hợp lệ",
+        canClick: false,
+        isEdit: false,
+      };
+    }
+
+    const isFuture = rowDate.isAfter(today);
+    const isToday = rowDate.isSame(today);
+
+    if (isFuture) {
       return {
         color: undefined,
         text: "Chưa diễn ra",
         canClick: false,
         isEdit: false,
       };
-    if (row.date === todayISO)
-      return { color: "blue", text: "Hôm nay", canClick: true, isEdit: false };
-    return { color: "red", text: "Quá hạn", canClick: true, isEdit: false };
+    }
+
+    if (isToday) {
+      return {
+        color: "blue",
+        text: "Hôm nay",
+        canClick: true,
+        isEdit: false,
+      };
+    }
+
+    return {
+      color: "red",
+      text: "Quá hạn",
+      canClick: true,
+      isEdit: false,
+    };
   };
 
   // Week navigation handlers

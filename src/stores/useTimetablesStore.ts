@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Timetable } from "@/types/timetable";
+import { cachedFetch } from "@/lib/requestCache";
 
 interface TimetablesState {
   timetables: Timetable[];
@@ -28,12 +29,7 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
     userId?: string,
     force = false
   ) => {
-    const { lastFetch, loading } = get();
-    const now = Date.now();
-
-    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
-      return;
-    }
+    const { loading } = get();
 
     if (loading) return;
 
@@ -47,9 +43,11 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
         url += `?${params.toString()}`;
       }
 
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch timetables");
-      const data = await response.json();
+      // Sử dụng cachedFetch để tự động deduplicate và cache
+      const data = await cachedFetch(url, {
+        skipCache: force,
+        cacheDuration: CACHE_DURATION,
+      });
 
       const processedData = Array.isArray(data)
         ? data.map((timetable) => ({
@@ -64,7 +62,7 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
 
       set({
         timetables: processedData,
-        lastFetch: now,
+        lastFetch: Date.now(),
         loading: false,
       });
     } catch (error) {

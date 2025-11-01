@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { FormInstance } from "antd";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
 import { FormModal, FormField } from "@/components/common";
+import { cachedFetch } from "@/lib/requestCache";
 
 type Props = {
   open: boolean;
@@ -20,7 +21,10 @@ export default function MaterialModal(props: Props) {
 
   useEffect(() => {
     if (!form) return;
+
+    // Tối ưu: Gộp logic xử lý form và fetch rooms trong 1 useEffect
     if (open) {
+      // Xử lý form values
       if (editing) {
         // Nếu editing.place_used là object, lấy _id
         const values = {
@@ -34,17 +38,20 @@ export default function MaterialModal(props: Props) {
       } else {
         form.resetFields();
       }
-    }
-  }, [open, editing, form]);
 
-  useEffect(() => {
-    // Lấy danh sách phòng với quyền Head_of_deparment
-    fetch("/api/rooms?userRole=Admin")
-      .then((res) => res.json())
-      .then((data) => {
-        setRooms(data.rooms || []);
-      });
-  }, []);
+      // Fetch rooms nếu chưa có dữ liệu (sử dụng cachedFetch)
+      if (rooms.length === 0) {
+        cachedFetch("/api/rooms?userRole=Admin")
+          .then((data) => {
+            setRooms(data.rooms || []);
+          })
+          .catch((error) => {
+            console.error("Error fetching rooms:", error);
+            setRooms([]);
+          });
+      }
+    }
+  }, [open, editing, form, rooms.length]);
 
   const categoryOptions = Object.values(MaterialCategory).map((v) => ({
     label: v,

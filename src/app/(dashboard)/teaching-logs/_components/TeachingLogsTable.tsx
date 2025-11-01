@@ -90,7 +90,7 @@ function getColumns(isHead: boolean) {
 }
 
 const TeachingLogsTable: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [editLog, setEditLog] = useState<TeachingLog | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [filters, setFilters] = useState<{
@@ -101,12 +101,14 @@ const TeachingLogsTable: React.FC = () => {
   }>({});
 
   // Use Zustand store with auto-fetch and caching
+  // Ưu tiên role Admin - nếu user là Admin thì lấy toàn bộ logs
   const {
     teachingLogs: logs,
     loading,
     fetchTeachingLogs,
   } = useTeachingLogs({
     userId: user?._id,
+    isAdmin: isAdmin(),
   });
 
   // Lọc logs theo các trường filter
@@ -148,16 +150,30 @@ const TeachingLogsTable: React.FC = () => {
 
       <DataTable
         data={filteredLogs}
-        columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
+        columns={getColumns(isAdmin())}
         loading={false}
         showActions={false}
-        onRow={(record) => ({
-          onClick: () => {
-            setEditLog(record);
-            setModalOpen(true);
-          },
-          style: { cursor: "pointer" },
-        })}
+        onRow={(record) => {
+          // Kiểm tra xem user có phải là owner của log này không
+          const timetable = record.timetable as any;
+          const lecturerId =
+            typeof timetable?.lecturer === "object"
+              ? timetable?.lecturer?._id
+              : timetable?.lecturer;
+          const isOwner = user?._id === lecturerId;
+
+          return {
+            onClick: () => {
+              setEditLog(record);
+              setModalOpen(true);
+            },
+            style: {
+              cursor: "pointer",
+              // Thêm visual cue: log của mình có background khác
+              background: isOwner ? undefined : "#fafafa",
+            },
+          };
+        }}
       />
 
       <TeachingLogModal
@@ -176,7 +192,7 @@ const TeachingLogsTable: React.FC = () => {
           setModalOpen(false);
           setEditLog(undefined);
           // Refetch teaching logs to get latest data (force bypass cache)
-          await fetchTeachingLogs(user?._id, true);
+          await fetchTeachingLogs(user?._id, true, isAdmin());
         }}
       />
     </div>

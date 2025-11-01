@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { User } from "@/types/user";
+import { cachedFetch } from "@/lib/requestCache";
 
 interface UsersState {
   users: User[];
@@ -20,25 +21,22 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   lastFetch: null,
 
   fetchUsers: async (force = false) => {
-    const { lastFetch, loading } = get();
-    const now = Date.now();
-
-    // Check if cache is still valid (skip if force refresh)
-    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
-      return; // Use cached data
-    }
+    const { loading } = get();
 
     // Prevent duplicate fetches
     if (loading) return;
 
     set({ loading: true });
     try {
-      const response = await fetch("/api/users");
-      if (!response.ok) throw new Error("Failed to fetch users");
-      const data = await response.json();
+      // Sử dụng cachedFetch để tự động deduplicate và cache
+      const data = await cachedFetch("/api/users", {
+        skipCache: force,
+        cacheDuration: CACHE_DURATION,
+      });
+
       set({
         users: Array.isArray(data) ? data : [],
-        lastFetch: now,
+        lastFetch: Date.now(),
         loading: false,
       });
     } catch (error) {

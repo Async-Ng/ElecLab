@@ -5,7 +5,11 @@ interface TeachingLogsState {
   teachingLogs: TeachingLog[];
   loading: boolean;
   lastFetch: number | null;
-  fetchTeachingLogs: (userId?: string, force?: boolean) => Promise<void>;
+  fetchTeachingLogs: (
+    userId?: string,
+    force?: boolean,
+    isAdmin?: boolean
+  ) => Promise<void>;
   addTeachingLog: (teachingLog: TeachingLog) => void;
   updateTeachingLog: (id: string, teachingLog: Partial<TeachingLog>) => void;
   deleteTeachingLog: (id: string) => void;
@@ -19,7 +23,11 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchTeachingLogs: async (userId?: string, force = false) => {
+  fetchTeachingLogs: async (
+    userId?: string,
+    force = false,
+    isAdmin = false
+  ) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
 
@@ -32,8 +40,18 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
     set({ loading: true });
     try {
       let url = "/api/teaching-logs";
-      if (userId) {
-        url += `?userId=${userId}`;
+      const params = new URLSearchParams();
+
+      // Nếu là Admin thì không truyền userId để lấy toàn bộ logs
+      if (!isAdmin && userId) {
+        params.append("userId", userId);
+        params.append("userRole", "User");
+      } else if (isAdmin) {
+        params.append("userRole", "Admin");
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
       }
 
       const response = await fetch(url);

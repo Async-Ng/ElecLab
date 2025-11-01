@@ -29,10 +29,12 @@ const ImagePreviewGroup: React.FC<{ images: string[] }> = ({ images }) => {
         footer={null}
         onCancel={() => setPreview(null)}
         width={900}
-        bodyStyle={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+        styles={{
+          body: {
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          },
         }}
       >
         {preview && (

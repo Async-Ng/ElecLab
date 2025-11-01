@@ -7,6 +7,7 @@ import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { DataTable } from "@/components/common";
 import { Button } from "antd";
 import { useTimetables } from "@/hooks/stores";
+import { cachedFetch } from "@/lib/requestCache";
 
 interface TimetableTableProps {
   data: Timetable[];
@@ -18,41 +19,49 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   const [tableData, setTableData] = useState<Timetable[]>(data);
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const { user, hasRole } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { fetchTimetables } = useTimetables({
-    userRole: user?.roles?.[0],
+    userRole: isAdmin() ? "Admin" : "User",
     userId: user?._id,
   });
 
-  // Kiểm tra xem user có phải Admin không
-  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
+  // Kiểm tra xem user có phải Admin không - ưu tiên role Admin
+  const isUserAdmin = isAdmin();
 
   React.useEffect(() => {
     setTableData(data);
   }, [data]);
+
   React.useEffect(() => {
-    fetch("/api/rooms?userRole=Admin")
-      .then((res) => res.json())
-      .then((d) =>
+    // Tối ưu: Gộp 2 fetch calls thành Promise.all + sử dụng cachedFetch
+    Promise.all([
+      cachedFetch("/api/rooms?userRole=Admin"),
+      cachedFetch("/api/users"),
+    ])
+      .then(([roomsData, usersData]) => {
+        // Xử lý rooms
         setRooms(
-          (d.rooms || []).map((r: any) => ({
+          (roomsData.rooms || []).map((r: any) => ({
             _id: r._id,
             name: r.name,
             room_id: r.room_id,
           }))
-        )
-      );
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((d) =>
+        );
+
+        // Xử lý users
         setUsers(
-          (d || []).map((u: any) => ({
+          (usersData || []).map((u: any) => ({
             _id: u._id,
             name: u.name,
             email: u.email,
           }))
-        )
-      );
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching rooms and users:", error);
+        setRooms([]);
+        setUsers([]);
+      });
   }, []);
 
   const handleEdit = (record: Timetable) => {
@@ -64,7 +73,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       prev.map((item) => (item._id === updated._id ? updated : item))
     );
     // Refetch timetables to get latest data (force bypass cache)
-    await fetchTimetables(user?.roles?.[0], user?._id, true);
+    await fetchTimetables(isAdmin() ? "Admin" : "User", user?._id, true);
   };
 
   const columns: ColumnsType<Timetable> = [
@@ -137,7 +146,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       dataIndex: "className",
       key: "className",
     },
-    ...(isAdmin
+    ...(isUserAdmin
       ? [
           {
             title: "Giảng viên",
@@ -152,13 +161,13 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       title: "Chỉnh sửa",
       key: "actions",
       render: (_: any, record: Timetable) => {
-        // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
+        // Chỉ hiển thị nếu là lecturer của TKB (chủ sở hữu)
         const isOwner =
           user &&
           (record.lecturer === user._id ||
             (typeof record.lecturer === "object" &&
               record.lecturer._id === user._id));
-        if (isAdmin || isOwner) {
+        if (isOwner) {
           return (
             <Button type="link" onClick={() => handleEdit(record)}>
               Chỉnh sửa

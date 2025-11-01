@@ -4,6 +4,7 @@ import { useTeachingLogsStore } from "@/stores/useTeachingLogsStore";
 interface UseTeachingLogsOptions {
   userId?: string;
   autoFetch?: boolean;
+  isAdmin?: boolean;
 }
 
 /**
@@ -12,22 +13,25 @@ interface UseTeachingLogsOptions {
  * @returns Teaching logs store state and actions
  */
 export const useTeachingLogs = (options: UseTeachingLogsOptions = {}) => {
-  const { userId, autoFetch = true } = options;
+  const { userId, autoFetch = true, isAdmin = false } = options;
   const store = useTeachingLogsStore();
   const hasFetched = useRef(false);
   const prevUserId = useRef(userId);
+  const prevIsAdmin = useRef(isAdmin);
 
   useEffect(() => {
     if (!autoFetch) return;
 
     const userIdChanged = prevUserId.current !== userId;
+    const isAdminChanged = prevIsAdmin.current !== isAdmin;
 
-    if (!hasFetched.current || userIdChanged) {
+    if (!hasFetched.current || userIdChanged || isAdminChanged) {
       hasFetched.current = true;
       prevUserId.current = userId;
-      store.fetchTeachingLogs(userId);
+      prevIsAdmin.current = isAdmin;
+      store.fetchTeachingLogs(userId, false, isAdmin);
     }
-  }, [userId, autoFetch, store]);
+  }, [userId, autoFetch, isAdmin, store]);
 
   return store;
 };

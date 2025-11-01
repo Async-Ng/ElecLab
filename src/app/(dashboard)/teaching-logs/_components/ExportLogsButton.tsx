@@ -3,6 +3,7 @@ import { Button, Select, Modal, Row, Col } from "antd";
 import ExportPreviewModal from "./ExportPreviewModal";
 import { DownloadOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
+import { formatDateVN } from "@/shared/utils/date";
 
 interface ExportLogsButtonProps {
   logs: any[];
@@ -12,7 +13,7 @@ function mapLogsToExcelRows(logs: any[]) {
   return logs.map((log) => ({
     "Học kỳ": log.timetable?.semester || "",
     "Năm học": log.timetable?.schoolYear || "",
-    Ngày: log.timetable?.date || "",
+    Ngày: formatDateVN(log.timetable?.date) || "",
     "Ca học": log.timetable?.period || "",
     "Phòng học": log.timetable?.room?.name || log.timetable?.room || "",
     "Giảng viên":

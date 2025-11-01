@@ -7,33 +7,35 @@ import { Room } from "@/types/room";
 import { User } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
 import ActionButtons from "@/components/common/ActionButtons";
+import { cachedFetch } from "@/lib/requestCache";
 
 export default function ImportButtons() {
-  const { hasRole, user } = useAuth();
-  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
+  const { isAdmin, user } = useAuth();
+  const isUserAdmin = isAdmin();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+
   useEffect(() => {
-    // Lấy danh sách phòng
-    fetch("/api/rooms?userRole=Admin")
-      .then((res) => res.json())
-      .then((data) =>
+    // Tối ưu: Gộp 2 fetch calls thành Promise.all + sử dụng cachedFetch để lấy phòng và giảng viên
+    Promise.all([
+      cachedFetch("/api/rooms?userRole=Admin"),
+      cachedFetch("/api/users"),
+    ])
+      .then(([roomsData, usersData]) => {
+        // Xử lý rooms
         setRooms(
-          (data.rooms || []).map((r: any) => ({
+          (roomsData.rooms || []).map((r: any) => ({
             _id: r._id,
             room_id: r.room_id,
             name: r.name || "",
             location: r.location || "",
             users_manage: r.users_manage || [],
           }))
-        )
-      );
-    // Lấy danh sách giảng viên
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((data) =>
+        );
+
+        // Xử lý users
         setUsers(
-          (data || []).map((u: any) => ({
+          (usersData || []).map((u: any) => ({
             _id: u._id,
             staff_id: u.staff_id,
             name: u.name || "",
@@ -42,8 +44,13 @@ export default function ImportButtons() {
             roles: u.roles || [],
             rooms_manage: u.rooms_manage || [],
           }))
-        )
-      );
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching rooms and users:", error);
+        setRooms([]);
+        setUsers([]);
+      });
   }, []);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRows, setPreviewRows] = useState<Timetable[]>([]);
@@ -120,7 +127,7 @@ export default function ImportButtons() {
             room: String(r["Phòng học"] || "").trim(),
             className: String(r["Lớp"] || "").trim(),
             // Nếu không phải Admin và file không có cột Giảng viên, tự động gán user hiện tại
-            lecturer: isAdmin
+            lecturer: isUserAdmin
               ? String(r["Giảng viên"] || "").trim()
               : user?.email || "",
           };
@@ -133,7 +140,7 @@ export default function ImportButtons() {
             row.subject ||
             row.room ||
             row.className ||
-            (isAdmin && row.lecturer)
+            (isUserAdmin && row.lecturer)
           );
         });
       setPreviewRows(preview);
@@ -150,7 +157,7 @@ export default function ImportButtons() {
       const worksheet = workbook.addWorksheet("Template");
 
       // Định nghĩa headers
-      const headers = isAdmin
+      const headers = isUserAdmin
         ? [
             "Năm học",
             "Học kỳ",
@@ -270,7 +277,7 @@ export default function ImportButtons() {
         ["8. Lớp: Nhập tên lớp"],
       ];
 
-      if (isAdmin) {
+      if (isUserAdmin) {
         instructions.push([
           "9. Giảng viên: Nhập EMAIL của giảng viên (ví dụ: abc@hcmct.edu.vn)",
         ]);

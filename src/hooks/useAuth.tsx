@@ -13,6 +13,8 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   hasRole: (role: string) => boolean;
+  getPrimaryRole: () => string | null;
+  isAdmin: () => boolean;
   loading: boolean;
 }
 
@@ -72,7 +74,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasRole = (role: string) => {
-    return user?.roles.includes(role) || false;
+    return user?.roles.includes(role as any) || false;
+  };
+
+  // Hàm kiểm tra role cao nhất - ưu tiên Admin
+  const getPrimaryRole = () => {
+    if (!user || !user.roles || user.roles.length === 0) return null;
+    // Nếu có role Admin thì ưu tiên Admin
+    if (user.roles.includes("Quản lý" as any)) return "Quản lý";
+    // Ngược lại trả về role đầu tiên
+    return user.roles[0];
+  };
+
+  const isAdmin = () => {
+    return user?.roles.includes("Quản lý" as any) || false;
   };
 
   return (
@@ -84,6 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         isAuthenticated: !!token,
         hasRole,
+        getPrimaryRole,
+        isAdmin,
         loading,
       }}
     >

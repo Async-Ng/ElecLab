@@ -77,7 +77,7 @@ export default function LessonCard({ lesson, statusInfo }: LessonCardProps) {
           transition: "all 0.3s ease",
           height: "100%",
         }}
-        bodyStyle={{ padding: "8px" }}
+        styles={{ body: { padding: "8px" } }}
         className="sm:body-style-[padding:12px] sm:rounded-lg"
         onClick={() => setDetailModalOpen(true)}
       >

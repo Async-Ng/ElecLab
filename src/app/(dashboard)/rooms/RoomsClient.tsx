@@ -6,6 +6,7 @@ import { Room } from "@/types/room";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PageHeader, ActionButtons } from "@/components/common";
 import { useRooms, useUsers } from "@/hooks/stores";
+import { useAuth } from "@/hooks/useAuth";
 
 // Lazy load components
 const RoomTable = lazy(() => import("./_components/RoomTable"));
@@ -18,17 +19,9 @@ export default function RoomsClient() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [form] = Form.useForm<Room>();
 
-  // Get user info from localStorage - memoized to prevent re-calculation
-  const user = useMemo(() => {
-    const userStr =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (!userStr) return null;
-    try {
-      return JSON.parse(userStr);
-    } catch {
-      return null;
-    }
-  }, []);
+  // Get user from auth hook - ưu tiên role Admin
+  const { user, isAdmin, getPrimaryRole } = useAuth();
+  const userRole = getPrimaryRole();
 
   // Use Zustand stores with auto-fetch and caching
   const {
@@ -37,7 +30,7 @@ export default function RoomsClient() {
     deleteRoom: removeRoom,
     fetchRooms,
   } = useRooms({
-    userRole: user?.roles?.[0],
+    userRole: isAdmin() ? "Admin" : "User",
     userId: user?._id,
   });
   const { users } = useUsers();
@@ -97,7 +90,7 @@ export default function RoomsClient() {
       setModalOpen(false);
 
       // Refetch rooms to get latest data (force bypass cache)
-      await fetchRooms(user?.roles?.[0], user?._id, true);
+      await fetchRooms(isAdmin() ? "Admin" : "User", user?._id, true);
     } catch (err: any) {
       message.error(err?.message || "Có lỗi xảy ra khi lưu phòng");
     } finally {

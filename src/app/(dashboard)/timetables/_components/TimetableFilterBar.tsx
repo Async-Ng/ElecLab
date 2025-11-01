@@ -11,6 +11,7 @@ import {
   SubjectSelect,
   ClassNameSelect,
 } from "@/components/common/SelectFields";
+import { cachedFetch } from "@/lib/requestCache";
 
 interface TimetableFilterBarProps {
   data: Timetable[];
@@ -66,12 +67,16 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
   const [lecturerOptions, setLecturerOptions] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    fetch("/api/rooms")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.rooms)) {
+    // Tối ưu: Gộp 2 fetch calls thành Promise.all + sử dụng cachedFetch
+    Promise.all([
+      cachedFetch("/api/rooms"),
+      cachedFetch("/api/users?role=lecturer"),
+    ])
+      .then(([roomsData, lecturersData]) => {
+        // Xử lý rooms
+        if (Array.isArray(roomsData.rooms)) {
           setRoomOptions(
-            data.rooms.map((r: any) => ({
+            roomsData.rooms.map((r: any) => ({
               label: r.room_id + (r.name ? ` - ${r.name}` : ""),
               value: r.room_id,
             }))
@@ -79,11 +84,14 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         } else {
           setRoomOptions([]);
         }
-      });
-    fetch("/api/users?role=lecturer")
-      .then((res) => res.json())
-      .then((lecturers) => {
-        setLecturerOptions(lecturers.map((l: any) => l.name));
+
+        // Xử lý lecturers
+        setLecturerOptions(lecturersData.map((l: any) => l.name));
+      })
+      .catch((error) => {
+        console.error("Error fetching filter data:", error);
+        setRoomOptions([]);
+        setLecturerOptions([]);
       });
   }, []);
 

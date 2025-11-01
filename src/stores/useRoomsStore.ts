@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
+import { cachedFetch } from "@/lib/requestCache";
 
 interface RoomsState {
   rooms: (Room & { users_manage?: User[] })[];
@@ -25,13 +26,7 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
   lastFetch: null,
 
   fetchRooms: async (userRole?: string, userId?: string, force = false) => {
-    const { lastFetch, loading } = get();
-    const now = Date.now();
-
-    // Check if cache is still valid (skip if force refresh)
-    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
-      return;
-    }
+    const { loading } = get();
 
     if (loading) return;
 
@@ -41,10 +36,12 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
       if (userRole) params.append("userRole", userRole);
       if (userId) params.append("userId", userId);
 
-      const response = await fetch(`/api/rooms?${params.toString()}`);
-      if (!response.ok) throw new Error("Failed to fetch rooms");
+      // Sử dụng cachedFetch để tự động deduplicate và cache
+      const data = await cachedFetch(`/api/rooms?${params.toString()}`, {
+        skipCache: force,
+        cacheDuration: CACHE_DURATION,
+      });
 
-      const data = await response.json();
       const roomsData = Array.isArray(data.rooms) ? data.rooms : [];
       const roomsWithUsers = roomsData.map((room: any) => ({
         ...room,
@@ -55,7 +52,7 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
 
       set({
         rooms: roomsWithUsers,
-        lastFetch: now,
+        lastFetch: Date.now(),
         loading: false,
       });
     } catch (error) {

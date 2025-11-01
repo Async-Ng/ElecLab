@@ -4,7 +4,6 @@ import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { useEffect, useState, lazy, Suspense, useMemo } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
-import { UserRole } from "@/types/user";
 import { PageHeader } from "@/components/common";
 import { useTimetables } from "@/hooks/stores";
 
@@ -16,7 +15,7 @@ const TimetableFilterBar = lazy(
 );
 
 export default function TimetablesClient() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   // Filter states
   const [schoolYear, setSchoolYear] = useState<string>("");
@@ -29,20 +28,8 @@ export default function TimetablesClient() {
   const [className, setClassName] = useState<string>("");
   const [lecturer, setLecturer] = useState<string>("");
 
-  // Determine user role
-  const isAdmin = useMemo(() => {
-    if (!user?.roles || user.roles.length === 0) return false;
-    return user.roles.some((role) => {
-      const roleStr = String(role);
-      return (
-        roleStr === UserRole.Admin ||
-        roleStr === "Quản lý" ||
-        roleStr === "Admin"
-      );
-    });
-  }, [user?.roles]);
-
-  const userRole = isAdmin ? "Admin" : "User";
+  // Ưu tiên role Admin
+  const userRole = isAdmin() ? "Admin" : "User";
 
   // Use Zustand store with auto-fetch and caching
   const { timetables: data } = useTimetables({

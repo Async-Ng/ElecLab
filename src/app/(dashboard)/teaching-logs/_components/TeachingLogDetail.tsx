@@ -8,6 +8,7 @@ import {
   Semester,
 } from "../../../../types/timetable";
 import ImagePreviewGroup from "./ImagePreviewGroup";
+import { formatDateVN } from "@/shared/utils/date";
 
 interface TeachingLogDetailProps {
   log: TeachingLog;
@@ -44,7 +45,9 @@ const TeachingLogDetail: React.FC<TeachingLogDetailProps> = ({ log }) => {
               ? timetable?.lecturer?.name
               : timetable?.lecturer}
           </Descriptions.Item>
-          <Descriptions.Item label="Ngày">{timetable?.date}</Descriptions.Item>
+          <Descriptions.Item label="Ngày">
+            {formatDateVN(timetable?.date)}
+          </Descriptions.Item>
           <Descriptions.Item label="Ca học">
             {timetable?.period}
           </Descriptions.Item>
@@ -82,10 +85,10 @@ const TeachingLogDetail: React.FC<TeachingLogDetailProps> = ({ log }) => {
             )}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày tạo">
-            {log?.createdAt}
+            {formatDateVN(log?.createdAt)}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày cập nhật">
-            {log?.updatedAt}
+            {formatDateVN(log?.updatedAt)}
           </Descriptions.Item>
         </Descriptions>
       </Col>
