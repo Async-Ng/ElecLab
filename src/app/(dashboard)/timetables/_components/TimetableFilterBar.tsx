@@ -89,7 +89,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
 
   return (
     <FilterBar onClear={handleClear} clearText="Xóa lọc">
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <SchoolYearSelect
           options={schoolYearOptions}
           value={schoolYear}
@@ -99,7 +99,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <SemesterSelect
           value={semester}
           onChange={setSemester}
@@ -108,7 +108,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <DatePicker
           format="DD/MM/YYYY"
           style={{ width: "100%" }}
@@ -119,7 +119,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <PeriodSelect
           value={period}
           onChange={setPeriod}
@@ -128,7 +128,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <StudyTimeSelect
           value={time}
           onChange={setTime}
@@ -137,7 +137,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <SubjectSelect
           options={subjectOptions}
           value={subject}
@@ -147,7 +147,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <Select
           style={{ width: "100%" }}
           placeholder="Phòng học"
@@ -160,7 +160,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <ClassNameSelect
           options={classOptions}
           value={className}
@@ -170,7 +170,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         />
       </Col>
 
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={6} className="mb-2">
         <Select
           style={{ width: "100%" }}
           placeholder="Giảng viên"

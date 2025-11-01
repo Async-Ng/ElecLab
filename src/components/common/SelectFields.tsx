@@ -22,7 +22,11 @@ export function SemesterSelect({
   return (
     <Select
       placeholder={placeholder}
-      value={value ?? undefined}
+      value={
+        value === "" || value === null || value === undefined
+          ? undefined
+          : value
+      }
       onChange={onChange}
       options={[
         { label: "HK1", value: Semester.First },
@@ -49,7 +53,11 @@ export function PeriodSelect({
   return (
     <Select
       placeholder={placeholder}
-      value={value ?? undefined}
+      value={
+        value === "" || value === null || value === undefined
+          ? undefined
+          : value
+      }
       onChange={onChange}
       options={[
         { label: "Ca 1", value: Period.Period1 },
@@ -77,7 +85,7 @@ export function StudyTimeSelect({
   return (
     <Select
       placeholder={placeholder}
-      value={value ?? undefined}
+      value={value || undefined}
       onChange={onChange}
       options={Object.values(StudyTime).map((t) => ({
         label: t,
