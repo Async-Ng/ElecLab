@@ -2,7 +2,23 @@
  * Server-side API utilities for SSR data fetching
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// Get the base URL - works in both dev and production
+function getBaseUrl() {
+  // In production (Vercel), use the deployment URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // Custom production URL
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  // In development, use localhost
+  return "http://localhost:3000";
+}
+
+const API_BASE_URL = getBaseUrl();
 
 /**
  * Fetch materials data on server side
@@ -15,6 +31,7 @@ export async function fetchMaterialsSSR() {
     });
 
     if (!res.ok) {
+      console.error("SSR fetch materials failed:", res.status, res.statusText);
       throw new Error("Failed to fetch materials");
     }
 
@@ -37,6 +54,7 @@ export async function fetchUsersSSR() {
     });
 
     if (!res.ok) {
+      console.error("SSR fetch users failed:", res.status, res.statusText);
       throw new Error("Failed to fetch users");
     }
 
@@ -65,6 +83,11 @@ export async function fetchRoomsSSR() {
     ]);
 
     if (!roomsRes.ok) {
+      console.error(
+        "SSR fetch rooms failed:",
+        roomsRes.status,
+        roomsRes.statusText
+      );
       throw new Error("Failed to fetch rooms");
     }
 
@@ -92,6 +115,7 @@ export async function fetchTimetablesSSR() {
     });
 
     if (!res.ok) {
+      console.error("SSR fetch timetables failed:", res.status, res.statusText);
       throw new Error("Failed to fetch timetables");
     }
 
@@ -114,6 +138,11 @@ export async function fetchTeachingLogsSSR() {
     });
 
     if (!res.ok) {
+      console.error(
+        "SSR fetch teaching logs failed:",
+        res.status,
+        res.statusText
+      );
       throw new Error("Failed to fetch teaching logs");
     }
 
