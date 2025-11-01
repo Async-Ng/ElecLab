@@ -28,6 +28,11 @@ export default function RoomsClient({
   const [editing, setEditing] = useState<Room | null>(null);
   const [form] = Form.useForm<Room>();
 
+  // Fetch data on mount
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
   async function fetchRooms() {
     setLoading(true);
     try {
