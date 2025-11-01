@@ -34,7 +34,7 @@ export default React.memo(function MaterialsTable({
 
   const columns = useMemo(
     () => [
-      { title: "Mã", dataIndex: "material_id", key: "material_id", width: 160 },
+      { title: "Mã", dataIndex: "material_id", key: "material_id", width: 100 },
       { title: "Tên", dataIndex: "name", key: "name", width: 600 },
       { title: "Danh mục", dataIndex: "category", key: "category", width: 150 },
       {
@@ -53,7 +53,7 @@ export default React.memo(function MaterialsTable({
         title: "Vị trí",
         dataIndex: "place_used",
         key: "place_used",
-        width: 180,
+        width: 240,
         render: (place_used: any) => {
           if (!place_used) return "-";
           if (typeof place_used === "object" && place_used.name)

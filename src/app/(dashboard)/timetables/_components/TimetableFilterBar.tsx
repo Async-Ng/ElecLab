@@ -1,7 +1,16 @@
-import { Select, DatePicker, Space, Button } from "antd";
+import { Select, DatePicker, Button, Col } from "antd";
 import dayjs from "dayjs";
 import React from "react";
 import { Semester, Period, StudyTime, Timetable } from "@/types/timetable";
+import FilterBar from "@/components/common/FilterBar";
+import {
+  SemesterSelect,
+  PeriodSelect,
+  StudyTimeSelect,
+  SchoolYearSelect,
+  SubjectSelect,
+  ClassNameSelect,
+} from "@/components/common/SelectFields";
 
 interface TimetableFilterBarProps {
   data: Timetable[];
@@ -79,72 +88,68 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
   }, []);
 
   return (
-    <div style={{ marginBottom: 16 }}>
-      <Space wrap style={{ marginBottom: 8 }}>
-        <Select
-          style={{ minWidth: 160 }}
-          placeholder="Năm học"
-          value={schoolYear || undefined}
+    <FilterBar onClear={handleClear} clearText="Xóa lọc">
+      <Col xs={24} sm={12} lg={6}>
+        <SchoolYearSelect
+          options={schoolYearOptions}
+          value={schoolYear}
           onChange={setSchoolYear}
-          options={schoolYearOptions.map((y) => ({ label: y, value: y }))}
+          style={{ width: "100%" }}
           allowClear
         />
-        <Select
-          style={{ minWidth: 140 }}
-          placeholder="Học kỳ"
-          value={semester || undefined}
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
+        <SemesterSelect
+          value={semester}
           onChange={setSemester}
-          options={[
-            { label: "HK1", value: Semester.First },
-            { label: "HK2", value: Semester.Second },
-            { label: "HK3", value: Semester.Third },
-          ]}
+          style={{ width: "100%" }}
           allowClear
         />
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
         <DatePicker
           format="DD/MM/YYYY"
-          style={{ width: 160 }}
+          style={{ width: "100%" }}
           value={date ? dayjs(date, "DD/MM/YYYY") : null}
           onChange={(d) => setDate(d ? d.format("DD/MM/YYYY") : "")}
           placeholder="Ngày"
           allowClear
         />
-        <Select
-          style={{ minWidth: 140 }}
-          placeholder="Ca học"
-          value={period || undefined}
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
+        <PeriodSelect
+          value={period}
           onChange={setPeriod}
-          options={[
-            { label: "Ca 1", value: Period.Period1 },
-            { label: "Ca 2", value: Period.Period2 },
-            { label: "Ca 3", value: Period.Period3 },
-            { label: "Ca 4", value: Period.Period4 },
-          ]}
+          style={{ width: "100%" }}
           allowClear
         />
-        <Select
-          style={{ minWidth: 160 }}
-          placeholder="Giờ học"
-          value={time || undefined}
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
+        <StudyTimeSelect
+          value={time}
           onChange={setTime}
-          options={Object.values(StudyTime).map((t) => ({
-            label: t,
-            value: t,
-          }))}
+          style={{ width: "100%" }}
           allowClear
         />
-      </Space>
-      <Space wrap style={{ marginBottom: 8 }}>
-        <Select
-          style={{ minWidth: 180 }}
-          placeholder="Môn học"
-          value={subject || undefined}
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
+        <SubjectSelect
+          options={subjectOptions}
+          value={subject}
           onChange={setSubject}
-          options={subjectOptions.map((s) => ({ label: s, value: s }))}
+          style={{ width: "100%" }}
           allowClear
         />
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
         <Select
-          style={{ minWidth: 220 }}
+          style={{ width: "100%" }}
           placeholder="Phòng học"
           value={room || undefined}
           onChange={setRoom}
@@ -153,25 +158,29 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
           showSearch
           optionFilterProp="label"
         />
-        <Select
-          style={{ minWidth: 180 }}
-          placeholder="Lớp"
-          value={className || undefined}
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
+        <ClassNameSelect
+          options={classOptions}
+          value={className}
           onChange={setClassName}
-          options={classOptions.map((c) => ({ label: c, value: c }))}
+          style={{ width: "100%" }}
           allowClear
         />
+      </Col>
+
+      <Col xs={24} sm={12} lg={6}>
         <Select
-          style={{ minWidth: 220 }}
+          style={{ width: "100%" }}
           placeholder="Giảng viên"
           value={lecturer || undefined}
           onChange={setLecturer}
           options={lecturerOptions.map((l) => ({ label: l, value: l }))}
           allowClear
         />
-        <Button onClick={handleClear}>Xóa lọc</Button>
-      </Space>
-    </div>
+      </Col>
+    </FilterBar>
   );
 };
 

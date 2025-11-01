@@ -21,9 +21,9 @@ import {
 } from "@ant-design/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { brandColors, gradients } from "@/styles/theme";
 
 const { Title, Text } = Typography;
-// const PRIMARY_COLOR = '#1890ff'; // Không dùng nữa, sẽ dùng màu đen/xám đậm cho nút
 
 interface LoginForm {
   username: string;
@@ -73,38 +73,38 @@ export default function LoginPage() {
   };
 
   return (
-    // Toàn bộ màn hình, màu nền không gradient, chỉ để cho ảnh nền quyết định
     <div className="w-screen h-screen flex items-center justify-center p-0 overflow-hidden">
       <Image
-        src="/images/background.jpg" // Đổi thành ảnh nền bạn muốn
+        src="/images/background.jpg"
         alt="Login Background"
         fill
         className="object-cover"
         priority
       />
-      <div className="absolute inset-0 bg-black/40 z-0" />{" "}
-      <div className="relative z-10 w-[90%] h-[90%] flex bg-transparent shadow-lg rounded-xl overflow-hidden">
-        <Row className="w-full h-full ">
+      <div className="absolute inset-0 bg-black/40 z-0" />
+      <div className="relative z-10 w-full h-full sm:w-[95%] sm:h-[95%] lg:w-[90%] lg:h-[90%] flex bg-transparent shadow-lg sm:rounded-xl overflow-hidden">
+        <Row className="w-full h-full">
           <Col
             xs={0}
-            md={15}
-            className="relative flex flex-col justify-center text-left p-12 "
+            md={14}
+            lg={15}
+            className="relative flex flex-col justify-center text-left p-6 sm:p-8 lg:p-12"
           >
             <div className="relative z-10 w-full">
               <Title
                 level={1}
-                style={{ color: "#FFFFFF", fontSize: "4rem" }}
-                className="!mt-0 !mb-2"
+                style={{ color: "#FFFFFF" }}
+                className="!mt-0 !mb-2 text-2xl sm:text-3xl lg:text-5xl xl:text-6xl"
               >
                 Khoa kỹ thuật Điện - Điện tử
               </Title>
 
               <Text
                 style={{
-                  color: "#fff",
-                  fontSize: "2.2rem",
+                  color: brandColors.warning,
+                  fontWeight: 600,
                 }}
-                className="block"
+                className="block text-lg sm:text-xl lg:text-2xl xl:text-3xl"
               >
                 Hệ thống quản lý phòng thực hành - ElecLab
               </Text>
@@ -113,105 +113,136 @@ export default function LoginPage() {
           <Col
             xs={24}
             md={10}
-            className="relative flex flex-col justify-center items-center p-8 sm:p-12 lg:p-16 bg-white overflow-hidden"
+            lg={9}
+            className="relative flex flex-col justify-center items-center p-6 sm:p-8 lg:p-12 xl:p-16 overflow-y-auto"
             style={{
-              borderTopLeftRadius: "50% 50%", // Cong theo hình ellipse
-              borderBottomLeftRadius: "50% 50%", // Cong theo hình ellipse
-              marginLeft: "-150px", // Đẩy lùi phần cong vào trong để lộ ảnh nền
-              paddingLeft: "180px", // Bù lại khoảng trống đã mất
+              background: "white",
+              borderTopLeftRadius: "0",
+              borderBottomLeftRadius: "0",
+              marginLeft: "0",
+              paddingLeft: "24px",
             }}
           >
-            <div className="w-full max-w-md">
-              <div className="flex flex-col items-center mb-10">
-                <div className="relative w-32 h-32 mb-4">
-                  {" "}
-                  <Image
-                    src="/images/logo.png" // Thay bằng logo của bạn
-                    alt="Logo"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-                <Title level={3} className="text-center !mb-1 text-gray-800">
-                  Đăng nhập
-                </Title>
-                <Text type="secondary" className="text-center text-base">
-                  Chào mừng bạn trở lại với hệ thống Eleclab.
-                </Text>
-              </div>
-
-              <Form
-                name="login"
-                initialValues={{ remember: true }}
-                onFinish={onFinish}
-                layout="vertical"
-                size="large"
-              >
-                <Form.Item
-                  name="username"
-                  rules={[{ required: true, message: "Vui lòng nhập email!" }]}
-                  className="!mb-6" // Khoảng cách giữa các item
-                >
-                  <Input
-                    prefix={<UserOutlined className="site-form-item-icon" />}
-                    placeholder="Email"
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="password"
-                  rules={[
-                    { required: true, message: "Vui lòng nhập mật khẩu!" },
-                    { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
-                  ]}
-                  className="!mb-6"
-                >
-                  <Input.Password
-                    prefix={<LockOutlined className="site-form-item-icon" />}
-                    placeholder="Mật khẩu"
-                  />
-                </Form.Item>
-
-                <Form.Item className="!mb-8">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    className="w-full h-12 flex items-center justify-center font-semibold text-lg"
-                    loading={loading}
-                    icon={<ArrowRightOutlined />}
-                    style={{
-                      backgroundColor: "#333333",
-                      borderColor: "#333333",
-                    }}
+            <style jsx>{`
+              @media (min-width: 768px) {
+                .curved-left {
+                  border-top-left-radius: 50% 50%;
+                  border-bottom-left-radius: 50% 50%;
+                  margin-left: -100px;
+                  padding-left: 130px !important;
+                }
+              }
+              @media (min-width: 1024px) {
+                .curved-left {
+                  margin-left: -150px;
+                  padding-left: 180px !important;
+                }
+              }
+            `}</style>
+            <div
+              className="curved-left w-full h-full flex items-center justify-center"
+              style={{ background: "white" }}
+            >
+              <div className="w-full max-w-md">
+                <div className="flex flex-col items-center mb-6 sm:mb-10">
+                  <div className="relative w-24 h-24 sm:w-32 sm:h-32 mb-3 sm:mb-4">
+                    <Image
+                      src="/images/logo.png"
+                      alt="Logo"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                  <Title
+                    level={3}
+                    className="text-center !mb-1"
+                    style={{ color: brandColors.primary }}
                   >
-                    {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-                  </Button>
-                </Form.Item>
-                {/* Static info below login button */}
-                <div className="mt-6 text-center text-gray-500 text-sm">
-                  <Divider plain className="!mb-4">
-                    Thông tin hệ thống
-                  </Divider>
-                  <p>
-                    Hệ thống ElecLab dành cho giảng viên và quản lý phòng thực
-                    hành.
-                  </p>
-                  <p>
-                    Liên hệ hỗ trợ:{" "}
-                    <a
-                      href="mailto:ndloi@hcmct.edu.vn"
-                      className="text-blue-600"
-                    >
-                      ndloi@hcmct.edu.vn
-                    </a>
-                  </p>
-                  <p>
-                    Đảm bảo bảo mật thông tin cá nhân và dữ liệu phòng thực
-                    hành.
-                  </p>
+                    Đăng nhập
+                  </Title>
+                  <Text
+                    type="secondary"
+                    className="text-center text-sm sm:text-base"
+                    style={{ color: brandColors.textSecondary }}
+                  >
+                    Chào mừng bạn trở lại với hệ thống Eleclab.
+                  </Text>
                 </div>
-              </Form>
+
+                <Form
+                  name="login"
+                  initialValues={{ remember: true }}
+                  onFinish={onFinish}
+                  layout="vertical"
+                  size="large"
+                >
+                  <Form.Item
+                    name="username"
+                    rules={[
+                      { required: true, message: "Vui lòng nhập email!" },
+                    ]}
+                    className="!mb-4 sm:!mb-6"
+                  >
+                    <Input
+                      prefix={<UserOutlined className="site-form-item-icon" />}
+                      placeholder="Email"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="password"
+                    rules={[
+                      { required: true, message: "Vui lòng nhập mật khẩu!" },
+                      { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+                    ]}
+                    className="!mb-4 sm:!mb-6"
+                  >
+                    <Input.Password
+                      prefix={<LockOutlined className="site-form-item-icon" />}
+                      placeholder="Mật khẩu"
+                    />
+                  </Form.Item>
+
+                  <Form.Item className="!mb-6 sm:!mb-8">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      className="w-full h-10 sm:h-12 flex items-center justify-center font-semibold text-base sm:text-lg"
+                      loading={loading}
+                      icon={<ArrowRightOutlined />}
+                    >
+                      {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                    </Button>
+                  </Form.Item>
+
+                  <div
+                    className="mt-4 sm:mt-6 text-center text-xs sm:text-sm"
+                    style={{ color: brandColors.textSecondary }}
+                  >
+                    <Divider plain className="!mb-3 sm:!mb-4">
+                      Thông tin hệ thống
+                    </Divider>
+                    <p className="mb-2">
+                      Hệ thống ElecLab dành cho giảng viên và quản lý phòng thực
+                      hành.
+                    </p>
+                    <p className="mb-2">
+                      Liên hệ hỗ trợ:{" "}
+                      <a
+                        href="mailto:ndloi@hcmct.edu.vn"
+                        style={{ color: brandColors.primary }}
+                      >
+                        ndloi@hcmct.edu.vn
+                      </a>
+                    </p>
+                    <p>
+                      Đảm bảo bảo mật thông tin cá nhân và dữ liệu phòng thực
+                      hành.
+                    </p>
+                  </div>
+                </Form>
+              </div>
             </div>
           </Col>
         </Row>

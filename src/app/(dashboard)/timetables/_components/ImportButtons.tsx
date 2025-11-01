@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { Button, message, Space } from "antd";
-import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
+import { message } from "antd";
 import ImportPreviewModal from "./ImportPreviewModal";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
+import ActionButtons from "@/components/common/ActionButtons";
 
 export default function ImportButtons() {
   const { hasRole, user } = useAuth();
@@ -353,7 +353,7 @@ export default function ImportButtons() {
   }
 
   return (
-    <Space>
+    <>
       <ImportPreviewModal
         visible={previewOpen}
         onClose={() => setPreviewOpen(false)}
@@ -380,15 +380,12 @@ export default function ImportButtons() {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
-      <Button
-        icon={<UploadOutlined />}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        Import thời khóa biểu
-      </Button>
-      <Button icon={<DownloadOutlined />} onClick={handleDownloadTemplate}>
-        Tải template mẫu
-      </Button>
-    </Space>
+      <ActionButtons
+        onImport={() => fileInputRef.current?.click()}
+        onDownloadTemplate={handleDownloadTemplate}
+        importText="Import thời khóa biểu"
+        templateText="Tải template mẫu"
+      />
+    </>
   );
 }
