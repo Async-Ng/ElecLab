@@ -31,6 +31,11 @@ export default function UsersClient({ initialUsers }: UsersClientProps) {
   const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
 
+  // Fetch data on mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);

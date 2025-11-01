@@ -26,6 +26,11 @@ export default function MaterialsClient({
   const [editing, setEditing] = useState<Material | null>(null);
   const [form] = Form.useForm<Material>();
 
+  // Fetch data on mount
+  useEffect(() => {
+    fetchMaterials();
+  }, []);
+
   // Client-side refresh function
   async function fetchMaterials() {
     setLoading(true);

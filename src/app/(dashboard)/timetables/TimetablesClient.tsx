@@ -34,6 +34,11 @@ export default function TimetablesClient({
   const [className, setClassName] = useState<string>("");
   const [lecturer, setLecturer] = useState<string>("");
 
+  // Fetch data on mount
+  useEffect(() => {
+    fetchTimetables();
+  }, []);
+
   // Client-side refresh function
   const fetchTimetables = async () => {
     setLoading(true);
