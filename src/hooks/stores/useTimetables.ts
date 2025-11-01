@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useTimetablesStore } from '@/stores/useTimetablesStore';
+import { useEffect, useRef } from "react";
+import { useTimetablesStore } from "@/stores/useTimetablesStore";
 
 interface UseTimetablesOptions {
   userRole?: string;

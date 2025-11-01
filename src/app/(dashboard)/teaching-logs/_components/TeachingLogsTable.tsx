@@ -110,10 +110,12 @@ const TeachingLogsTable: React.FC = () => {
     return logs.filter((log) => {
       const t = (log.timetable as any) || {};
       if (filters.semester && t.semester !== filters.semester) return false;
-      if (filters.schoolYear && t.schoolYear !== filters.schoolYear) return false;
+      if (filters.schoolYear && t.schoolYear !== filters.schoolYear)
+        return false;
       if (filters.room) {
         const room = t.room;
-        if (typeof room === "object" && room?._id !== filters.room) return false;
+        if (typeof room === "object" && room?._id !== filters.room)
+          return false;
         if (typeof room === "string" && room !== filters.room) return false;
       }
       if (filters.lecturer) {
@@ -137,9 +139,9 @@ const TeachingLogsTable: React.FC = () => {
         description="Quản lý nhật ký các ca giảng dạy"
         extra={<ExportLogsButton logs={filteredLogs} />}
       />
-      
+
       <TeachingLogsFilter logs={logs} filters={filters} onChange={setFilters} />
-      
+
       <DataTable
         data={filteredLogs}
         columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
@@ -150,10 +152,10 @@ const TeachingLogsTable: React.FC = () => {
             setEditLog(record);
             setModalOpen(true);
           },
-          style: { cursor: 'pointer' },
+          style: { cursor: "pointer" },
         })}
       />
-      
+
       <TeachingLogModal
         open={modalOpen}
         onClose={() => {

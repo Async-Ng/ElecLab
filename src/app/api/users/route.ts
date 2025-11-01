@@ -11,10 +11,7 @@ export async function GET() {
     await connectToDatabase();
     // Tối ưu: Sử dụng lean() để trả về plain objects thay vì Mongoose documents
     // Chỉ select các fields cần thiết
-    const users = await User.find({})
-      .select("-password")
-      .lean()
-      .exec();
+    const users = await User.find({}).select("-password").lean().exec();
 
     const usersWithAvatar = users.map((u: any) => {
       const avatar = u.avatar;

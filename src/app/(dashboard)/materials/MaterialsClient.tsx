@@ -94,7 +94,7 @@ export default function MaterialsClient() {
         const savedMaterial = await response.json();
         message.success(editing ? "Cập nhật thành công" : "Tạo mới thành công");
         setModalOpen(false);
-        
+
         if (editing && editing._id) {
           updateMaterial(editing._id, savedMaterial);
         } else {

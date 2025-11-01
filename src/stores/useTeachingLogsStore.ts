@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { TeachingLog } from '@/types/teachingLog';
+import { create } from "zustand";
+import { TeachingLog } from "@/types/teachingLog";
 
 interface TeachingLogsState {
   teachingLogs: TeachingLog[];
@@ -31,21 +31,24 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
 
     set({ loading: true });
     try {
-      let url = '/api/teaching-logs';
+      let url = "/api/teaching-logs";
       if (userId) {
         url += `?userId=${userId}`;
       }
 
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch teaching logs');
+      if (!response.ok) throw new Error("Failed to fetch teaching logs");
       const data = await response.json();
 
       const processedData = Array.isArray(data)
         ? data.map((log) => ({
             ...log,
-            user: typeof log.user === 'object' && log.user !== null ? log.user : undefined,
+            user:
+              typeof log.user === "object" && log.user !== null
+                ? log.user
+                : undefined,
             timetable:
-              typeof log.timetable === 'object' && log.timetable !== null
+              typeof log.timetable === "object" && log.timetable !== null
                 ? log.timetable
                 : undefined,
           }))
@@ -57,7 +60,7 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error('Error fetching teaching logs:', error);
+      console.error("Error fetching teaching logs:", error);
       set({ loading: false });
     }
   },

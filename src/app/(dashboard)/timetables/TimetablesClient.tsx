@@ -91,12 +91,14 @@ export default function TimetablesClient() {
         title="Thời khóa biểu"
         description="Quản lý thời khóa biểu giảng dạy"
         extra={
-          <Suspense fallback={<LoadingSpinner fullScreen={false} tip="Đang tải..." />}>
+          <Suspense
+            fallback={<LoadingSpinner fullScreen={false} tip="Đang tải..." />}
+          >
             <ImportButtons />
           </Suspense>
         }
       />
-      
+
       <Suspense
         fallback={
           <LoadingSpinner fullScreen={false} tip="Đang tải bộ lọc..." />

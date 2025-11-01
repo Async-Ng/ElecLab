@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { Material } from '@/types/material';
+import { create } from "zustand";
+import { Material } from "@/types/material";
 
 interface MaterialsState {
   materials: Material[];
@@ -31,8 +31,8 @@ export const useMaterialsStore = create<MaterialsState>((set, get) => ({
 
     set({ loading: true });
     try {
-      const response = await fetch('/api/materials');
-      if (!response.ok) throw new Error('Failed to fetch materials');
+      const response = await fetch("/api/materials");
+      if (!response.ok) throw new Error("Failed to fetch materials");
       const data = await response.json();
       set({
         materials: Array.isArray(data) ? data : [],
@@ -40,7 +40,7 @@ export const useMaterialsStore = create<MaterialsState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error('Error fetching materials:', error);
+      console.error("Error fetching materials:", error);
       set({ loading: false });
     }
   },

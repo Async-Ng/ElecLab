@@ -11,7 +11,7 @@ export async function GET() {
     .lean()
     .sort({ material_id: 1 }) // Sắp xếp theo material_id
     .exec();
-    
+
   return NextResponse.json(materials);
 }
 

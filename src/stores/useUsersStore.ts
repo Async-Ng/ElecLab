@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { User } from '@/types/user';
+import { create } from "zustand";
+import { User } from "@/types/user";
 
 interface UsersState {
   users: User[];
@@ -33,8 +33,8 @@ export const useUsersStore = create<UsersState>((set, get) => ({
 
     set({ loading: true });
     try {
-      const response = await fetch('/api/users');
-      if (!response.ok) throw new Error('Failed to fetch users');
+      const response = await fetch("/api/users");
+      if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       set({
         users: Array.isArray(data) ? data : [],
@@ -42,7 +42,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       set({ loading: false });
     }
   },

@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { Timetable } from '@/types/timetable';
+import { create } from "zustand";
+import { Timetable } from "@/types/timetable";
 
 interface TimetablesState {
   timetables: Timetable[];
@@ -31,16 +31,16 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
 
     set({ loading: true });
     try {
-      let url = '/api/timetables';
+      let url = "/api/timetables";
       const params = new URLSearchParams();
-      if (userRole) params.append('userRole', userRole);
-      if (userId) params.append('userId', userId);
+      if (userRole) params.append("userRole", userRole);
+      if (userId) params.append("userId", userId);
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
 
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch timetables');
+      if (!response.ok) throw new Error("Failed to fetch timetables");
       const data = await response.json();
 
       const processedData = Array.isArray(data)
@@ -48,7 +48,7 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
             ...timetable,
             users_taught: Array.isArray(timetable.users_taught)
               ? timetable.users_taught.filter(
-                  (user: unknown) => typeof user === 'object' && user !== null
+                  (user: unknown) => typeof user === "object" && user !== null
                 )
               : [],
           }))
@@ -60,7 +60,7 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error('Error fetching timetables:', error);
+      console.error("Error fetching timetables:", error);
       set({ loading: false });
     }
   },

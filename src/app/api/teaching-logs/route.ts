@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
   try {
     let query: any = {};
-    
+
     // Tối ưu: Build query trực tiếp thay vì filter sau
     if (lessonId) {
       query.timetable = lessonId;
@@ -62,12 +62,12 @@ export async function GET(request: Request) {
         .sort({ createdAt: -1 })
         .lean()
         .exec();
-      
+
       // Filter out logs where timetable is null (not matching lecturer)
-      const result = logs.filter(log => log.timetable !== null);
+      const result = logs.filter((log) => log.timetable !== null);
       return NextResponse.json(result);
     }
-    
+
     // Admin hoặc có lessonId cụ thể
     const logs = await TeachingLog.find(query)
       .populate({

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useUsersStore } from '@/stores/useUsersStore';
+import { useEffect, useRef } from "react";
+import { useUsersStore } from "@/stores/useUsersStore";
 
 /**
  * Custom hook to manage users data with automatic fetching and caching

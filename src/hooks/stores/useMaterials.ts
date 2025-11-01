@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useMaterialsStore } from '@/stores/useMaterialsStore';
+import { useEffect, useRef } from "react";
+import { useMaterialsStore } from "@/stores/useMaterialsStore";
 
 interface UseMaterialsOptions {
   autoFetch?: boolean;

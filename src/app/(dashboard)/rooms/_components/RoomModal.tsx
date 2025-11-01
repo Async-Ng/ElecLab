@@ -2,6 +2,8 @@ import { Room } from "@/types/room";
 import { FormInstance } from "antd";
 import { User } from "@/types/user";
 import { FormModal, FormField } from "@/components/common";
+import { useMemo } from "react";
+
 interface RoomModalProps {
   open: boolean;
   onOk: () => void;
@@ -24,6 +26,20 @@ export default function RoomModal({
     value: user._id,
   }));
 
+  // Transform editing data: convert users_manage from objects to IDs
+  const formInitialValues = useMemo(() => {
+    if (!editing) return undefined;
+
+    return {
+      ...editing,
+      users_manage: Array.isArray(editing.users_manage)
+        ? editing.users_manage.map((user: any) => 
+            typeof user === 'object' && user !== null ? user._id : user
+          )
+        : editing.users_manage,
+    };
+  }, [editing]);
+
   return (
     <FormModal
       open={open}
@@ -33,7 +49,7 @@ export default function RoomModal({
       onCancel={onCancel}
       width={600}
       twoColumns={false}
-      initialValues={editing || undefined}
+      initialValues={formInitialValues}
     >
       <FormField
         name="room_id"

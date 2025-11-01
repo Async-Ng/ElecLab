@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useTeachingLogsStore } from '@/stores/useTeachingLogsStore';
+import { useEffect, useRef } from "react";
+import { useTeachingLogsStore } from "@/stores/useTeachingLogsStore";
 
 interface UseTeachingLogsOptions {
   userId?: string;

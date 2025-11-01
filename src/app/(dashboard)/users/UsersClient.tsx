@@ -25,7 +25,12 @@ export default function UsersClient() {
   const [editingUser, setEditingUser] = useState<User | undefined>();
 
   // Use Zustand stores with auto-fetch and caching
-  const { users, loading: usersLoading, updateUser, deleteUser: removeUser } = useUsers();
+  const {
+    users,
+    loading: usersLoading,
+    updateUser,
+    deleteUser: removeUser,
+  } = useUsers();
   const { rooms } = useRooms();
 
   const handleCreate = () => {
@@ -80,14 +85,14 @@ export default function UsersClient() {
           ? "Cập nhật người dùng thành công"
           : "Tạo người dùng thành công"
       );
-      
+
       if (editingUser && editingUser._id) {
         updateUser(editingUser._id, savedUser);
       } else {
         // Force refetch for new user
         window.location.reload();
       }
-      
+
       setModalOpen(false);
     } catch (error: any) {
       message.error(error.message || "Lỗi khi lưu người dùng");

@@ -19,7 +19,8 @@ export default function RoomsClient() {
 
   // Get user info from localStorage - memoized to prevent re-calculation
   const user = useMemo(() => {
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem("user") : null;
+    const userStr =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
     if (!userStr) return null;
     try {
       return JSON.parse(userStr);
@@ -29,7 +30,11 @@ export default function RoomsClient() {
   }, []);
 
   // Use Zustand stores with auto-fetch and caching
-  const { rooms, updateRoom, deleteRoom: removeRoom } = useRooms({
+  const {
+    rooms,
+    updateRoom,
+    deleteRoom: removeRoom,
+  } = useRooms({
     userRole: user?.roles?.[0],
     userId: user?._id,
   });
@@ -72,12 +77,12 @@ export default function RoomsClient() {
       });
 
       if (!res.ok) throw new Error("Lưu thất bại");
-      
+
       const savedRoom = await res.json();
-      
+
       message.success(editing ? "Đã cập nhật" : "Đã tạo");
       setModalOpen(false);
-      
+
       if (editing && editing._id) {
         updateRoom(editing._id, savedRoom);
       } else {

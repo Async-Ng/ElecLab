@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useRoomsStore } from '@/stores/useRoomsStore';
+import { useEffect, useRef } from "react";
+import { useRoomsStore } from "@/stores/useRoomsStore";
 
 interface UseRoomsOptions {
   userRole?: string;

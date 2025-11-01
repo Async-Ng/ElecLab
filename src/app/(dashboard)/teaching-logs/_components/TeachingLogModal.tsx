@@ -31,7 +31,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   const [fileList, setFileList] = useState<any[]>([]);
   const [previewImage, setPreviewImage] = useState<string | undefined>();
   const [previewVisible, setPreviewVisible] = useState(false);
-  
+
   // Lấy user hiện tại
   let currentUser: any = null;
   try {
@@ -42,7 +42,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
     try {
       const values = await form.validateFields();
       setLoading(true);
-      
+
       // Kiểm tra quyền: chỉ chủ sở hữu mới được edit
       let lecturerId = "";
       if (log && log.timetable && typeof log.timetable === "object") {
@@ -54,7 +54,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         setLoading(false);
         return;
       }
-      
+
       const formData = new FormData();
       formData.append("timetable", timetableId);
       formData.append("note", values.note || "");
@@ -64,7 +64,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
           formData.append("images", file.originFileObj);
         }
       });
-      
+
       const method = log ? "PUT" : "POST";
       const url = log
         ? `/api/teaching-logs/${log._id}?userId=${encodeURIComponent(
@@ -75,7 +75,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         method,
         body: formData,
       });
-      
+
       setLoading(false);
       onSuccess?.();
       onClose();
@@ -85,7 +85,8 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   };
 
   const isOwner = (() => {
-    if (!log || !log.timetable || typeof log.timetable !== "object") return true; // Tạo mới
+    if (!log || !log.timetable || typeof log.timetable !== "object")
+      return true; // Tạo mới
     const lec = log.timetable.lecturer;
     const lecturerId = typeof lec === "object" ? lec._id || "" : lec || "";
     return currentUser?._id === lecturerId;
@@ -101,7 +102,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       width={900}
     >
       {log && <TeachingLogDetail log={log} />}
-      
+
       {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
       {isOwner && (
         <Form
@@ -119,11 +120,11 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
             options={statusOptions}
             rules={[{ required: true }]}
           />
-          
+
           <Form.Item label="Ghi chú" name="note">
             <Input.TextArea rows={3} />
           </Form.Item>
-          
+
           <Form.Item label="Ảnh minh họa">
             <Upload
               listType="picture-card"
@@ -151,7 +152,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
               </div>
             </Upload>
           </Form.Item>
-          
+
           <AntModal
             open={previewVisible}
             footer={null}

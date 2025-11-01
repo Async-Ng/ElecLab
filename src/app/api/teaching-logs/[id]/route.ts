@@ -4,11 +4,12 @@ import { connectToDatabase } from "@/lib/mongodb";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   await connectToDatabase();
   try {
-    const log = await TeachingLog.findById(params.id).populate({
+    const { id } = await params;
+    const log = await TeachingLog.findById(id).populate({
       path: "timetable",
       populate: [
         { path: "lecturer", select: "name" },
@@ -24,9 +25,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   await connectToDatabase();
+  const { id } = await params;
   const contentType = request.headers.get("content-type") || "";
   let body: Record<string, any> = {};
   let images: Buffer[] = [];
@@ -51,7 +53,7 @@ export async function PUT(
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
   try {
-    const log = await TeachingLog.findById(params.id).populate({
+    const log = await TeachingLog.findById(id).populate({
       path: "timetable",
       select: "lecturer",
     });
@@ -63,7 +65,7 @@ export async function PUT(
         : log.timetable.lecturer;
     if (!userId || userId !== lecturerId)
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
-    const updated = await TeachingLog.findByIdAndUpdate(params.id, body, {
+    const updated = await TeachingLog.findByIdAndUpdate(id, body, {
       new: true,
     });
     return NextResponse.json(updated);
@@ -77,11 +79,12 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   await connectToDatabase();
   try {
-    const deleted = await TeachingLog.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const deleted = await TeachingLog.findByIdAndDelete(id);
     if (!deleted)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({ success: true });
