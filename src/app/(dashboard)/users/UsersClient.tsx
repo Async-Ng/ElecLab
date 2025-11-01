@@ -168,15 +168,31 @@ export default function UsersClient({ initialUsers }: UsersClientProps) {
             editingUser={editingUser}
             onSubmit={(formData) => {
               // Convert FormData to UserFormData
+              const rolesString = formData.get("roles") as string;
+              const roomsString = formData.get("rooms_manage") as string;
+
               const userFormData: any = {
                 staff_id: formData.get("staff_id"),
                 name: formData.get("name"),
                 email: formData.get("email"),
                 password: formData.get("password"),
-                roles: [formData.get("roles")],
-                rooms_manage: formData.getAll("rooms_manage"),
+                position: formData.get("position"),
+                roles: rolesString ? JSON.parse(rolesString) : [],
+                rooms_manage: roomsString ? JSON.parse(roomsString) : [],
               };
-              handleSave(userFormData);
+
+              // Handle avatar
+              const avatarFile = formData.get("avatar");
+              if (avatarFile && avatarFile instanceof File) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  userFormData.avatar = reader.result;
+                  handleSave(userFormData);
+                };
+                reader.readAsDataURL(avatarFile);
+              } else {
+                handleSave(userFormData);
+              }
             }}
             onCancel={() => setModalOpen(false)}
             roles={availableRoles}
