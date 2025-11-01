@@ -1,13 +1,15 @@
 "use client";
 
-import StaffFilterBar from "../_components/StaffFilterBar";
-import TimetableTable from "../_components/TimetableTable";
-import TimetableGrid from "./_components/TimetableGrid";
-import LessonModal from "./_components/LessonModal";
 import dayjs, { Dayjs } from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Timetable, Semester } from "@/types/timetable";
 import { useParams } from "next/navigation";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
+// Lazy load components
+const StaffFilterBar = lazy(() => import("../_components/StaffFilterBar"));
+const TimetableGrid = lazy(() => import("./_components/TimetableGrid"));
+const LessonModal = lazy(() => import("./_components/LessonModal"));
 
 export default function StaffTimetableWeekView() {
   const params = useParams();
@@ -15,6 +17,7 @@ export default function StaffTimetableWeekView() {
   const [weekStart, setWeekStart] = useState<Dayjs>(dayjs().startOf("week"));
   const [items, setItems] = useState<Timetable[]>([]);
   const [filtered, setFiltered] = useState<Timetable[]>([]);
+  const [loading, setLoading] = useState(true);
   const [schoolYear, setSchoolYear] = useState<string>("");
   const [semester, setSemester] = useState<Semester | null>(null);
   // Giữ lại các filter cũ nếu cần
@@ -28,6 +31,7 @@ export default function StaffTimetableWeekView() {
 
   useEffect(() => {
     if (!staffId) return;
+    setLoading(true);
     const params = new URLSearchParams({ userId: staffId });
     fetch(`/api/timetables?${params}`)
       .then((res) => res.json())
@@ -48,7 +52,8 @@ export default function StaffTimetableWeekView() {
             )
           ) as string[]
         );
-      });
+      })
+      .finally(() => setLoading(false));
   }, [staffId]);
 
   // Lấy danh sách năm học có trong dữ liệu
@@ -99,44 +104,57 @@ export default function StaffTimetableWeekView() {
   const handlePrevWeek = () => setWeekStart((prev) => prev.subtract(1, "week"));
   const handleNextWeek = () => setWeekStart((prev) => prev.add(1, "week"));
 
+  if (loading) {
+    return <LoadingSpinner tip="Đang tải thời khóa biểu của bạn..." />;
+  }
+
   return (
     <div>
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>
         Thời khóa biểu cá nhân
       </h1>
-      <StaffFilterBar
-        schoolYear={schoolYear}
-        setSchoolYear={setSchoolYear}
-        semester={semester}
-        setSemester={setSemester}
-        schoolYearOptions={schoolYearOptions}
-        className={className}
-        setClassName={setClassName}
-        roomFilter={roomFilter}
-        setRoomFilter={setRoomFilter}
-        classOptions={classOptions}
-        roomOptions={roomOptions}
-        onPrevWeek={handlePrevWeek}
-        onNextWeek={handleNextWeek}
-      />
+      <Suspense
+        fallback={
+          <LoadingSpinner fullScreen={false} tip="Đang tải bộ lọc..." />
+        }
+      >
+        <StaffFilterBar
+          schoolYear={schoolYear}
+          setSchoolYear={setSchoolYear}
+          semester={semester}
+          setSemester={setSemester}
+          schoolYearOptions={schoolYearOptions}
+          className={className}
+          setClassName={setClassName}
+          roomFilter={roomFilter}
+          setRoomFilter={setRoomFilter}
+          classOptions={classOptions}
+          roomOptions={roomOptions}
+          weekStart={weekStart}
+          setWeekStart={setWeekStart}
+          onPrevWeek={handlePrevWeek}
+          onNextWeek={handleNextWeek}
+        />
+      </Suspense>
       <div style={{ marginTop: 16 }}>
-        {/* Nếu filter theo năm học/học kỳ thì hiển thị bảng, ngược lại giữ grid tuần */}
-        {schoolYear || semester ? (
-          <TimetableTable data={filtered} />
-        ) : (
-          <>
-            <TimetableGrid
-              items={filtered}
-              days={days}
-              allPeriods={allPeriods}
-              statusInfo={statusInfo}
-              onDetail={(lesson) => setModal({ open: true, record: lesson })}
-            />
+        <Suspense fallback={<LoadingSpinner tip="Đang tải lịch..." />}>
+          <TimetableGrid
+            items={filtered}
+            days={days}
+            allPeriods={allPeriods}
+            statusInfo={statusInfo}
+            onDetail={(lesson) => setModal({ open: true, record: lesson })}
+          />
+        </Suspense>
+        {modal.open && (
+          <Suspense
+            fallback={<LoadingSpinner fullScreen={false} tip="Đang tải..." />}
+          >
             <LessonModal
               modal={modal}
               onClose={() => setModal({ open: false })}
             />
-          </>
+          </Suspense>
         )}
       </div>
     </div>

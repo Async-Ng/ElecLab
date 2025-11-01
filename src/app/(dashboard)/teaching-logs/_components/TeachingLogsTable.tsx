@@ -7,6 +7,7 @@ import { UserRole } from "../../../../types/user";
 import ExportLogsButton from "./ExportLogsButton";
 import TeachingLogModal from "./TeachingLogModal";
 import TeachingLogsFilter from "./TeachingLogsFilter";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 function getColumns(isHead: boolean) {
   const base = [
@@ -88,7 +89,7 @@ function getColumns(isHead: boolean) {
 const TeachingLogsTable: React.FC = () => {
   const { user } = useAuth();
   const [logs, setLogs] = useState<TeachingLog[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [editLog, setEditLog] = useState<TeachingLog | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [filters, setFilters] = useState<{
@@ -140,6 +141,10 @@ const TeachingLogsTable: React.FC = () => {
     return true;
   });
 
+  if (loading) {
+    return <LoadingSpinner tip="Đang tải nhật ký ca dạy..." />;
+  }
+
   return (
     <>
       <TeachingLogsFilter logs={logs} filters={filters} onChange={setFilters} />
@@ -148,7 +153,7 @@ const TeachingLogsTable: React.FC = () => {
         columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
         dataSource={filteredLogs}
         rowKey={(record) => record._id}
-        loading={loading}
+        loading={false}
         pagination={{ pageSize: 10 }}
         onRow={(record) => ({
           onClick: () => {

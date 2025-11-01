@@ -97,7 +97,6 @@ export default function ImportButtons() {
       setPreviewRows(preview);
       setPreviewOpen(true);
     } catch (err) {
-      console.error(err);
       message.error("Import thất bại");
     }
   }
@@ -145,7 +144,6 @@ export default function ImportButtons() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error(err);
       message.error("Không thể tạo file mẫu");
     }
   }
@@ -172,7 +170,6 @@ export default function ImportButtons() {
       return { ...row, room: roomId, lecturer: lecturerId };
     });
     try {
-      console.log("IMPORT PAYLOAD:", JSON.stringify(mappedRows, null, 2));
       const res = await fetch("/api/timetables", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -182,11 +179,10 @@ export default function ImportButtons() {
         message.success("Đã import thời khóa biểu");
       } else {
         const errorData = await res.json();
-        console.error("IMPORT ERROR:", errorData);
+
         message.error(`Import thất bại: ${errorData.error || "Unknown error"}`);
       }
     } catch (err) {
-      console.error("IMPORT EXCEPTION:", err);
       message.error("Import thất bại");
     }
   }
