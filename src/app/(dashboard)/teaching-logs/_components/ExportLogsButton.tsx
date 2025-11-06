@@ -22,11 +22,6 @@ function mapLogsToExcelRows(logs: any[]) {
       log.timetable?.lecturer?.name || log.timetable?.lecturer || "",
     "Ghi chú": log.note || "",
     "Trạng thái": log.status || "",
-    Ảnh: Array.isArray(log.images)
-      ? log.images
-          .map((img: string) => `data:image/jpeg;base64,${img}`)
-          .join(", ")
-      : log.images || "",
   }));
 }
 
@@ -83,31 +78,26 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
   >([]);
   useEffect(() => {
     // Extract unique lecturers from logs data
-    const lecturerList = Array.from(
-      new Map(
-        logs
-          .map((log) => {
-            const timetable = log.timetable;
-            if (timetable?.lecturer) {
-              const lecturer = timetable.lecturer;
-              if (typeof lecturer === "object" && lecturer.name) {
-                return [
-                  lecturer._id || lecturer.id,
-                  {
-                    id: lecturer._id || lecturer.id,
-                    name: lecturer.name,
-                  },
-                ];
-              }
-            }
-            return null;
-          })
-          .filter(Boolean)
-      ).values()
-    );
+    const lecturerMap = new Map<string, { id: string; name: string }>();
+
+    logs.forEach((log) => {
+      const timetable = log.timetable;
+      if (timetable?.lecturer) {
+        const lecturer = timetable.lecturer;
+        if (typeof lecturer === "object" && lecturer.name) {
+          const id = lecturer._id || lecturer.id;
+          if (id && !lecturerMap.has(id)) {
+            lecturerMap.set(id, {
+              id,
+              name: lecturer.name,
+            });
+          }
+        }
+      }
+    });
 
     setLecturers(
-      lecturerList.map((lecturer: any) => ({
+      Array.from(lecturerMap.values()).map((lecturer) => ({
         value: lecturer.id,
         label: lecturer.name,
       }))
@@ -116,7 +106,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
 
   // Filter logs using same logic as TeachingLogsTable
   const filteredLogs = useMemo(() => {
-    return logs.filter((log) => {
+    const result = logs.filter((log) => {
       const t = log.timetable || {};
       if (semester && t.semester !== semester) return false;
       if (schoolYear && t.schoolYear !== schoolYear) return false;
@@ -132,22 +122,61 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       }
       return true;
     });
+
+    console.log("ExportLogsButton - Filter applied:", {
+      totalLogs: logs.length,
+      filteredLogsCount: result.length,
+      filters: { semester, schoolYear, room, lecturer },
+    });
+
+    return result;
   }, [logs, semester, schoolYear, room, lecturer]);
 
   const handleExport = () => {
-    const excelRows = mapLogsToExcelRows(filteredLogs);
-    const worksheet = XLSX.utils.json_to_sheet(excelRows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
-    XLSX.writeFile(workbook, "teaching-logs.xlsx");
-    setModalOpen(false);
+    console.log("ExportLogsButton - handleExport called:", {
+      filteredLogsCount: filteredLogs.length,
+      filteredLogs,
+    });
+
+    if (filteredLogs.length === 0) {
+      Modal.warning({
+        title: "Không có dữ liệu",
+        content: "Vui lòng chọn lọc để hiển thị dữ liệu trước khi xuất.",
+      });
+      return;
+    }
+
+    try {
+      const excelRows = mapLogsToExcelRows(filteredLogs);
+      console.log("ExportLogsButton - Excel rows:", excelRows.slice(0, 2));
+
+      const worksheet = XLSX.utils.json_to_sheet(excelRows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
+      XLSX.writeFile(workbook, "teaching-logs.xlsx");
+
+      console.log("✅ ExportLogsButton - Export successful");
+      setModalOpen(false);
+    } catch (error) {
+      console.error("❌ ExportLogsButton - Export error:", error);
+      Modal.error({
+        title: "Lỗi xuất Excel",
+        content: String(error),
+      });
+    }
   };
 
   return (
     <>
       <Button
         icon={<DownloadOutlined />}
-        onClick={() => setModalOpen(true)}
+        onClick={() => {
+          console.log("ExportLogsButton - Button clicked:", {
+            logsCount: logs.length,
+            logs: logs.slice(0, 2),
+          });
+          setModalOpen(true);
+        }}
         disabled={!logs.length}
         type="default"
         style={{ marginBottom: 16 }}

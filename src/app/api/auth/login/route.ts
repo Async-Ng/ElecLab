@@ -30,8 +30,36 @@ export async function POST(req: Request) {
       );
     }
 
+    // Validate password exists and is a string
+    if (!user.password || typeof user.password !== "string") {
+      console.error("LOGIN ERROR: Invalid password field for user:", {
+        userId: user._id,
+        email: user.email,
+        passwordType: typeof user.password,
+        password: user.password,
+      });
+      return NextResponse.json(
+        { message: "Lỗi hệ thống: Không tìm thấy mật khẩu người dùng" },
+        { status: 500 }
+      );
+    }
+
     // Check password
-    const validPassword = await bcrypt.compare(password, user.password);
+    let validPassword = false;
+    try {
+      validPassword = await bcrypt.compare(password, user.password);
+    } catch (bcryptError: any) {
+      console.error("BCRYPT ERROR:", {
+        error: bcryptError.message,
+        passwordLength: user.password.length,
+        inputPasswordLength: password.length,
+      });
+      return NextResponse.json(
+        { message: "Lỗi xác thực mật khẩu" },
+        { status: 500 }
+      );
+    }
+
     if (!validPassword) {
       return NextResponse.json(
         { message: "Email hoặc mật khẩu không chính xác" },
