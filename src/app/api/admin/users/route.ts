@@ -104,10 +104,13 @@ export async function PUT(request: Request) {
 
     await connectToDatabase();
 
-    // If password is being updated, hash it
+    // If password is being updated, hash it; otherwise remove it from updateData
     if (updateData.password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(updateData.password, salt);
+    } else {
+      // Don't update password if it's empty/null
+      delete updateData.password;
     }
 
     // Upload avatar to ImgBB if provided
