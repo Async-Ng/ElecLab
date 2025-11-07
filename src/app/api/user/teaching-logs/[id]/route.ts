@@ -1,16 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import TeachingLog from "@/models/TeachingLog";
 import { requireAuth, getAuthContext } from "@/lib/apiMiddleware";
+import { uploadImagesToImgBB } from "@/lib/imgbb";
 
 /**
  * PUT /api/user/teaching-logs/[id]
  * Cập nhật teaching log (user chỉ có thể update log của timetable mà mình là lecturer)
  */
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   // Check user authentication
   const authError = requireAuth(request);
   if (authError) return authError;
@@ -24,8 +26,6 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
-
     console.log("PUT /api/user/teaching-logs/[id] - ID:", id);
     console.log("PUT /api/user/teaching-logs/[id] - Auth:", auth);
 
@@ -33,7 +33,7 @@ export async function PUT(
 
     const contentType = request.headers.get("content-type") || "";
     let body: Record<string, any> = {};
-    let images: Buffer[] = [];
+    let base64Images: string[] = [];
 
     console.log(
       "PUT /api/user/teaching-logs/[id] - Content-Type:",
@@ -43,7 +43,7 @@ export async function PUT(
     if (contentType.includes("application/json")) {
       body = await request.json();
       if (body.images && Array.isArray(body.images)) {
-        images = body.images.map((img: string) => Buffer.from(img, "base64"));
+        base64Images = body.images;
       }
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
@@ -58,7 +58,7 @@ export async function PUT(
 
         if (key === "images" && value instanceof File) {
           const bytes = await value.arrayBuffer();
-          images.push(Buffer.from(bytes));
+          base64Images.push(Buffer.from(bytes).toString("base64"));
         } else {
           body[key] = value;
         }
@@ -93,14 +93,18 @@ export async function PUT(
       updatedAt: new Date(),
     };
 
-    // Nếu có images mới, thêm vào
-    if (images.length > 0) {
-      updateData.images = images;
+    // Upload new images to ImgBB if provided
+    if (base64Images.length > 0) {
+      console.log("🚀 Uploading", base64Images.length, "images to ImgBB...");
+      const imageUrls = await uploadImagesToImgBB(base64Images);
+      console.log("✅ Uploaded", imageUrls.length, "images to ImgBB");
+      updateData.images = imageUrls;
     }
 
     console.log("PUT /api/user/teaching-logs/[id] - Update data:", {
       ...updateData,
-      images: images.length > 0 ? `${images.length} images` : "no images",
+      images:
+        base64Images.length > 0 ? `${base64Images.length} images` : "no images",
     });
 
     // Update log
@@ -136,9 +140,10 @@ export async function PUT(
  * Xóa teaching log (user chỉ có thể xóa log của timetable mà mình là lecturer)
  */
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   // Check user authentication
   const authError = requireAuth(request);
   if (authError) return authError;
@@ -151,8 +156,6 @@ export async function DELETE(
         { status: 401 }
       );
     }
-
-    const { id } = params;
 
     console.log("DELETE /api/user/teaching-logs/[id] - ID:", id);
 

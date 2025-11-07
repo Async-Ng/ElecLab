@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import TeachingLog from "@/models/TeachingLog";
 import { requireAuth, getAuthContext } from "@/lib/apiMiddleware";
+import { uploadImagesToImgBB } from "@/lib/imgbb";
 
 /**
  * GET /api/user/teaching-logs
@@ -80,14 +81,14 @@ export async function POST(request: Request) {
 
     const contentType = request.headers.get("content-type") || "";
     let body: Record<string, any> = {};
-    let images: Buffer[] = [];
+    let base64Images: string[] = [];
 
     console.log("POST /api/user/teaching-logs - Content-Type:", contentType);
 
     if (contentType.includes("application/json")) {
       body = await request.json();
       if (body.images && Array.isArray(body.images)) {
-        images = body.images.map((img: string) => Buffer.from(img, "base64"));
+        base64Images = body.images; // Keep as base64 for now
       }
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
@@ -102,7 +103,8 @@ export async function POST(request: Request) {
 
         if (key === "images" && value instanceof File) {
           const arrayBuffer = await value.arrayBuffer();
-          images.push(Buffer.from(arrayBuffer));
+          const buffer = Buffer.from(arrayBuffer);
+          base64Images.push(buffer.toString("base64"));
         } else if (!(value instanceof File)) {
           body[key] = value;
         }
@@ -111,7 +113,7 @@ export async function POST(request: Request) {
       console.log("POST /api/user/teaching-logs - Parsed body:", body);
       console.log(
         "POST /api/user/teaching-logs - Images count:",
-        images.length
+        base64Images.length
       );
     }
 
@@ -137,7 +139,15 @@ export async function POST(request: Request) {
       }
     }
 
-    body.images = images;
+    // Upload images to ImgBB and get URLs
+    if (base64Images.length > 0) {
+      console.log("🚀 Uploading", base64Images.length, "images to ImgBB...");
+      const imageUrls = await uploadImagesToImgBB(base64Images);
+      console.log("✅ Uploaded", imageUrls.length, "images to ImgBB");
+      body.images = imageUrls;
+    } else {
+      body.images = [];
+    }
 
     const created = await TeachingLog.create(body);
     return NextResponse.json(created, { status: 201 });

@@ -63,6 +63,7 @@ export default function TimetableModal({
       schoolYear: timetable.schoolYear || "",
       semester: timetable.semester ? Number(timetable.semester) : undefined,
       date: d ? dayjs(d, "YYYY-MM-DD") : null,
+      week: timetable.week || undefined,
       period: timetable.period ? Number(timetable.period) : undefined,
       time: timetable.time || undefined,
       subject: timetable.subject || "",
@@ -75,6 +76,7 @@ export default function TimetableModal({
         typeof timetable.lecturer === "object"
           ? timetable.lecturer._id
           : timetable.lecturer || user?._id, // Auto fill với user hiện tại nếu không có
+      note: timetable.note || "",
     };
   }, [timetable, rooms, user]);
 
@@ -249,6 +251,27 @@ export default function TimetableModal({
       </Col>
       <Col span={12}>
         <Form.Item
+          name="week"
+          label="Tuần"
+          rules={[
+            { required: true, message: "Vui lòng nhập tuần" },
+            {
+              pattern: /^([1-9]|1[0-3])$/,
+              message: "Tuần phải từ 1 đến 13",
+            },
+          ]}
+        >
+          <Input
+            type="number"
+            min={1}
+            max={13}
+            placeholder="1-13"
+            disabled={!isOwner}
+          />
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item
           name="period"
           label="Ca học"
           rules={[{ required: true, message: "Vui lòng chọn ca học" }]}
@@ -337,6 +360,18 @@ export default function TimetableModal({
           </Select>
         </Form.Item>
       </Col>
+
+      {timetable?._id && (
+        <Col span={24}>
+          <Form.Item name="note" label="Ghi chú">
+            <Input.TextArea
+              placeholder="Nhập ghi chú cho tiết dạy này (tuỳ chọn)"
+              rows={3}
+              disabled={!isOwner}
+            />
+          </Form.Item>
+        </Col>
+      )}
     </FormModal>
   );
 }

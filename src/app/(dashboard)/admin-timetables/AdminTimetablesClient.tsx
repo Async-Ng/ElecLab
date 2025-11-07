@@ -28,6 +28,7 @@ export default function AdminTimetablesClient() {
   const [schoolYear, setSchoolYear] = useState<string>("");
   const [semester, setSemester] = useState<Semester | "">("");
   const [date, setDate] = useState<string>("");
+  const [week, setWeek] = useState<number | "">("");
   const [period, setPeriod] = useState<Period | "">("");
   const [time, setTime] = useState<StudyTime | "">("");
   const [subject, setSubject] = useState<string>("");
@@ -62,6 +63,7 @@ export default function AdminTimetablesClient() {
         (!schoolYear || row.schoolYear === schoolYear) &&
         (!semester || row.semester === semester) &&
         (!date || row.date === date) &&
+        (!week || row.week === week) &&
         (!period || row.period === period) &&
         (!time || row.time === time) &&
         (!subject || row.subject.includes(subject)) &&
@@ -74,6 +76,7 @@ export default function AdminTimetablesClient() {
     schoolYear,
     semester,
     date,
+    week,
     period,
     time,
     subject,
@@ -87,6 +90,7 @@ export default function AdminTimetablesClient() {
     setSchoolYear("");
     setSemester("");
     setDate("");
+    setWeek("");
     setPeriod("");
     setTime("");
     setSubject("");
@@ -127,6 +131,8 @@ export default function AdminTimetablesClient() {
           setSemester={setSemester}
           date={date}
           setDate={setDate}
+          week={week}
+          setWeek={setWeek}
           period={period}
           setPeriod={setPeriod}
           time={time}

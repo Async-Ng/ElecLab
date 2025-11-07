@@ -21,6 +21,8 @@ interface TimetableTableViewProps {
   setSemester: (value: Semester | "") => void;
   className: string;
   setClassName: (value: string) => void;
+  week?: number | "";
+  setWeek?: (value: number | "") => void;
 }
 
 export default function TimetableTableView({
@@ -35,6 +37,8 @@ export default function TimetableTableView({
   setSemester,
   className,
   setClassName,
+  week = "",
+  setWeek = () => {},
 }: TimetableTableViewProps) {
   // Get unique values for filters
   const schoolYears = useMemo(
@@ -53,6 +57,7 @@ export default function TimetableTableView({
     setSchoolYear("");
     setSemester("");
     setClassName("");
+    setWeek("");
   };
 
   return (
@@ -97,6 +102,21 @@ export default function TimetableTableView({
             {classes.map((cls) => (
               <Select.Option key={cls} value={cls}>
                 {cls}
+              </Select.Option>
+            ))}
+          </Select>
+        </Col>
+        <Col xs={24} sm={8} md={6}>
+          <Select
+            placeholder="Tuần"
+            value={week || undefined}
+            onChange={setWeek}
+            allowClear
+            style={{ width: "100%" }}
+          >
+            {Array.from({ length: 13 }, (_, i) => (
+              <Select.Option key={i + 1} value={i + 1}>
+                Tuần {i + 1}
               </Select.Option>
             ))}
           </Select>

@@ -146,6 +146,7 @@ export default function ImportButtons() {
             schoolYear: String(r["Năm học"] || "").trim(),
             semester: Number(r["Học kỳ"] || Semester.First),
             date: formattedDate,
+            week: Number(r["Tuần"] || ""),
             period: Number(r["Ca"] || Period.Period1),
             time: timeValue as StudyTime,
             subject: String(r["Môn học"] || "").trim(),
@@ -187,6 +188,7 @@ export default function ImportButtons() {
             "Năm học",
             "Học kỳ",
             "Ngày",
+            "Tuần",
             "Ca",
             "Giờ học",
             "Môn học",
@@ -198,6 +200,7 @@ export default function ImportButtons() {
             "Năm học",
             "Học kỳ",
             "Ngày",
+            "Tuần",
             "Ca",
             "Giờ học",
             "Môn học",
@@ -224,8 +227,18 @@ export default function ImportButtons() {
           error: "Vui lòng chọn 1, 2 hoặc 3",
         };
 
-        // Cột D: Ca (dropdown 1, 2, 3, 4)
+        // Cột D: Tuần (dropdown 1-13)
         worksheet.getCell(`D${row}`).dataValidation = {
+          type: "list",
+          allowBlank: false,
+          formulae: ['"1,2,3,4,5,6,7,8,9,10,11,12,13"'],
+          showErrorMessage: true,
+          errorTitle: "Giá trị không hợp lệ",
+          error: "Vui lòng chọn tuần từ 1 đến 13",
+        };
+
+        // Cột E: Ca (dropdown 1, 2, 3, 4)
+        worksheet.getCell(`E${row}`).dataValidation = {
           type: "list",
           allowBlank: false,
           formulae: ['"1,2,3,4"'],
@@ -234,17 +247,17 @@ export default function ImportButtons() {
           error: "Vui lòng chọn 1, 2, 3 hoặc 4",
         };
 
-        // Cột E: Giờ học - TỰ ĐỘNG từ Ca học (áp dụng cho tất cả các dòng từ row 2)
-        worksheet.getCell(`E${row}`).value = {
-          formula: `IF(D${row}=1,"07:00-09:15",IF(D${row}=2,"09:30-11:45",IF(D${row}=3,"12:30-14:45",IF(D${row}=4,"15:00-17:15",""))))`,
+        // Cột F: Giờ học - TỰ ĐỘNG từ Ca học (áp dụng cho tất cả các dòng từ row 2)
+        worksheet.getCell(`F${row}`).value = {
+          formula: `IF(E${row}=1,"07:00-09:15",IF(E${row}=2,"09:30-11:45",IF(E${row}=3,"12:30-14:45",IF(E${row}=4,"15:00-17:15",""))))`,
         };
 
-        // Cột G: Phòng học (dropdown nếu có danh sách phòng)
+        // Cột H: Phòng học (dropdown nếu có danh sách phòng)
         if (roomValues.length > 0) {
           // Excel có giới hạn 255 ký tự cho formula, nếu quá nhiều phòng thì bỏ qua
           const roomFormula = roomValues.join(",");
           if (roomFormula.length < 255) {
-            worksheet.getCell(`G${row}`).dataValidation = {
+            worksheet.getCell(`H${row}`).dataValidation = {
               type: "list",
               allowBlank: false,
               formulae: [`"${roomFormula}"`],

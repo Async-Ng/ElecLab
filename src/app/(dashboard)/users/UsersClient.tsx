@@ -148,18 +148,13 @@ export default function UsersClient() {
                 rooms_manage: roomsString ? JSON.parse(roomsString) : [],
               };
 
-              // Handle avatar
-              const avatarFile = formData.get("avatar");
-              if (avatarFile && avatarFile instanceof File) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  userFormData.avatar = reader.result;
-                  handleSave(userFormData);
-                };
-                reader.readAsDataURL(avatarFile);
-              } else {
-                handleSave(userFormData);
+              // Avatar is already base64 or string from UserModal
+              const avatar = formData.get("avatar");
+              if (avatar && typeof avatar === "string") {
+                userFormData.avatar = avatar;
               }
+
+              handleSave(userFormData);
             }}
             onCancel={() => setModalOpen(false)}
             roles={availableRoles}

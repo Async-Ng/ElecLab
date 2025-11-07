@@ -79,6 +79,7 @@ export default function ImportPreviewModal({
       r.schoolYear &&
       r.semester &&
       r.date &&
+      r.week &&
       r.period &&
       r.time &&
       r.subject &&
@@ -154,6 +155,25 @@ export default function ImportPreviewModal({
           />
         );
       },
+    },
+    {
+      title: "Tuần",
+      dataIndex: "week",
+      key: "week",
+      render: (val: number, record: any) => (
+        <Input
+          type="number"
+          value={val}
+          style={{ width: 60 }}
+          min={1}
+          max={13}
+          onChange={(e) => {
+            const num = e.target.value ? Number(e.target.value) : undefined;
+            updateRow(record.key, { week: num });
+          }}
+          placeholder="1-13"
+        />
+      ),
     },
     {
       title: "Ca học",

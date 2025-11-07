@@ -37,6 +37,7 @@ export default function UserTimetablesClient() {
   const [schoolYear, setSchoolYear] = useState<string>("");
   const [semester, setSemester] = useState<Semester | "">("");
   const [className, setClassName] = useState<string>("");
+  const [week, setWeek] = useState<number | "">("");
 
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
@@ -167,6 +168,7 @@ export default function UserTimetablesClient() {
         if (schoolYear && tt.schoolYear !== schoolYear) return false;
         if (semester && tt.semester !== semester) return false;
         if (className && !tt.className?.includes(className)) return false;
+        if (week && tt.week !== week) return false;
         return true;
       })
       .map((tt) => {
@@ -183,7 +185,7 @@ export default function UserTimetablesClient() {
           canLog: !isFuture && !hasLog, // Có thể ghi log (không phải tương lai và chưa có log)
         };
       });
-  }, [data, schoolYear, semester, className, timetableLogMap]);
+  }, [data, schoolYear, semester, className, week, timetableLogMap]);
 
   const handleAdd = (prefillData?: any) => {
     // Tạo object timetable với dữ liệu prefill
@@ -332,6 +334,8 @@ export default function UserTimetablesClient() {
             setSemester={setSemester}
             className={className}
             setClassName={setClassName}
+            week={week}
+            setWeek={setWeek}
           />
         )}
       </Suspense>

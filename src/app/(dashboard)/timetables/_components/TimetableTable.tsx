@@ -160,6 +160,13 @@ export default function TimetableTable({
       },
     },
     {
+      title: "Tuần",
+      dataIndex: "week",
+      key: "week",
+      width: 60,
+      render: (value: number) => value || "-",
+    },
+    {
       title: "Ca học",
       dataIndex: "period",
       key: "period",
@@ -237,6 +244,22 @@ export default function TimetableTable({
       title: "Lớp",
       dataIndex: "className",
       key: "className",
+    },
+    {
+      title: "Ghi chú",
+      dataIndex: "note",
+      key: "note",
+      render: (note: string) =>
+        note ? (
+          <span
+            style={{ color: "#8c8c8c", fontSize: "12px", fontStyle: "italic" }}
+            title={note}
+          >
+            {note.length > 30 ? note.substring(0, 30) + "..." : note}
+          </span>
+        ) : (
+          "-"
+        ),
     },
     ...(isUserAdmin
       ? [

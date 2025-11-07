@@ -22,6 +22,8 @@ interface TimetableFilterBarProps {
   setSemester: (v: Semester | "") => void;
   date: string;
   setDate: (v: string) => void;
+  week: number | "";
+  setWeek: (v: number | "") => void;
   period: Period | "";
   setPeriod: (v: Period | "") => void;
   time: StudyTime | "";
@@ -45,6 +47,8 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
   setSemester,
   date,
   setDate,
+  week,
+  setWeek,
   period,
   setPeriod,
   time,
@@ -166,6 +170,20 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
           value={date ? dayjs(date, "DD/MM/YYYY") : null}
           onChange={(d) => setDate(d ? d.format("DD/MM/YYYY") : "")}
           placeholder="Ngày"
+          allowClear
+        />
+      </Col>
+
+      <Col xs={24} sm={12} lg={6} className="mb-2">
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Tuần"
+          value={week || undefined}
+          onChange={(v) => setWeek(v)}
+          options={Array.from({ length: 13 }, (_, i) => ({
+            label: `Tuần ${i + 1}`,
+            value: i + 1,
+          }))}
           allowClear
         />
       </Col>

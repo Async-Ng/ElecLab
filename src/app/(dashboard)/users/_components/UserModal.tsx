@@ -41,12 +41,8 @@ const UserModal: React.FC<UserModalProps> = ({
           roles: editingUser.roles || [],
           rooms_manage: editingUser.rooms_manage || [],
         });
-        // Nếu có avatar dạng base64 thì set fileList để preview
-        if (
-          editingUser.avatar &&
-          typeof editingUser.avatar === "string" &&
-          editingUser.avatar.startsWith("data:image")
-        ) {
+        // If avatar exists (URL or base64), set fileList for preview
+        if (editingUser.avatar && typeof editingUser.avatar === "string") {
           setFileList([
             {
               uid: "1",
@@ -67,18 +63,36 @@ const UserModal: React.FC<UserModalProps> = ({
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
-    const formData = new FormData();
-    formData.append("staff_id", values.staff_id);
-    formData.append("name", values.name);
-    formData.append("email", values.email);
-    formData.append("position", values.position || "");
-    if (values.password) formData.append("password", values.password);
-    formData.append("roles", JSON.stringify(values.roles));
-    formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
+
+    // If there's a file to upload, convert to base64
     if (fileList.length && fileList[0].originFileObj) {
-      formData.append("avatar", fileList[0].originFileObj);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const formData = new FormData();
+        formData.append("staff_id", values.staff_id);
+        formData.append("name", values.name);
+        formData.append("email", values.email);
+        formData.append("position", values.position || "");
+        if (values.password) formData.append("password", values.password);
+        formData.append("roles", JSON.stringify(values.roles));
+        formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
+        // Append base64 avatar
+        formData.append("avatar", reader.result as string);
+        onSubmit(formData);
+      };
+      reader.readAsDataURL(fileList[0].originFileObj);
+    } else {
+      // No avatar file
+      const formData = new FormData();
+      formData.append("staff_id", values.staff_id);
+      formData.append("name", values.name);
+      formData.append("email", values.email);
+      formData.append("position", values.position || "");
+      if (values.password) formData.append("password", values.password);
+      formData.append("roles", JSON.stringify(values.roles));
+      formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
+      onSubmit(formData);
     }
-    onSubmit(formData);
   };
 
   return (

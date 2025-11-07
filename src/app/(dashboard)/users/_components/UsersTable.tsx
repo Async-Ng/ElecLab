@@ -40,8 +40,12 @@ export const UsersTable = ({
             />
           );
         }
-        // FE tự ghép prefix nếu avatar là base64
-        const src = avatar.startsWith("data:image")
+        // Check if avatar is URL (from ImgBB) or base64
+        const isUrl =
+          avatar.startsWith("http://") || avatar.startsWith("https://");
+        const src = isUrl
+          ? avatar
+          : avatar.startsWith("data:image")
           ? avatar
           : `data:image/png;base64,${avatar}`;
         return (

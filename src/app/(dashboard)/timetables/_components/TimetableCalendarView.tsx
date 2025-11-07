@@ -103,6 +103,28 @@ export default function TimetableCalendarView({
 }: TimetableCalendarViewProps) {
   const [currentWeek, setCurrentWeek] = useState(dayjs());
 
+  // Get semester week from current week's timetables
+  const getSemesterWeekFromData = (date: Dayjs): number => {
+    // Tìm timetable có ngày trong tuần hiện tại
+    const dateStr = date.format("DD/MM/YYYY");
+
+    const timetablesInWeek = timetables.filter((tt) => {
+      const ttDate = dayjs(tt.date, "DD/MM/YYYY");
+      return (
+        ttDate.isoWeek() === date.isoWeek() && ttDate.year() === date.year()
+      );
+    });
+
+    if (timetablesInWeek.length > 0) {
+      // Lấy tuần từ timetable đầu tiên
+      return timetablesInWeek[0].week || 0;
+    }
+
+    return 0;
+  };
+
+  const semesterWeek = getSemesterWeekFromData(currentWeek);
+
   // Helper function to capitalize first letter
   const capitalize = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -403,6 +425,22 @@ export default function TimetableCalendarView({
           <div style={{ color: "#8c8c8c", fontSize: "11px", marginTop: "2px" }}>
             {periodConfig.studyTime}
           </div>
+          {tt.note && (
+            <div
+              style={{
+                color: "#8c8c8c",
+                fontSize: "11px",
+                marginTop: "4px",
+                fontStyle: "italic",
+                borderTop: "1px solid #f0f0f0",
+                paddingTop: "4px",
+              }}
+              title={tt.note}
+            >
+              📝{" "}
+              {tt.note.length > 30 ? tt.note.substring(0, 30) + "..." : tt.note}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -477,7 +515,13 @@ export default function TimetableCalendarView({
             </Button>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <Text strong style={{ fontSize: "16px" }}>
-                Tuần {currentWeek.isoWeek()} - {currentWeek.year()}
+                {semesterWeek > 0 ? (
+                  <>Tuần {semesterWeek}</>
+                ) : (
+                  <>
+                    Tuần {currentWeek.isoWeek()} - {currentWeek.year()}
+                  </>
+                )}
               </Text>
               <Button onClick={goToToday}>Hôm nay</Button>
             </div>

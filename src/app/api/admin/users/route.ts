@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { Binary } from "mongodb";
 import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import { requireAdmin } from "@/lib/apiMiddleware";
+import { uploadImageToImgBB } from "@/lib/imgbb";
 import bcrypt from "bcryptjs";
 
 /**
@@ -19,24 +19,8 @@ export async function GET(request: Request) {
 
     const users = await User.find({}).select("-password").lean().exec();
 
-    const usersWithAvatar = users.map((u: any) => {
-      const avatar = u.avatar;
-      if (avatar) {
-        if (avatar instanceof Binary) {
-          const buffer = avatar.buffer as Buffer;
-          u.avatar = buffer.toString("base64");
-        } else if (Buffer.isBuffer(avatar)) {
-          u.avatar = avatar.toString("base64");
-        } else {
-          u.avatar = null;
-        }
-      } else {
-        u.avatar = null;
-      }
-      return u;
-    });
-
-    return NextResponse.json(usersWithAvatar);
+    // Avatar is now stored as URL string from ImgBB, no conversion needed
+    return NextResponse.json(users);
   } catch (error) {
     console.error("GET /api/admin/users error:", error);
     return NextResponse.json(
@@ -75,26 +59,24 @@ export async function POST(request: Request) {
     const salt = await bcrypt.genSalt(10);
     body.password = await bcrypt.hash(body.password, salt);
 
-    // Process avatar if provided
-    if (body.avatar) {
-      if (typeof body.avatar === "string") {
-        const base64 = body.avatar.includes(",")
-          ? body.avatar.split(",")[1]
-          : body.avatar;
-        body.avatar = Buffer.from(base64, "base64");
-      } else if (body.avatar instanceof ArrayBuffer) {
-        body.avatar = Buffer.from(body.avatar);
+    // Upload avatar to ImgBB if provided
+    if (body.avatar && typeof body.avatar === "string") {
+      console.log("🚀 Uploading avatar to ImgBB...");
+      const avatarUrl = await uploadImageToImgBB(
+        body.avatar,
+        `avatar_${Date.now()}`
+      );
+      if (avatarUrl) {
+        console.log("✅ Avatar uploaded to ImgBB:", avatarUrl);
+        body.avatar = avatarUrl;
+      } else {
+        console.warn("❌ Failed to upload avatar, setting to null");
+        body.avatar = null;
       }
     }
 
     const user = await User.create(body);
     const userWithoutPassword = { ...user.toObject(), password: undefined };
-
-    if (user.avatar) {
-      userWithoutPassword.avatar = `data:image/png;base64,${user.avatar.toString(
-        "base64"
-      )}`;
-    }
 
     return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {
@@ -133,15 +115,19 @@ export async function PUT(request: Request) {
       updateData.password = await bcrypt.hash(updateData.password, salt);
     }
 
-    // Process avatar if provided
-    if (updateData.avatar) {
-      if (typeof updateData.avatar === "string") {
-        const base64 = updateData.avatar.includes(",")
-          ? updateData.avatar.split(",")[1]
-          : updateData.avatar;
-        updateData.avatar = Buffer.from(base64, "base64");
-      } else if (updateData.avatar instanceof ArrayBuffer) {
-        updateData.avatar = Buffer.from(updateData.avatar);
+    // Upload avatar to ImgBB if provided
+    if (updateData.avatar && typeof updateData.avatar === "string") {
+      console.log("🚀 Uploading avatar to ImgBB...");
+      const avatarUrl = await uploadImageToImgBB(
+        updateData.avatar,
+        `avatar_${Date.now()}`
+      );
+      if (avatarUrl) {
+        console.log("✅ Avatar uploaded to ImgBB:", avatarUrl);
+        updateData.avatar = avatarUrl;
+      } else {
+        console.warn("❌ Failed to upload avatar, keeping existing");
+        delete updateData.avatar;
       }
     }
 
@@ -153,14 +139,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const userObj = updated.toObject();
-    if (updated.avatar) {
-      userObj.avatar = `data:image/png;base64,${updated.avatar.toString(
-        "base64"
-      )}`;
-    }
-
-    return NextResponse.json(userObj);
+    return NextResponse.json(updated.toObject());
   } catch (error) {
     console.error("PUT /api/admin/users error:", error);
     return NextResponse.json(
