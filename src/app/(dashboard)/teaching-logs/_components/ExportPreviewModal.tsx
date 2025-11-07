@@ -68,7 +68,7 @@ const ExportPreviewModal: React.FC<ExportPreviewModalProps> = ({
       open={open}
       onCancel={onClose}
       footer={null}
-      width={900}
+      width={1200}
     >
       <Table
         columns={columns}

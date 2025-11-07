@@ -34,7 +34,10 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
   const [lecturer, setLecturer] = useState<string | undefined>();
   const [modalOpen, setModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+
+  // Check if current user is admin
+  const isUserAdmin = isAdmin();
 
   // Fixed semester options
   const semesters = [
@@ -239,16 +242,18 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
               options={rooms}
             />
           </Col>
-          <Col span={12}>
-            <Select
-              allowClear
-              placeholder="Giảng viên"
-              style={{ width: "100%" }}
-              value={lecturer}
-              onChange={setLecturer}
-              options={lecturers}
-            />
-          </Col>
+          {isUserAdmin && (
+            <Col span={12}>
+              <Select
+                allowClear
+                placeholder="Giảng viên"
+                style={{ width: "100%" }}
+                value={lecturer}
+                onChange={setLecturer}
+                options={lecturers}
+              />
+            </Col>
+          )}
         </Row>
         <div style={{ color: "#888", fontSize: 13 }}>
           Chọn các trường để lọc dữ liệu trước khi xuất file Excel. Nếu không
