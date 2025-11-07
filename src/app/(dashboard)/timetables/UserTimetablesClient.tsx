@@ -65,14 +65,6 @@ export default function UserTimetablesClient() {
   // Khi user xem/sửa TKB, chỉ cần user hiện tại
   const { users } = useUsers();
 
-  // Debug: Log rooms và users
-  console.log("UserTimetablesClient - Data:", {
-    roomsCount: rooms.length,
-    usersCount: users.length,
-    hasUser: !!user,
-    userRoles: user?.roles,
-  });
-
   // Tạo mảng users tối thiểu cho modal (chỉ user hiện tại)
   const modalUsers = useMemo(() => {
     if (users.length > 0) return users; // Admin có full list
@@ -138,7 +130,6 @@ export default function UserTimetablesClient() {
       }
     }
 
-    console.warn("Invalid date format:", dateString);
     return null;
   };
 
@@ -202,12 +193,6 @@ export default function UserTimetablesClient() {
 
   // Handler cho việc chỉnh sửa TKB (dùng cho nút "Chỉnh sửa" trong table)
   const handleEditTimetable = (timetable: any) => {
-    console.log("🔧 UserTimetablesClient - Edit timetable:", {
-      timetableId: timetable._id,
-      modalOpen,
-      logModalOpen,
-    });
-
     if (timetable._id) {
       // Đảm bảo chỉ mở 1 modal
       setLogModalOpen(false);
@@ -220,15 +205,6 @@ export default function UserTimetablesClient() {
 
   // Handler cho việc ghi log (dùng cho calendar view và click row trong table)
   const handleCreateLog = (timetable: any) => {
-    console.log("📋 UserTimetablesClient - Create log for timetable:", {
-      timetableId: timetable._id,
-      hasLog: timetable.hasLog,
-      isFuture: timetable.isFuture,
-      canLog: timetable.canLog,
-      modalOpen,
-      logModalOpen,
-    });
-
     if (timetable._id) {
       // Nếu TKB đã có log rồi thì không cho phép ghi log nữa
       if (timetable.hasLog) {

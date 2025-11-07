@@ -34,24 +34,10 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   const [previewImage, setPreviewImage] = useState<string | undefined>();
   const [previewVisible, setPreviewVisible] = useState(false);
 
-  console.log("TeachingLogModal - Props:", {
-    open,
-    timetableId,
-    hasLog: !!log,
-    userId: user?._id,
-  });
-
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-
-      console.log("TeachingLogModal - Creating log:", {
-        timetableId,
-        values,
-        user: user?._id,
-        roles: user?.roles,
-      });
 
       // Kiểm tra quyền: chỉ chủ sở hữu mới được edit
       let lecturerId = "";
@@ -80,13 +66,6 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       const endpoint = getApiEndpoint("teaching-logs", user?.roles || []);
       const url = log ? `${endpoint}/${log._id}` : endpoint;
 
-      console.log("TeachingLogModal - Calling API:", {
-        method,
-        url,
-        timetableId,
-        hasImages: fileList.length > 0,
-      });
-
       try {
         // Encode roles to base64 to avoid ISO-8859-1 encoding issues with Vietnamese characters
         const roleString = JSON.stringify(user?.roles || []);
@@ -101,20 +80,12 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
           },
         });
 
-        console.log("TeachingLogModal - Response:", {
-          ok: response.ok,
-          status: response.status,
-          statusText: response.statusText,
-        });
-
         if (!response.ok) {
           const errorData = await response.json();
-          console.error("TeachingLogModal - Error response:", errorData);
           throw new Error(errorData.error || "Lưu thất bại");
         }
 
         const result = await response.json();
-        console.log("TeachingLogModal - Success result:", result);
 
         message.success(
           log ? "Cập nhật nhật ký thành công!" : "Tạo nhật ký mới thành công!"
@@ -124,11 +95,9 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         onSuccess?.();
         onClose();
       } catch (fetchError: any) {
-        console.error("TeachingLogModal - Fetch error:", fetchError);
         throw fetchError;
       }
     } catch (err: any) {
-      console.error("TeachingLogModal - Outer error:", err);
       message.error(err?.message || "Có lỗi xảy ra khi lưu nhật ký");
       setLoading(false);
     }
@@ -136,7 +105,6 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
 
   const isOwner = (() => {
     if (!log || !log.timetable) {
-      console.log("TeachingLogModal - isOwner: true (new log)");
       return true; // Tạo mới
     }
 
@@ -152,13 +120,6 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
     }
 
     const isOwnerResult = user?._id === lecturerId;
-
-    console.log("TeachingLogModal - isOwner check:", {
-      userId: user?._id,
-      lecturerId,
-      isOwner: isOwnerResult,
-      timetableType: typeof timetable,
-    });
 
     return isOwnerResult;
   })();

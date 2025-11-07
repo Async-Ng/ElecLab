@@ -51,7 +51,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("GET /api/user/teaching-logs error:", error);
     return NextResponse.json(
       { error: "Failed to fetch teaching logs" },
       { status: 500 }
@@ -83,8 +82,6 @@ export async function POST(request: Request) {
     let body: Record<string, any> = {};
     let base64Images: string[] = [];
 
-    console.log("POST /api/user/teaching-logs - Content-Type:", contentType);
-
     if (contentType.includes("application/json")) {
       body = await request.json();
       if (body.images && Array.isArray(body.images)) {
@@ -94,13 +91,7 @@ export async function POST(request: Request) {
       const formData = await request.formData();
       body = {} as Record<string, any>;
 
-      console.log("POST /api/user/teaching-logs - FormData entries:");
       for (const [key, value] of formData.entries()) {
-        console.log(
-          `  ${key}:`,
-          value instanceof File ? `File(${value.name})` : value
-        );
-
         if (key === "images" && value instanceof File) {
           const arrayBuffer = await value.arrayBuffer();
           const buffer = Buffer.from(arrayBuffer);
@@ -109,12 +100,6 @@ export async function POST(request: Request) {
           body[key] = value;
         }
       }
-
-      console.log("POST /api/user/teaching-logs - Parsed body:", body);
-      console.log(
-        "POST /api/user/teaching-logs - Images count:",
-        base64Images.length
-      );
     }
 
     // Verify that the timetable belongs to the user
@@ -141,9 +126,7 @@ export async function POST(request: Request) {
 
     // Upload images to ImgBB and get URLs
     if (base64Images.length > 0) {
-      console.log("🚀 Uploading", base64Images.length, "images to ImgBB...");
       const imageUrls = await uploadImagesToImgBB(base64Images);
-      console.log("✅ Uploaded", imageUrls.length, "images to ImgBB");
       body.images = imageUrls;
     } else {
       body.images = [];
@@ -152,7 +135,6 @@ export async function POST(request: Request) {
     const created = await TeachingLog.create(body);
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("POST /api/user/teaching-logs error:", error);
     return NextResponse.json(
       { error: "Failed to create teaching log" },
       { status: 500 }

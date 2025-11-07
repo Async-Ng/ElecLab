@@ -24,7 +24,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(timetables);
   } catch (error) {
-    console.error("GET /api/admin/timetables error:", error);
     return NextResponse.json(
       { error: "Failed to fetch timetables" },
       { status: 500 }
@@ -54,7 +53,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
-    console.error("POST /api/admin/timetables error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to create timetable" },
       { status: 500 }
@@ -96,7 +94,6 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("PUT /api/admin/timetables error:", error);
     return NextResponse.json(
       { error: "Failed to update timetable" },
       { status: 500 }

@@ -126,21 +126,10 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       return true;
     });
 
-    console.log("ExportLogsButton - Filter applied:", {
-      totalLogs: logs.length,
-      filteredLogsCount: result.length,
-      filters: { semester, schoolYear, room, lecturer },
-    });
-
     return result;
   }, [logs, semester, schoolYear, room, lecturer]);
 
   const handleExport = () => {
-    console.log("ExportLogsButton - handleExport called:", {
-      filteredLogsCount: filteredLogs.length,
-      filteredLogs,
-    });
-
     if (filteredLogs.length === 0) {
       Modal.warning({
         title: "Không có dữ liệu",
@@ -151,17 +140,14 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
 
     try {
       const excelRows = mapLogsToExcelRows(filteredLogs);
-      console.log("ExportLogsButton - Excel rows:", excelRows.slice(0, 2));
 
       const worksheet = XLSX.utils.json_to_sheet(excelRows);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
       XLSX.writeFile(workbook, "teaching-logs.xlsx");
 
-      console.log("✅ ExportLogsButton - Export successful");
       setModalOpen(false);
     } catch (error) {
-      console.error("❌ ExportLogsButton - Export error:", error);
       Modal.error({
         title: "Lỗi xuất Excel",
         content: String(error),

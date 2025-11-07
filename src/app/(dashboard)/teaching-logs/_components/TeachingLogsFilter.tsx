@@ -46,21 +46,11 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
         try {
           const roomsEndpoint = getApiEndpoint("rooms", user.roles);
 
-          console.log(
-            "TeachingLogsFilter - Calling rooms endpoint:",
-            roomsEndpoint
-          );
-
           const roomsRes = await authFetch(
             roomsEndpoint,
             user._id!,
             user.roles
           );
-
-          console.log("TeachingLogsFilter - Rooms API response:", {
-            status: roomsRes.status,
-            ok: roomsRes.ok,
-          });
 
           let roomsData = { rooms: [] };
 
@@ -70,18 +60,8 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
             try {
               roomsData = JSON.parse(roomsText);
             } catch (e) {
-              console.error(
-                "TeachingLogsFilter - Invalid JSON from rooms API:",
-                roomsText.substring(0, 100)
-              );
               roomsData = { rooms: [] };
             }
-          } else {
-            console.error(
-              "TeachingLogsFilter - Rooms API error:",
-              roomsRes.status,
-              roomsRes.statusText
-            );
           }
 
           // Extract lecturers from existing logs data instead of API call
@@ -113,7 +93,6 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
             }))
           );
         } catch (error) {
-          console.error("Error fetching filter data:", error);
           setRooms([]);
           setLecturers([]);
         }

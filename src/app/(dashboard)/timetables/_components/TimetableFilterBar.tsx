@@ -93,13 +93,8 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
           try {
             roomsData = await roomsRes.json();
           } catch (e) {
-            console.error("TimetableFilterBar - Invalid JSON from rooms API");
+            // Failed to parse rooms response
           }
-        } else {
-          console.error(
-            "TimetableFilterBar - Rooms API error:",
-            roomsRes.status
-          );
         }
 
         // Parse lecturers response safely
@@ -107,15 +102,8 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
           try {
             lecturersData = await lecturersRes.json();
           } catch (e) {
-            console.error(
-              "TimetableFilterBar - Invalid JSON from lecturers API"
-            );
+            // Failed to parse lecturers response
           }
-        } else {
-          console.error(
-            "TimetableFilterBar - Lecturers API error:",
-            lecturersRes.status
-          );
         }
 
         // Xử lý rooms
@@ -133,7 +121,6 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         // Xử lý lecturers
         setLecturerOptions(lecturersData.map((l: any) => l.name));
       } catch (error) {
-        console.error("Error fetching data:", error);
         setRoomOptions([]);
         setLecturerOptions([]);
       }

@@ -26,19 +26,11 @@ export async function PUT(
       );
     }
 
-    console.log("PUT /api/user/teaching-logs/[id] - ID:", id);
-    console.log("PUT /api/user/teaching-logs/[id] - Auth:", auth);
-
     await connectToDatabase();
 
     const contentType = request.headers.get("content-type") || "";
     let body: Record<string, any> = {};
     let base64Images: string[] = [];
-
-    console.log(
-      "PUT /api/user/teaching-logs/[id] - Content-Type:",
-      contentType
-    );
 
     if (contentType.includes("application/json")) {
       body = await request.json();
@@ -49,13 +41,7 @@ export async function PUT(
       const formData = await request.formData();
       body = {} as Record<string, any>;
 
-      console.log("PUT /api/user/teaching-logs/[id] - FormData entries:");
       for (const [key, value] of formData.entries()) {
-        console.log(
-          `  ${key}:`,
-          value instanceof File ? `File(${value.name})` : value
-        );
-
         if (key === "images" && value instanceof File) {
           const bytes = await value.arrayBuffer();
           base64Images.push(Buffer.from(bytes).toString("base64"));
@@ -95,17 +81,9 @@ export async function PUT(
 
     // Upload new images to ImgBB if provided
     if (base64Images.length > 0) {
-      console.log("🚀 Uploading", base64Images.length, "images to ImgBB...");
       const imageUrls = await uploadImagesToImgBB(base64Images);
-      console.log("✅ Uploaded", imageUrls.length, "images to ImgBB");
       updateData.images = imageUrls;
     }
-
-    console.log("PUT /api/user/teaching-logs/[id] - Update data:", {
-      ...updateData,
-      images:
-        base64Images.length > 0 ? `${base64Images.length} images` : "no images",
-    });
 
     // Update log
     const updated = await TeachingLog.findByIdAndUpdate(id, updateData, {
@@ -120,14 +98,8 @@ export async function PUT(
       })
       .exec();
 
-    console.log(
-      "PUT /api/user/teaching-logs/[id] - Updated successfully:",
-      updated?._id
-    );
-
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("PUT /api/user/teaching-logs/[id] error:", error);
     return NextResponse.json(
       { error: "Failed to update teaching log" },
       { status: 500 }
@@ -157,8 +129,6 @@ export async function DELETE(
       );
     }
 
-    console.log("DELETE /api/user/teaching-logs/[id] - ID:", id);
-
     await connectToDatabase();
 
     // Tìm log hiện tại và kiểm tra quyền
@@ -185,14 +155,8 @@ export async function DELETE(
     // Xóa log
     await TeachingLog.findByIdAndDelete(id);
 
-    console.log(
-      "DELETE /api/user/teaching-logs/[id] - Deleted successfully:",
-      id
-    );
-
     return NextResponse.json({ message: "Teaching log deleted successfully" });
   } catch (error) {
-    console.error("DELETE /api/user/teaching-logs/[id] error:", error);
     return NextResponse.json(
       { error: "Failed to delete teaching log" },
       { status: 500 }

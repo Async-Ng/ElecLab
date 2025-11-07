@@ -35,16 +35,6 @@ export default function TimetableModal({
   const [form] = Form.useForm();
   const { user } = useAuth();
 
-  // Debug: Kiểm tra dữ liệu nhận được
-  React.useEffect(() => {
-    console.log("TimetableModal received:", {
-      hasTimetable: !!timetable,
-      roomsCount: rooms.length,
-      usersCount: users.length,
-      timetable,
-    });
-  }, [timetable, rooms, users]);
-
   // Prepare initial values for form
   const initialValues = React.useMemo(() => {
     if (!timetable) return null; // Không có data prefill

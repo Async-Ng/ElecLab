@@ -37,7 +37,6 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     // Chỉ admin mới có quyền fetch danh sách users
     // User thường không có endpoint /api/user/users
     if (!isAdmin(userRole)) {
-      console.log("User is not admin, skipping users fetch");
       set({ users: [], loading: false, lastFetch: null });
       return;
     }
@@ -56,7 +55,6 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching users:", error);
       set({ users: [], loading: false });
     }
   },

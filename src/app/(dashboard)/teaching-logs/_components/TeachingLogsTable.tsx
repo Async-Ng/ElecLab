@@ -159,13 +159,6 @@ const TeachingLogsTable: React.FC = () => {
 
           const isOwner = user?._id === lecturerId;
 
-          console.log("TeachingLogsTable - Row click:", {
-            recordId: record._id,
-            userId: user?._id,
-            lecturerId,
-            isOwner,
-          });
-
           return {
             onClick: () => {
               setEditLog(record);

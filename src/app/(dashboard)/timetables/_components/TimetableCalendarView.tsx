@@ -163,28 +163,12 @@ export default function TimetableCalendarView({
       };
     });
 
-    console.log("🔍 Building grid for week:", Object.keys(grid));
-    console.log("🔍 Total timetables to process:", timetables.length);
-
-    if (timetables.length > 0) {
-      console.log(
-        "🔍 Sample timetable raw data:",
-        timetables.slice(0, 5).map((tt) => ({
-          rawDate: tt.date,
-          typeof: typeof tt.date,
-          period: tt.period,
-          subject: tt.subject,
-        }))
-      );
-    }
-
     let matchedCount = 0;
     timetables.forEach((tt) => {
       // Parse date with multiple format support
       let dateKey = "";
 
       if (!tt.date) {
-        console.log("⚠️ Timetable missing date:", tt);
         return;
       }
 
@@ -202,11 +186,6 @@ export default function TimetableCalendarView({
       }
 
       if (!parsedDate.isValid()) {
-        console.log("⚠️ Invalid date format:", {
-          rawDate: tt.date,
-          subject: tt.subject,
-          period: tt.period,
-        });
         return;
       }
 
@@ -215,22 +194,8 @@ export default function TimetableCalendarView({
       if (grid[dateKey]) {
         grid[dateKey][tt.period] = tt;
         matchedCount++;
-        console.log("✅ Matched:", dateKey, "Period", tt.period, tt.subject);
-      } else {
-        // Only log first few mismatches to reduce noise
-        if (matchedCount < 2) {
-          console.log("ℹ️ Not in current week:", dateKey, "Period", tt.period);
-        }
       }
     });
-
-    console.log(
-      "📊 Summary: Matched",
-      matchedCount,
-      "of",
-      timetables.length,
-      "timetables"
-    );
 
     return grid;
   }, [timetables, weekDays]);
@@ -525,15 +490,6 @@ export default function TimetableCalendarView({
               Tuần trước
             </Button>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <Text strong style={{ fontSize: "16px" }}>
-                {semesterWeek > 0 ? (
-                  <>Tuần {semesterWeek}</>
-                ) : (
-                  <>
-                    Tuần {currentWeek.isoWeek()} - {currentWeek.year()}
-                  </>
-                )}
-              </Text>
               <Button onClick={goToToday}>Hôm nay</Button>
             </div>
             <Button icon={<RightOutlined />} onClick={goToNextWeek}>

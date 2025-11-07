@@ -43,22 +43,9 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
         forceUserEndpoint
       );
 
-      console.log("Fetching timetables:", {
-        userId,
-        userRole,
-        endpoint,
-        forceUserEndpoint,
-      });
-
       const response = await authFetch(endpoint, userId, userRole);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to fetch timetables:", {
-          status: response.status,
-          statusText: response.statusText,
-          endpoint,
-          error: errorData,
-        });
         throw new Error(
           errorData.message || `Failed to fetch timetables: ${response.status}`
         );
@@ -82,7 +69,6 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching timetables:", error);
       set({ loading: false });
     }
   },

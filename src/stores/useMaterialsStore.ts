@@ -51,7 +51,6 @@ export const useMaterialsStore = create<MaterialsState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching materials:", error);
       set({ loading: false });
     }
   },

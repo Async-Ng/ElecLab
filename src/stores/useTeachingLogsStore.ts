@@ -72,7 +72,6 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching teaching logs:", error);
       set({ loading: false });
     }
   },

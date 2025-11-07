@@ -28,7 +28,6 @@ export async function uploadImageToImgBB(
   filename?: string
 ): Promise<string | null> {
   if (!IMGBB_API_KEY) {
-    console.error("❌ IMGBB_API_KEY not configured");
     return null;
   }
 
@@ -53,25 +52,17 @@ export async function uploadImageToImgBB(
     });
 
     if (!response.ok) {
-      console.error(
-        "❌ ImgBB upload failed:",
-        response.status,
-        response.statusText
-      );
       return null;
     }
 
     const result: ImgBBResponse = await response.json();
 
     if (result.success && result.data?.url) {
-      console.log("✅ Image uploaded to ImgBB:", result.data.url);
       return result.data.url;
     } else {
-      console.error("❌ ImgBB response unsuccessful:", result);
       return null;
     }
   } catch (error) {
-    console.error("❌ Error uploading to ImgBB:", error);
     return null;
   }
 }
@@ -105,17 +96,11 @@ export async function deleteImageFromImgBB(
     });
 
     if (response.ok) {
-      console.log("✅ Image deleted from ImgBB");
       return true;
     } else {
-      console.error(
-        "❌ Failed to delete image from ImgBB:",
-        response.statusText
-      );
       return false;
     }
   } catch (error) {
-    console.error("❌ Error deleting image from ImgBB:", error);
     return false;
   }
 }

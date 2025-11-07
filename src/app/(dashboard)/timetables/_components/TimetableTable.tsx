@@ -79,7 +79,6 @@ export default function TimetableTable({
         );
       })
       .catch((error) => {
-        console.error("Error fetching rooms and users:", error);
         setRooms([]);
         setUsers([]);
       });
@@ -87,7 +86,6 @@ export default function TimetableTable({
 
   // Handler cho nút "Chỉnh sửa" - dùng để edit TKB
   const handleEditTimetable = (record: TimetableWithLog) => {
-    console.log("🔧 TimetableTable - Button Edit clicked:", record._id);
     if (externalOnEditTimetable) {
       // Use external timetable edit handler
       externalOnEditTimetable(record);
@@ -100,7 +98,6 @@ export default function TimetableTable({
 
   // Handler cho click row - dùng để ghi log
   const handleRowClick = (record: TimetableWithLog) => {
-    console.log("📋 TimetableTable - Row clicked:", record._id);
     if (externalOnEdit) {
       // Use external handler for logging
       externalOnEdit(record);

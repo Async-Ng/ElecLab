@@ -68,7 +68,6 @@ export default function ImportButtons() {
           }))
         );
       } catch (error) {
-        console.error("Error fetching rooms and users:", error);
         setRooms([]);
         setUsers([]);
       }
@@ -353,7 +352,6 @@ export default function ImportButtons() {
 
       message.success("Đã tải template thành công");
     } catch (err) {
-      console.error("Error creating template:", err);
       message.error("Không thể tạo file mẫu");
     }
   }

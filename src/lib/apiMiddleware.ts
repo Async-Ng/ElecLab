@@ -22,7 +22,6 @@ export function getAuthContext(request: Request): AuthContext | null {
   try {
     decodedRole = Buffer.from(encodedUserRole, "base64").toString("utf-8");
   } catch (error) {
-    console.error("Failed to decode userRole:", error);
     return null;
   }
 

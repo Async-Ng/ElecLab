@@ -34,20 +34,15 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
 
     if (loading) return;
 
-    console.log("🏠 fetchRooms called:", { userId, userRole, force });
-
     set({ loading: true });
     try {
       const endpoint = getApiEndpoint("rooms", userRole);
-      console.log("🏠 Fetching from endpoint:", endpoint);
 
       const response = await authFetch(endpoint, userId, userRole);
       if (!response.ok) {
-        console.error("🏠 Response not OK:", response.status);
         throw new Error("Failed to fetch rooms");
       }
       const data = await response.json();
-      console.log("🏠 Received data:", data);
 
       const roomsData = Array.isArray(data.rooms) ? data.rooms : [];
       const roomsWithUsers = roomsData.map((room: any) => ({
@@ -57,15 +52,12 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
           : [],
       }));
 
-      console.log("🏠 Processed rooms:", roomsWithUsers.length);
-
       set({
         rooms: roomsWithUsers,
         lastFetch: Date.now(),
         loading: false,
       });
     } catch (error) {
-      console.error("🏠 Error fetching rooms:", error);
       set({ rooms: [], loading: false });
     }
   },

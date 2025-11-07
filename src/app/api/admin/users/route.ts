@@ -22,7 +22,6 @@ export async function GET(request: Request) {
     // Avatar is now stored as URL string from ImgBB, no conversion needed
     return NextResponse.json(users);
   } catch (error) {
-    console.error("GET /api/admin/users error:", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
       { status: 500 }
@@ -61,16 +60,13 @@ export async function POST(request: Request) {
 
     // Upload avatar to ImgBB if provided
     if (body.avatar && typeof body.avatar === "string") {
-      console.log("🚀 Uploading avatar to ImgBB...");
       const avatarUrl = await uploadImageToImgBB(
         body.avatar,
         `avatar_${Date.now()}`
       );
       if (avatarUrl) {
-        console.log("✅ Avatar uploaded to ImgBB:", avatarUrl);
         body.avatar = avatarUrl;
       } else {
-        console.warn("❌ Failed to upload avatar, setting to null");
         body.avatar = null;
       }
     }
@@ -80,7 +76,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {
-    console.error("POST /api/admin/users error:", error);
     return NextResponse.json(
       { error: "Failed to create user" },
       { status: 500 }
@@ -117,16 +112,13 @@ export async function PUT(request: Request) {
 
     // Upload avatar to ImgBB if provided
     if (updateData.avatar && typeof updateData.avatar === "string") {
-      console.log("🚀 Uploading avatar to ImgBB...");
       const avatarUrl = await uploadImageToImgBB(
         updateData.avatar,
         `avatar_${Date.now()}`
       );
       if (avatarUrl) {
-        console.log("✅ Avatar uploaded to ImgBB:", avatarUrl);
         updateData.avatar = avatarUrl;
       } else {
-        console.warn("❌ Failed to upload avatar, keeping existing");
         delete updateData.avatar;
       }
     }
@@ -141,7 +133,6 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(updated.toObject());
   } catch (error) {
-    console.error("PUT /api/admin/users error:", error);
     return NextResponse.json(
       { error: "Failed to update user" },
       { status: 500 }
@@ -178,7 +169,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error("DELETE /api/admin/users error:", error);
     return NextResponse.json(
       { error: "Failed to delete user" },
       { status: 500 }
