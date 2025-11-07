@@ -235,6 +235,17 @@ export default function TimetableCalendarView({
     return grid;
   }, [timetables, weekDays]);
 
+  // Check if there is any timetable in the current week's grid
+  const hasAny = React.useMemo(() => {
+    try {
+      return Object.values(timetableGrid).some((dayObj) =>
+        Object.values(dayObj).some((cell) => cell !== null)
+      );
+    } catch (e) {
+      return false;
+    }
+  }, [timetableGrid]);
+
   const goToPreviousWeek = () => {
     setCurrentWeek(currentWeek.subtract(1, "week"));
   };
@@ -494,7 +505,7 @@ export default function TimetableCalendarView({
         </Col>
       </Row>
 
-      {timetables.length === 0 && !loading ? (
+      {!loading && !hasAny ? (
         <Empty description="Chưa có lịch giảng dạy" />
       ) : (
         <div>

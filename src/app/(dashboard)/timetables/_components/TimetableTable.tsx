@@ -273,8 +273,9 @@ export default function TimetableTable({
         ]
       : []),
     {
-      title: "Chỉnh sửa",
+      title: "Hành động",
       key: "actions",
+      width: 220,
       render: (_: any, record: Timetable) => {
         // User view: chỉ hiển thị nếu là owner
         // Admin view: hiển thị cho tất cả
@@ -291,15 +292,28 @@ export default function TimetableTable({
         }
 
         return (
-          <Button
-            type="link"
-            onClick={(e) => {
-              e.stopPropagation(); // Ngăn event bubbling lên row click
-              handleEditTimetable(record);
-            }}
-          >
-            Chỉnh sửa
-          </Button>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Button
+              type="primary"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation(); // Ngăn event bubbling lên row click
+                handleRowClick(record);
+              }}
+            >
+              Ghi Log
+            </Button>
+            <Button
+              type="default"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation(); // Ngăn event bubbling lên row click
+                handleEditTimetable(record);
+              }}
+            >
+              Chỉnh sửa TKB
+            </Button>
+          </div>
         );
       },
     },
@@ -312,20 +326,6 @@ export default function TimetableTable({
         columns={columns}
         loading={loading}
         showActions={false}
-        onRow={(record) => {
-          const recordWithLog = record as TimetableWithLog;
-          return {
-            onClick: () => handleRowClick(record),
-            style: {
-              cursor: recordWithLog.canLog
-                ? "pointer"
-                : recordWithLog.isFuture
-                ? "not-allowed"
-                : "pointer",
-              backgroundColor: recordWithLog.isOverdue ? "#fff7e6" : undefined,
-            },
-          };
-        }}
       />
       {!externalOnEditTimetable && (
         <TimetableModal
