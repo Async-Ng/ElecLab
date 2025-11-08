@@ -276,14 +276,6 @@ export default function ImportButtons() {
         fgColor: { argb: "FFE0E0E0" },
       };
 
-      // Định dạng cột Giờ học để người dùng biết nó tự động
-      const timeColumnIndex = 5; // Cột E
-      worksheet.getColumn(timeColumnIndex).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF0F8FF" }, // Màu xanh nhạt
-      };
-
       // Auto width cho các cột
       worksheet.columns = headers.map((header, index) => ({
         key: header,
@@ -310,7 +302,7 @@ export default function ImportButtons() {
         ["   - Ca 3 → 12:30-14:45"],
         ["   - Ca 4 → 15:00-17:15"],
         ["6. Môn học: Nhập tên môn học"],
-        ["7. Phòng học: Chọn từ dropdown mã phòng (nếu có danh sách)"],
+        ["7. Phòng học: Chọn từ dropdown mã phòng"],
         ["8. Lớp: Nhập tên lớp"],
       ];
 
@@ -324,9 +316,9 @@ export default function ImportButtons() {
         [""],
         ["LƯU Ý QUAN TRỌNG:"],
         [
-          "- Cột 'Giờ học' có nền màu XANH NHẠT - nghĩa là TỰ ĐỘNG, không cần nhập",
+          "- Cột 'Giờ học' TỰ ĐỘNG - không cần nhập, sẽ tự động điền khi chọn Ca",
         ],
-        ["- Khi bạn chọn Ca, Giờ học sẽ tự động điền tương ứng"],
+        ["- Khi bạn chọn Ca, Giờ học sẽ tự động cập nhật tương ứng"],
         ["- Các ô có dropdown sẽ hiển thị mũi tên xuống khi click vào"],
         ["- Không được để trống các trường bắt buộc"],
         ["- Ngày phải đúng định dạng DD/MM/YYYY"]
