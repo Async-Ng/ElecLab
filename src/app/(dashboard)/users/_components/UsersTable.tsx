@@ -29,14 +29,20 @@ export const UsersTable = ({
       title: "Avatar",
       dataIndex: "avatar",
       key: "avatar",
-      width: "10%",
+      width: "12%",
       render: (avatar: string | undefined) => {
         if (!avatar || typeof avatar !== "string") {
           return (
             <AntdAvatar
               shape="square"
-              size={100}
-              icon={<UserOutlined style={{ fontSize: 64 }} />}
+              size={120}
+              icon={<UserOutlined style={{ fontSize: 72 }} />}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#f0f0f0",
+              }}
             />
           );
         }
@@ -51,8 +57,12 @@ export const UsersTable = ({
         return (
           <div
             style={{
-              width: "100%",
-              height: "100%",
+              position: "relative",
+              width: 120,
+              height: 120,
+              borderRadius: "8px",
+              overflow: "hidden",
+              background: "#f0f0f0",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -61,11 +71,11 @@ export const UsersTable = ({
             <Image
               src={src}
               alt="avatar"
-              fill
+              width={120}
+              height={120}
               style={{
-                objectFit: "contain",
+                objectFit: "cover",
                 borderRadius: "8px",
-                background: "#f0f0f0",
               }}
               unoptimized
             />
