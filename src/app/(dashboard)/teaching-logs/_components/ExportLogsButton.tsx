@@ -16,10 +16,11 @@ function mapLogsToExcelRows(logs: any[]) {
     "Học kỳ": log.timetable?.semester || "",
     "Tuần": log.timetable?.week || "",
     "Năm học": log.timetable?.schoolYear || "",
-    Ngày: formatDateVN(log.timetable?.date) || "",
+    "Ngày": formatDateVN(log.timetable?.date) || "",
     "Ca học": log.timetable?.period || "",
     "Phòng học": log.timetable?.room?.name || log.timetable?.room || "",
-    "Giảng viên": log.timetable?.lecturer?.name || log.timetable?.lecturer || "",
+    "Giảng viên":
+      log.timetable?.lecturer?.name || log.timetable?.lecturer || "",
     "Trạng thái": log.status || "",
     "Ghi chú": log.note || "",
   }));
@@ -43,7 +44,10 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
   ];
 
   const schoolYears = useMemo(
-    () => Array.from(new Set(logs.map((l) => l.timetable?.schoolYear).filter(Boolean))),
+    () =>
+      Array.from(
+        new Set(logs.map((l) => l.timetable?.schoolYear).filter(Boolean))
+      ),
     [logs]
   );
 
@@ -66,7 +70,9 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
     fetchRooms();
   }, [user]);
 
-  const [lecturers, setLecturers] = useState<{ value: string; label: string }[]>([]);
+  const [lecturers, setLecturers] = useState<
+    { value: string; label: string }[]
+  >([]);
   useEffect(() => {
     const lecturerMap = new Map<string, { id: string; name: string }>();
 
@@ -126,49 +132,107 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       const workbook = new ExcelJS.Workbook();
 
       const exportDate = dayjs().format("DD/MM/YYYY HH:mm:ss");
-      const semesterLabel = semester ? semesters.find((s) => s.value === semester)?.label || "" : "Tất cả";
+      const semesterLabel = semester
+        ? semesters.find((s) => s.value === semester)?.label || ""
+        : "Tất cả";
       const schoolYearLabel = schoolYear || "Tất cả";
 
-      const statusCounts = filteredLogs.reduce(
-        (acc, log) => {
-          const status = log.status || "Không rõ";
-          acc[status] = (acc[status] || 0) + 1;
-          return acc;
-        },
-        {} as Record<string, number>
-      );
+      const statusCounts = filteredLogs.reduce((acc, log) => {
+        const status = log.status || "Không rõ";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
       // Calculate by semester from filteredLogs to match the filtered data
       const countBySemester = {
-        HK1: filteredLogs.filter((l) => String(l.timetable?.semester) === "1").length,
-        HK2: filteredLogs.filter((l) => String(l.timetable?.semester) === "2").length,
-        HK3: filteredLogs.filter((l) => String(l.timetable?.semester) === "3").length,
+        HK1: filteredLogs.filter((l) => String(l.timetable?.semester) === "1")
+          .length,
+        HK2: filteredLogs.filter((l) => String(l.timetable?.semester) === "2")
+          .length,
+        HK3: filteredLogs.filter((l) => String(l.timetable?.semester) === "3")
+          .length,
       };
 
       // === STYLING ===
-      const headerFill: any = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2C5F2D" } };
-      const headerFont: any = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
+      const headerFill: any = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF2C5F2D" },
+      };
+      const headerFont: any = {
+        bold: true,
+        size: 14,
+        color: { argb: "FFFFFFFF" },
+      };
 
-      const titleFill: any = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1565C0" } };
-      const titleFont: any = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+      const titleFill: any = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1565C0" },
+      };
+      const titleFont: any = {
+        bold: true,
+        size: 16,
+        color: { argb: "FFFFFFFF" },
+      };
 
-      const sectionFill: any = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0D47A1" } };
-      const sectionFont: any = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+      const sectionFill: any = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF0D47A1" },
+      };
+      const sectionFont: any = {
+        bold: true,
+        size: 12,
+        color: { argb: "FFFFFFFF" },
+      };
 
-      const labelFill: any = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE3F2FD" } };
+      const labelFill: any = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE3F2FD" },
+      };
       const labelFont: any = { bold: true, size: 11 };
 
-      const valueFill: any = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F5F5" } };
+      const valueFill: any = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF5F5F5" },
+      };
       const valueFont: any = { size: 11 };
 
-      const highlightFill: any = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF57C00" } };
-      const highlightFont: any = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+      const highlightFill: any = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF57C00" },
+      };
+      const highlightFont: any = {
+        bold: true,
+        size: 11,
+        color: { argb: "FFFFFFFF" },
+      };
 
-      const tableLabelFill: any = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1565C0" } };
-      const tableLabelFont: any = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+      const tableLabelFill: any = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1565C0" },
+      };
+      const tableLabelFont: any = {
+        bold: true,
+        size: 11,
+        color: { argb: "FFFFFFFF" },
+      };
 
-      const centerAlignment: any = { horizontal: "center", vertical: "center", wrapText: false };
-      const leftAlignment: any = { horizontal: "left", vertical: "center", wrapText: false };
+      const centerAlignment: any = {
+        horizontal: "center",
+        vertical: "center",
+        wrapText: false,
+      };
+      const leftAlignment: any = {
+        horizontal: "left",
+        vertical: "center",
+        wrapText: false,
+      };
 
       const calculateWidth = (text: string | number): number => {
         const str = String(text || "");
@@ -179,7 +243,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
 
       // === SHEET 1: METADATA & STATISTICS ===
       const metadataSheet = workbook.addWorksheet("Báo Cáo");
-      
+
       // Set columns first before any merge operations
       metadataSheet.columns = [
         { width: 22 },
@@ -191,7 +255,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
         { width: 14 },
         { width: 24 },
       ];
-      
+
       let currentRow = 1;
 
       // === 1. HEADER ===
@@ -247,7 +311,8 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       // Vai trò
       row = metadataSheet.getRow(currentRow);
       row.getCell(1).value = "Vai trò:";
-      row.getCell(2).value = user?.position || (isUserAdmin ? "Trưởng khoa" : "Giảng viên");
+      row.getCell(2).value =
+        user?.position || (isUserAdmin ? "Trưởng khoa" : "Giảng viên");
       row.getCell(1).fill = labelFill;
       row.getCell(1).font = labelFont;
       row.getCell(2).fill = valueFill;
@@ -300,7 +365,8 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       ["HK1", "HK2", "HK3"].forEach((hk, idx) => {
         row = metadataSheet.getRow(currentRow);
         row.getCell(1).value = `${hk}:`;
-        row.getCell(2).value = countBySemester[hk as keyof typeof countBySemester];
+        row.getCell(2).value =
+          countBySemester[hk as keyof typeof countBySemester];
         row.getCell(1).fill = labelFill;
         row.getCell(1).font = labelFont;
         row.getCell(2).fill = highlightFill;
@@ -335,20 +401,20 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
 
       // === SHEET 2: DATA TABLE ===
       const dataSheet = workbook.addWorksheet("Chi Tiết");
-      
+
       // Set columns first - with more spacing and room for content
       dataSheet.columns = [
-        { width: 13 },  // Học kỳ
-        { width: 10 },  // Tuần (new)
-        { width: 16 },  // Năm học
-        { width: 16 },  // Ngày
-        { width: 13 },  // Ca học
-        { width: 28 },  // Phòng học (dynamic min 28)
-        { width: 38 },  // Giảng viên (dynamic, large)
-        { width: 14 },  // Trạng thái
-        { width: 28 },  // Ghi chú (dynamic min 28)
+        { width: 13 }, // Học kỳ
+        { width: 10 }, // Tuần (new)
+        { width: 16 }, // Năm học
+        { width: 16 }, // Ngày
+        { width: 13 }, // Ca học
+        { width: 28 }, // Phòng học (dynamic min 28)
+        { width: 38 }, // Giảng viên (dynamic, large)
+        { width: 14 }, // Trạng thái
+        { width: 28 }, // Ghi chú (dynamic min 28)
       ];
-      
+
       currentRow = 1;
 
       // Header
@@ -389,40 +455,55 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
           right: { style: "thin" },
         };
       });
-      row.height = 24;  // Add header row height
+      row.height = 24; // Add header row height
       currentRow++;
 
       excelRows.forEach((rowData: any, idx: number) => {
         row = dataSheet.getRow(currentRow);
-        row.height = 18;  // Add data row height for better spacing
+        row.height = 18; // Add data row height for better spacing
         dataHeaders.forEach((header, colIdx) => {
           const cell = row.getCell(colIdx + 1);
           cell.value = rowData[header] || "";
-          cell.fill = idx % 2 === 0 ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } } : { type: "pattern", pattern: "solid", fgColor: { argb: "FFF9F9F9" } };
+          cell.fill =
+            idx % 2 === 0
+              ? {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFFFFFFF" },
+                }
+              : {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFF9F9F9" },
+                };
           cell.alignment = centerAlignment;
-          cell.border = { bottom: { style: "thin", color: { argb: "FFE0E0E0" } } };
+          cell.border = {
+            bottom: { style: "thin", color: { argb: "FFE0E0E0" } },
+          };
         });
         currentRow++;
       });
 
       // Calculate dynamic width for flexible columns (Phòng học, Giảng viên, Ghi chú)
       const dynamicColumnIndices = {
-        "Phòng học": 4,    // Column E (index 4)
-        "Giảng viên": 5,   // Column F (index 5)
-        "Ghi chú": 7,      // Column H (index 7)
+        "Phòng học": 4, // Column E (index 4)
+        "Giảng viên": 5, // Column F (index 5)
+        "Ghi chú": 7, // Column H (index 7)
       };
 
       const columnWidths: { [key: number]: number } = {};
 
       // Initialize with minimum widths for dynamic columns
       Object.values(dynamicColumnIndices).forEach((idx) => {
-        columnWidths[idx] = 28;  // Minimum width for dynamic columns
+        columnWidths[idx] = 28; // Minimum width for dynamic columns
       });
 
       // Calculate max width for each dynamic column
       excelRows.forEach((rowData: any) => {
         dataHeaders.forEach((header, colIdx) => {
-          if (dynamicColumnIndices[header as keyof typeof dynamicColumnIndices]) {
+          if (
+            dynamicColumnIndices[header as keyof typeof dynamicColumnIndices]
+          ) {
             const content = rowData[header] || "";
             const width = calculateWidth(content);
             if (width > columnWidths[colIdx]) {
@@ -436,7 +517,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       Object.entries(columnWidths).forEach(([idx, width]) => {
         const colNum = parseInt(idx);
         if (dataSheet.columns[colNum]) {
-          dataSheet.columns[colNum].width = Math.max(width, 28);  // Ensure minimum 28
+          dataSheet.columns[colNum].width = Math.max(width, 28); // Ensure minimum 28
         }
       });
 
@@ -482,7 +563,12 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
           <Button key="preview" onClick={() => setPreviewOpen(true)}>
             Xem trước dữ liệu sẽ xuất
           </Button>,
-          <Button key="export" type="primary" onClick={handleExport} disabled={!filteredLogs.length}>
+          <Button
+            key="export"
+            type="primary"
+            onClick={handleExport}
+            disabled={!filteredLogs.length}
+          >
             Xuất file Excel
           </Button>,
           <Button key="cancel" onClick={() => setModalOpen(false)}>
@@ -535,11 +621,16 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
           )}
         </Row>
         <div style={{ color: "#888", fontSize: 13 }}>
-          Chọn các trường để lọc dữ liệu trước khi xuất file Excel. Nếu không chọn sẽ xuất toàn bộ.
+          Chọn các trường để lọc dữ liệu trước khi xuất file Excel. Nếu không
+          chọn sẽ xuất toàn bộ.
         </div>
       </Modal>
 
-      <ExportPreviewModal open={previewOpen} onClose={() => setPreviewOpen(false)} logs={filteredLogs} />
+      <ExportPreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        logs={filteredLogs}
+      />
     </>
   );
 };

@@ -470,7 +470,7 @@ export default function TimetableCalendarView({
         </Col>
       </Row>
 
-      {!loading && !hasAny ? (
+      {!loading && timetables.length === 0 ? (
         <Empty description="Chưa có lịch giảng dạy" />
       ) : (
         <div>
