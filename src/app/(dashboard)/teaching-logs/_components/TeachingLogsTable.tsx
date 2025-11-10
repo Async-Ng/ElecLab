@@ -27,6 +27,12 @@ function getColumns(isHead: boolean) {
       render: (value: string | number) => value,
     },
     {
+      title: "Tuần",
+      dataIndex: ["timetable", "week"],
+      key: "week",
+      render: (value: string | number) => value || "-",
+    },
+    {
       title: "Ngày",
       dataIndex: ["timetable", "date"],
       key: "date",

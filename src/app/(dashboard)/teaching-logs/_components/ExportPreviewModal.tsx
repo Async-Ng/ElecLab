@@ -15,6 +15,7 @@ const columns = [
     key: "schoolYear",
   },
   { title: "Học kỳ", dataIndex: ["timetable", "semester"], key: "semester" },
+  { title: "Tuần", dataIndex: ["timetable", "week"], key: "week" },
   {
     title: "Ngày",
     dataIndex: ["timetable", "date"],
