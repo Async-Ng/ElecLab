@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Timetable from "@/models/Timetable";
 import { requireAdmin } from "@/lib/apiMiddleware";
+import {
+  isWeekValidForSemester,
+  isValidDateFormat,
+  getWeekValidationError,
+  getDateValidationError,
+} from "@/shared/utils/semesterValidation";
 
 /**
  * GET /api/admin/timetables
@@ -44,6 +50,37 @@ export async function POST(request: Request) {
     const body = await request.json();
     await connectToDatabase();
 
+    // Validation function
+    const validateTimetable = (tt: any): string | null => {
+      // Validate date format
+      const dateError = getDateValidationError(tt.date);
+      if (dateError) return dateError;
+
+      // Validate week for semester
+      const weekError = getWeekValidationError(tt.semester, tt.week);
+      if (weekError) return weekError;
+
+      return null;
+    };
+
+    // Validate all entries before inserting
+    if (Array.isArray(body)) {
+      for (let i = 0; i < body.length; i++) {
+        const error = validateTimetable(body[i]);
+        if (error) {
+          return NextResponse.json(
+            { error: `Dòng ${i + 2}: ${error}` },
+            { status: 400 }
+          );
+        }
+      }
+    } else {
+      const error = validateTimetable(body);
+      if (error) {
+        return NextResponse.json({ error }, { status: 400 });
+      }
+    }
+
     let result;
     if (Array.isArray(body)) {
       result = await Timetable.insertMany(body);
@@ -53,6 +90,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
+    console.error("POST /api/admin/timetables error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to create timetable" },
       { status: 500 }
@@ -79,6 +117,25 @@ export async function PUT(request: Request) {
       );
     }
 
+    // Validate week for semester if both are provided
+    if (updateData.semester !== undefined && updateData.week !== undefined) {
+      const error = getWeekValidationError(
+        updateData.semester,
+        updateData.week
+      );
+      if (error) {
+        return NextResponse.json({ error }, { status: 400 });
+      }
+    }
+
+    // Validate date format if provided
+    if (updateData.date !== undefined) {
+      const error = getDateValidationError(updateData.date);
+      if (error) {
+        return NextResponse.json({ error }, { status: 400 });
+      }
+    }
+
     await connectToDatabase();
 
     const updated = await Timetable.findByIdAndUpdate(_id, updateData, {
@@ -94,6 +151,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(updated);
   } catch (error) {
+    console.error("PUT /api/admin/timetables error:", error);
     return NextResponse.json(
       { error: "Failed to update timetable" },
       { status: 500 }

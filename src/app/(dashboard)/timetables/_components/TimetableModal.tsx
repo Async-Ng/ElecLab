@@ -10,6 +10,11 @@ import { User } from "@/types/user";
 import FormModal from "@/components/common/FormModal";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
+import {
+  isWeekValidForSemester,
+  getWeekValidationError,
+  getDateValidationError,
+} from "@/shared/utils/semesterValidation";
 
 // Configure dayjs
 dayjs.extend(customParseFormat);
@@ -34,6 +39,14 @@ export default function TimetableModal({
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const { user } = useAuth();
+  const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+
+  // Watch semester changes to update week validation hint
+  const handleSemesterChange = (value: number) => {
+    setSelectedSemester(value);
+    // Trigger week field revalidation when semester changes
+    form.validateFields(["week"]);
+  };
 
   // Prepare initial values for form
   const initialValues = React.useMemo(() => {
@@ -86,6 +99,23 @@ export default function TimetableModal({
     setLoading(true);
     try {
       const values = await form.validateFields();
+
+      // Validate week for semester
+      const weekError = getWeekValidationError(values.semester, values.week);
+      if (weekError) {
+        message.error(weekError);
+        setLoading(false);
+        return;
+      }
+
+      // Validate date
+      const dateStr = values.date.format("DD/MM/YYYY");
+      const dateError = getDateValidationError(dateStr);
+      if (dateError) {
+        message.error(dateError);
+        setLoading(false);
+        return;
+      }
 
       // Xác định method: POST (tạo mới) hoặc PUT (cập nhật)
       const isUpdate = !!timetable?._id;
@@ -216,10 +246,14 @@ export default function TimetableModal({
           label="Học kỳ"
           rules={[{ required: true, message: "Vui lòng chọn học kỳ" }]}
         >
-          <Select placeholder="Chọn học kỳ" disabled={!isOwner}>
-            <Select.Option value={1}>HK1</Select.Option>
-            <Select.Option value={2}>HK2</Select.Option>
-            <Select.Option value={3}>HK3</Select.Option>
+          <Select
+            placeholder="Chọn học kỳ"
+            disabled={!isOwner}
+            onChange={handleSemesterChange}
+          >
+            <Select.Option value={1}>HK1 (Tuần 1-20)</Select.Option>
+            <Select.Option value={2}>HK2 (Tuần 21-40)</Select.Option>
+            <Select.Option value={3}>HK3 (Tuần 41-52)</Select.Option>
           </Select>
         </Form.Item>
       </Col>
@@ -246,16 +280,44 @@ export default function TimetableModal({
           rules={[
             { required: true, message: "Vui lòng nhập tuần" },
             {
-              pattern: /^([1-9]|1[0-3])$/,
-              message: "Tuần phải từ 1 đến 13",
+              pattern: /^([1-9]|[1-4][0-9]|5[0-2])$/,
+              message: "Tuần phải từ 1 đến 52",
+            },
+            {
+              validator: (_, value) => {
+                if (!value) return Promise.resolve();
+                const semester = form.getFieldValue("semester");
+                if (!semester) return Promise.resolve();
+
+                if (isWeekValidForSemester(semester, value)) {
+                  return Promise.resolve();
+                }
+
+                const error = getWeekValidationError(semester, value);
+                return Promise.reject(new Error(error));
+              },
+              message: "Tuần không phù hợp với học kỳ",
             },
           ]}
+          extra={
+            selectedSemester ? (
+              <span style={{ color: "#1890ff", fontSize: 12 }}>
+                {selectedSemester === 1 && "HK1: Nhập tuần từ 1 đến 20"}
+                {selectedSemester === 2 && "HK2: Nhập tuần từ 21 đến 40"}
+                {selectedSemester === 3 && "HK3: Nhập tuần từ 41 đến 52"}
+              </span>
+            ) : (
+              <span style={{ color: "#999", fontSize: 12 }}>
+                Chọn học kỳ trước để xem phạm vi tuần
+              </span>
+            )
+          }
         >
           <Input
             type="number"
             min={1}
-            max={13}
-            placeholder="1-13"
+            max={52}
+            placeholder="1-52"
             disabled={!isOwner}
           />
         </Form.Item>

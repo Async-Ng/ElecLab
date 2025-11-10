@@ -13,7 +13,7 @@ const TimetableSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 1,
-    max: 13,
+    max: 52,
   },
   period: {
     type: Number,

@@ -226,14 +226,20 @@ export default function ImportButtons() {
           error: "Vui lòng chọn 1, 2 hoặc 3",
         };
 
-        // Cột D: Tuần (dropdown 1-13)
+        // Cột D: Tuần (dropdown 1-52)
+        // Tuần được chia theo học kỳ:
+        // HK 1: tuần 1-20
+        // HK 2: tuần 21-40
+        // HK 3: tuần 41-52
         worksheet.getCell(`D${row}`).dataValidation = {
           type: "list",
           allowBlank: false,
-          formulae: ['"1,2,3,4,5,6,7,8,9,10,11,12,13"'],
+          formulae: [
+            '"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52"',
+          ],
           showErrorMessage: true,
           errorTitle: "Giá trị không hợp lệ",
-          error: "Vui lòng chọn tuần từ 1 đến 13",
+          error: "Vui lòng chọn tuần từ 1 đến 52",
         };
 
         // Cột E: Ca (dropdown 1, 2, 3, 4)
@@ -294,21 +300,25 @@ export default function ImportButtons() {
         [""],
         ["1. Năm học: Nhập theo định dạng YYYY-YYYY (ví dụ: 2024-2025)"],
         ["2. Học kỳ: Chọn từ dropdown (1, 2, hoặc 3)"],
+        ["   - HK 1: Tuần 1-20"],
+        ["   - HK 2: Tuần 21-40"],
+        ["   - HK 3: Tuần 41-52"],
         ["3. Ngày: Nhập theo định dạng DD/MM/YYYY (ví dụ: 05/08/2024)"],
-        ["4. Ca: Chọn từ dropdown (1, 2, 3, hoặc 4)"],
-        ["5. Giờ học: TỰ ĐỘNG cập nhật khi chọn Ca (KHÔNG CẦN NHẬP)"],
+        ["4. Tuần: Chọn từ dropdown (1-52) theo học kỳ"],
+        ["5. Ca: Chọn từ dropdown (1, 2, 3, hoặc 4)"],
+        ["6. Giờ học: TỰ ĐỘNG cập nhật khi chọn Ca (KHÔNG CẦN NHẬP)"],
         ["   - Ca 1 → 07:00-09:15"],
         ["   - Ca 2 → 09:30-11:45"],
         ["   - Ca 3 → 12:30-14:45"],
         ["   - Ca 4 → 15:00-17:15"],
-        ["6. Môn học: Nhập tên môn học"],
-        ["7. Phòng học: Chọn từ dropdown mã phòng"],
-        ["8. Lớp: Nhập tên lớp"],
+        ["7. Môn học: Nhập tên môn học"],
+        ["8. Phòng học: Chọn từ dropdown mã phòng"],
+        ["9. Lớp: Nhập tên lớp"],
       ];
 
       if (isUserAdmin) {
         instructions.push([
-          "9. Giảng viên: Nhập EMAIL của giảng viên (ví dụ: abc@hcmct.edu.vn)",
+          "10. Giảng viên: Nhập EMAIL của giảng viên (ví dụ: abc@hcmct.edu.vn)",
         ]);
       }
 
@@ -319,6 +329,7 @@ export default function ImportButtons() {
           "- Cột 'Giờ học' TỰ ĐỘNG - không cần nhập, sẽ tự động điền khi chọn Ca",
         ],
         ["- Khi bạn chọn Ca, Giờ học sẽ tự động cập nhật tương ứng"],
+        ["- Tuần phải phù hợp với học kỳ (HK1: 1-20, HK2: 21-40, HK3: 41-52)"],
         ["- Các ô có dropdown sẽ hiển thị mũi tên xuống khi click vào"],
         ["- Không được để trống các trường bắt buộc"],
         ["- Ngày phải đúng định dạng DD/MM/YYYY"]

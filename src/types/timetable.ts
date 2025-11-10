@@ -28,7 +28,7 @@ export interface Timetable {
   schoolYear: string; // Năm học, ví dụ: "2025-2026"
   semester: Semester; // Học kỳ
   date: string; // Ngày, định dạng vi-VN: "DD/MM/YYYY" hoặc "DD-MM-YYYY"
-  week: number; // Số tuần (1-13)
+  week: number; // Số tuần (1-52: HK1=1-20, HK2=21-40, HK3=41-52)
   period: Period; // Ca học
   time: StudyTime; // Giờ học
   subject: string; // Môn học

@@ -15,6 +15,10 @@ import {
 } from "antd";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  isWeekValidForSemester,
+  getWeekValidationError,
+} from "@/shared/utils/semesterValidation";
 
 interface ImportPreviewModalProps {
   visible: boolean;
@@ -166,12 +170,12 @@ export default function ImportPreviewModal({
           value={val}
           style={{ width: 60 }}
           min={1}
-          max={13}
+          max={52}
           onChange={(e) => {
             const num = e.target.value ? Number(e.target.value) : undefined;
             updateRow(record.key, { week: num });
           }}
-          placeholder="1-13"
+          placeholder="1-52"
         />
       ),
     },
@@ -314,6 +318,13 @@ export default function ImportPreviewModal({
           !dayjs(dateVal, "DD/MM/YYYY", true).isValid()
         ) {
           return <Tag color="orange">Ngày sai định dạng</Tag>;
+        }
+        // Kiểm tra tuần có phù hợp với học kỳ
+        if (record.week && record.semester) {
+          if (!isWeekValidForSemester(record.semester, record.week)) {
+            const error = getWeekValidationError(record.semester, record.week);
+            return <Tag color="orange">{error}</Tag>;
+          }
         }
         if (
           rooms.length > 0 &&

@@ -202,13 +202,13 @@ export default function Sidebar({ onClose }: Props) {
         className="flex flex-col items-center py-8 gap-2"
         style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.15)" }}
       >
-        <div className="rounded-md bg-white p-4 shadow-lg">
+        <div className="rounded-full bg-white shadow-lg">
           <Image
             src="/images/logo.png"
             alt="ElecLab logo"
-            className="object-contain"
-            width={200}
-            height={200}
+            className="object-cover"
+            width={230}
+            height={230}
             priority
           />
         </div>

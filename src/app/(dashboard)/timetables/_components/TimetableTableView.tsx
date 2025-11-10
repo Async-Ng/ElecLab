@@ -121,12 +121,9 @@ export default function TimetableTableView({
             ))}
           </Select>
         </Col>
-        <Col xs={24} sm={24} md={6} style={{ textAlign: "right" }}>
+        <Col xs={24} sm={24} md={6} style={{ textAlign: "left" }}>
           <Space>
             <Button onClick={handleClearFilters}>Xóa lọc</Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
-              Thêm lịch dạy
-            </Button>
           </Space>
         </Col>
       </Row>

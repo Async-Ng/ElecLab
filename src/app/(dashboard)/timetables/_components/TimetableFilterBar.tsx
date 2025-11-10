@@ -167,7 +167,7 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
           placeholder="Tuần"
           value={week || undefined}
           onChange={(v) => setWeek(v)}
-          options={Array.from({ length: 13 }, (_, i) => ({
+          options={Array.from({ length: 52 }, (_, i) => ({
             label: `Tuần ${i + 1}`,
             value: i + 1,
           }))}
