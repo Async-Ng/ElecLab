@@ -12,7 +12,7 @@ function mapLogsToExcelRows(logs: any[]) {
   return logs.map((log) => ({
     "Học kỳ": log.timetable?.semester || "",
     "Năm học": log.timetable?.schoolYear || "",
-    Ngày: log.timetable?.date || "",
+    "Ngày": log.timetable?.date || "",
     "Ca học": log.timetable?.period || "",
     "Phòng học": log.timetable?.room?.name || log.timetable?.room || "",
     "Giảng viên":
