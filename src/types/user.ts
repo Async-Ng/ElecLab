@@ -1,6 +1,6 @@
 export enum UserRole {
-  User = "Người dùng",
-  Admin = "Quản lý",
+  User = "User",
+  Admin = "Admin",
 }
 
 export interface User {

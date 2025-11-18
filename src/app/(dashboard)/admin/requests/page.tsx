@@ -13,7 +13,7 @@ export default function AdminRequestsPage() {
 
   useEffect(() => {
     if (!loading && (!user || !user.roles?.includes("Admin"))) {
-      router.push("/");
+      router.push("/timetables");
     }
   }, [user, loading, router]);
 

@@ -9,14 +9,21 @@ interface DecodedToken {
 }
 
 function verifyToken(token: string | null | undefined): DecodedToken | null {
-  if (!token) return null;
+  if (!token) {
+    console.log("No token provided");
+    return null;
+  }
   try {
+    const cleanToken = token.replace("Bearer ", "");
+    console.log("Verifying token:", cleanToken.substring(0, 20) + "...");
     const decoded = jwt.verify(
-      token.replace("Bearer ", ""),
+      cleanToken,
       process.env.JWT_SECRET || "your-secret-key"
     ) as DecodedToken;
+    console.log("Token verified successfully, userId:", decoded.userId);
     return decoded;
-  } catch {
+  } catch (error) {
+    console.log("Token verification failed:", error instanceof Error ? error.message : "Unknown error");
     return null;
   }
 }
@@ -37,9 +44,22 @@ export async function GET(req: NextRequest) {
 
     if (isAdmin) {
       const user = await User.findById(auth.userId);
-      if (!user?.roles?.includes("Admin")) {
+      console.log("Admin request - User:", user?._id, "Roles:", user?.roles);
+      if (!user) {
+        console.log("User not found in database for ID:", auth.userId);
         return NextResponse.json(
-          { error: "Chỉ admin mới được truy cập" },
+          { error: "Người dùng không tồn tại", userId: auth.userId },
+          { status: 403 }
+        );
+      }
+      if (!user.roles?.includes("Admin")) {
+        console.log(
+          "Access denied - User roles:",
+          user?.roles,
+          "Expected: Admin"
+        );
+        return NextResponse.json(
+          { error: "Chỉ admin mới được truy cập", roles: user.roles },
           { status: 403 }
         );
       }
