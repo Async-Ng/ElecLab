@@ -18,6 +18,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   const [tableData, setTableData] = useState<Timetable[]>(data);
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
   const { user, hasRole } = useAuth();
   const { fetchTimetables } = useTimetables({
     userRole: user?.roles?.[0],
@@ -50,6 +51,17 @@ export default function TimetableTable({ data }: TimetableTableProps) {
             _id: u._id,
             name: u.name,
             email: u.email,
+          }))
+        )
+      );
+    fetch("/api/materials")
+      .then((res) => res.json())
+      .then((d) =>
+        setMaterials(
+          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
+            _id: m._id,
+            name: m.name,
+            quantity: m.quantity,
           }))
         )
       );
@@ -185,6 +197,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
         timetable={editRecord}
         rooms={rooms}
         users={users}
+        materials={materials}
       />
     </>
   );

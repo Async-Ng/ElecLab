@@ -9,6 +9,8 @@ interface TimetableGridProps {
   days: Dayjs[];
   allPeriods: number[];
   statusInfo: (row: Timetable) => any;
+  materials?: Array<{ _id: string; name: string; quantity: number }>;
+  rooms?: Array<{ _id: string; room_id: string; name: string }>;
 }
 
 const { Text } = Typography;
@@ -29,6 +31,8 @@ export default function TimetableGrid({
   days,
   allPeriods,
   statusInfo,
+  materials = [],
+  rooms = [],
 }: TimetableGridProps) {
   const getLessonsForCell = (day: Dayjs, period: number) => {
     return items.filter((it) => {
@@ -237,6 +241,8 @@ export default function TimetableGrid({
                       }
                       lesson={lesson}
                       statusInfo={statusInfo(lesson)}
+                      materials={materials}
+                      rooms={rooms}
                     />
                   ))
                 )}

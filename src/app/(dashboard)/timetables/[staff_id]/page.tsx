@@ -1,7 +1,7 @@
 "use client";
 
 import dayjs, { Dayjs } from "dayjs";
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import { Timetable } from "@/types/timetable";
 import { useParams } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -24,6 +24,34 @@ export default function StaffTimetablePage() {
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [weekStart, setWeekStart] = useState<Dayjs>(dayjs().startOf("week"));
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+
+  // Fetch materials and rooms
+  useEffect(() => {
+    fetch("/api/materials")
+      .then((res) => res.json())
+      .then((d) =>
+        setMaterials(
+          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
+            _id: m._id,
+            name: m.name,
+            quantity: m.quantity,
+          }))
+        )
+      );
+    fetch("/api/rooms")
+      .then((res) => res.json())
+      .then((d) =>
+        setRooms(
+          (Array.isArray(d) ? d : d.rooms || []).map((r: any) => ({
+            _id: r._id,
+            room_id: r.room_id,
+            name: r.name,
+          }))
+        )
+      );
+  }, []);
 
   // Use Zustand store with auto-fetch for this staff
   const { timetables, loading } = useTimetables({
@@ -115,6 +143,8 @@ export default function StaffTimetablePage() {
                   days={days}
                   allPeriods={allPeriods}
                   statusInfo={statusInfo}
+                  materials={materials}
+                  rooms={rooms}
                 />
               </div>
             </div>

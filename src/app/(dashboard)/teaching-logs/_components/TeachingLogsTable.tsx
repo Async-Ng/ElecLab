@@ -99,6 +99,8 @@ const TeachingLogsTable: React.FC = () => {
     room?: string;
     lecturer?: string;
   }>({});
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
 
   // Use Zustand store with auto-fetch and caching
   const {
@@ -108,6 +110,32 @@ const TeachingLogsTable: React.FC = () => {
   } = useTeachingLogs({
     userId: user?._id,
   });
+
+  // Fetch materials and rooms for material requests
+  React.useEffect(() => {
+    fetch("/api/materials")
+      .then((res) => res.json())
+      .then((d) =>
+        setMaterials(
+          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
+            _id: m._id,
+            name: m.name,
+            quantity: m.quantity,
+          }))
+        )
+      );
+    fetch("/api/rooms")
+      .then((res) => res.json())
+      .then((d) =>
+        setRooms(
+          (Array.isArray(d) ? d : d.rooms || []).map((r: any) => ({
+            _id: r._id,
+            room_id: r.room_id,
+            name: r.name,
+          }))
+        )
+      );
+  }, []);
 
   // Lọc logs theo các trường filter
   const filteredLogs = useMemo(() => {
@@ -172,6 +200,8 @@ const TeachingLogsTable: React.FC = () => {
             : String(editLog?.timetable || "")
         }
         log={editLog}
+        materials={materials}
+        rooms={rooms}
         onSuccess={async () => {
           setModalOpen(false);
           setEditLog(undefined);

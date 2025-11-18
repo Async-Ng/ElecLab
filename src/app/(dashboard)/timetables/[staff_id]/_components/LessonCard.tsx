@@ -18,6 +18,7 @@ import {
 } from "@ant-design/icons";
 import { Timetable } from "@/types/timetable";
 import TeachingLogModal from "@/app/(dashboard)/teaching-logs/_components/TeachingLogModal";
+import { CreateMaterialRequestFromTimetable } from "@/components/materialRequest/CreateMaterialRequestFromTimetable";
 import { useState } from "react";
 import { useLessonLogStatus } from "@/hooks/useLessonLogStatus";
 import { brandColors } from "@/styles/theme";
@@ -32,10 +33,18 @@ interface LessonCardProps {
     canClick?: boolean;
     isEdit?: boolean;
   };
+  materials?: Array<{ _id: string; name: string; quantity: number }>;
+  rooms?: Array<{ _id: string; room_id: string; name: string }>;
 }
 
-export default function LessonCard({ lesson, statusInfo }: LessonCardProps) {
+export default function LessonCard({
+  lesson,
+  statusInfo,
+  materials = [],
+  rooms = [],
+}: LessonCardProps) {
   const [logModalOpen, setLogModalOpen] = useState(false);
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const { hasLog, isFuture } = useLessonLogStatus(
     lesson._id as string,
@@ -168,37 +177,6 @@ export default function LessonCard({ lesson, statusInfo }: LessonCardProps) {
               {hasLog ? "Đã ghi log" : statusInfo.text}
             </Tag>
           )}
-
-          {/* Action button */}
-          <Button
-            icon={<FileAddOutlined />}
-            type={hasLog ? "default" : "primary"}
-            size="small"
-            block
-            onClick={(e) => {
-              e.stopPropagation();
-              setLogModalOpen(true);
-            }}
-            disabled={isFuture || hasLog}
-            style={{
-              fontSize: "9px",
-              height: 24,
-              marginTop: 4,
-              padding: "0 6px",
-            }}
-            className="sm:text-[10px] sm:h-7 sm:mt-1 sm:px-2"
-          >
-            <span className="hidden sm:inline">
-              {isFuture
-                ? "Chưa đến ngày"
-                : hasLog
-                ? "Đã ghi nhật ký"
-                : "Ghi nhật ký"}
-            </span>
-            <span className="sm:hidden">
-              {isFuture ? "Chưa đến" : hasLog ? "Đã ghi" : "Ghi log"}
-            </span>
-          </Button>
         </Space>
 
         <TeachingLogModal
@@ -206,6 +184,8 @@ export default function LessonCard({ lesson, statusInfo }: LessonCardProps) {
           onClose={() => setLogModalOpen(false)}
           timetableId={lesson._id as string}
           onSuccess={() => setLogModalOpen(false)}
+          materials={materials}
+          rooms={rooms}
         />
       </Card>
 
@@ -222,6 +202,15 @@ export default function LessonCard({ lesson, statusInfo }: LessonCardProps) {
         footer={[
           <Button key="close" onClick={() => setDetailModalOpen(false)}>
             Đóng
+          </Button>,
+          <Button
+            key="material"
+            onClick={() => {
+              setDetailModalOpen(false);
+              setMaterialModalOpen(true);
+            }}
+          >
+            Gửi yêu cầu vật tư
           </Button>,
           !isFuture && !hasLog && (
             <Button
@@ -279,10 +268,21 @@ export default function LessonCard({ lesson, statusInfo }: LessonCardProps) {
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Ghi chú">
-            {(lesson as any).note || "Không có ghi chú"}
+            {String(
+              (lesson as unknown as { note?: string }).note ??
+                "Không có ghi chú"
+            )}
           </Descriptions.Item>
         </Descriptions>
       </Modal>
+
+      <CreateMaterialRequestFromTimetable
+        visible={materialModalOpen}
+        onClose={() => setMaterialModalOpen(false)}
+        timetable={lesson}
+        materials={materials}
+        rooms={rooms}
+      />
     </>
   );
 }
