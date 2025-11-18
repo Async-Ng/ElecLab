@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Tag } from "antd";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { useAuth } from "../../../../hooks/useAuth";
@@ -101,14 +101,20 @@ const TeachingLogsTable: React.FC = () => {
   }>({});
   const [materials, setMaterials] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
+
+  // Load active role from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("activeRole");
+      setActiveRole(stored);
+    }
+  }, []);
 
   // Use Zustand store with auto-fetch and caching
-  const {
-    teachingLogs: logs,
-    loading,
-    fetchTeachingLogs,
-  } = useTeachingLogs({
-    userId: user?._id,
+  // If active role is User, fetch only that user's logs; if Admin, fetch all
+  const { teachingLogs: logs, loading } = useTeachingLogs({
+    userId: activeRole === UserRole.User ? user?._id : undefined,
   });
 
   // Fetch materials and rooms for material requests

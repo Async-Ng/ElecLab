@@ -38,7 +38,7 @@ export default function RoomsClient() {
     fetchRooms,
   } = useRooms({
     userRole: user?.roles?.[0],
-    userId: user?._id,
+    // Don't pass userId for admin page - should fetch all rooms
   });
   const { users } = useUsers();
 

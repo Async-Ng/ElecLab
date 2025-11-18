@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
 import { brandColors } from "@/styles/theme";
+import { Select } from "antd";
 
 type Props = {
   onClose?: () => void;
@@ -14,6 +15,18 @@ type Props = {
 
 export default function Sidebar({ onClose }: Props) {
   const { user, logout } = useAuth();
+  const [activeRole, setActiveRole] = useState<UserRole | null>(null);
+
+  // Initialize active role from localStorage or default to first role
+  useEffect(() => {
+    const stored = localStorage.getItem("activeRole");
+    if (stored && user?.roles.includes(stored as UserRole)) {
+      setActiveRole(stored as UserRole);
+    } else if (user?.roles.length) {
+      setActiveRole(user.roles[0]);
+      localStorage.setItem("activeRole", user.roles[0]);
+    }
+  }, [user?.roles]);
   // Định nghĩa các menu item với quyền truy cập
   const allMenuItems: Array<{
     href: string;
@@ -21,27 +34,6 @@ export default function Sidebar({ onClose }: Props) {
     icon: React.ReactNode;
     roles: UserRole[];
   }> = [
-    {
-      href: `/timetables/${user?._id}`,
-      label: "TKB của tôi",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M16 2v4M8 2v4"
-          />
-        </svg>
-      ),
-      roles: [UserRole.Admin, UserRole.User],
-    },
     {
       href: "/timetables",
       label: "Thời khóa biểu",
@@ -105,7 +97,7 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.User, UserRole.Admin],
+      roles: [UserRole.User],
     },
 
     {
@@ -125,7 +117,7 @@ export default function Sidebar({ onClose }: Props) {
           <rect x="3" y="14" width="7" height="7" />
         </svg>
       ),
-      roles: [UserRole.User, UserRole.Admin],
+      roles: [UserRole.User],
     },
 
     {
@@ -234,11 +226,17 @@ export default function Sidebar({ onClose }: Props) {
   // Lọc menu theo role (sau khi lấy user)
 
   let menuItems: typeof allMenuItems = [];
-  if (user?.roles?.includes(UserRole.Admin)) {
-    // Quản lý: thấy toàn bộ
-    menuItems = allMenuItems;
-  } else if (user?.roles?.includes(UserRole.User)) {
-    // Người dùng: chỉ thấy các mục cho phép
+
+  // If user has selected a specific role, use that; otherwise use their primary role
+  const currentRole = activeRole || user?.roles?.[0];
+
+  if (currentRole === UserRole.Admin) {
+    // Quản lý: chỉ thấy admin items (items that have Admin in their roles)
+    menuItems = allMenuItems.filter((item) =>
+      item.roles.includes(UserRole.Admin)
+    );
+  } else if (currentRole === UserRole.User) {
+    // Người dùng: chỉ thấy các mục cho phép User
     menuItems = allMenuItems.filter((item) =>
       item.roles.includes(UserRole.User)
     );
@@ -305,6 +303,42 @@ export default function Sidebar({ onClose }: Props) {
               )
               .join(", ")}
           </p>
+
+          {/* Role switcher for dual-role users */}
+          {user?.roles && user.roles.length > 1 && (
+            <div className="mt-3">
+              <Select
+                value={activeRole}
+                onChange={(value) => {
+                  setActiveRole(value);
+                  localStorage.setItem("activeRole", value);
+                  window.location.reload();
+                }}
+                options={user.roles.map((role) => ({
+                  label: role === UserRole.Admin ? "Quản lý" : "Người dùng",
+                  value: role,
+                }))}
+                style={{ width: "100%" }}
+                className="role-switcher"
+              />
+              <style jsx>{`
+                :global(.role-switcher .ant-select-selector) {
+                  background: rgba(255, 255, 255, 0.2) !important;
+                  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+                  color: white !important;
+                }
+                :global(.role-switcher .ant-select-selector:hover) {
+                  background: rgba(255, 255, 255, 0.3) !important;
+                }
+                :global(.role-switcher .ant-select-arrow) {
+                  color: white !important;
+                }
+                :global(.role-switcher .ant-select-selection-item) {
+                  color: white !important;
+                }
+              `}</style>
+            </div>
+          )}
         </div>
       </div>
 

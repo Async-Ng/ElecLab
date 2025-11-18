@@ -28,7 +28,8 @@ export const useTimetables = (options: UseTimetablesOptions = {}) => {
     if (!hasFetched.current || paramsChanged) {
       hasFetched.current = true;
       prevParams.current = { userRole, userId };
-      store.fetchTimetables(userRole, userId);
+      // Force refresh when parameters change to bypass cache
+      store.fetchTimetables(userRole, userId, paramsChanged);
     }
   }, [userRole, userId, autoFetch, store]);
 

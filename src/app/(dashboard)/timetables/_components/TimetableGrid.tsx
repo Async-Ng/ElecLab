@@ -8,7 +8,12 @@ interface TimetableGridProps {
   items: Timetable[];
   days: Dayjs[];
   allPeriods: number[];
-  statusInfo: (row: Timetable) => any;
+  statusInfo: (row: Timetable) => {
+    color?: string;
+    text?: string;
+    canClick?: boolean;
+    isEdit?: boolean;
+  };
   materials?: Array<{ _id: string; name: string; quantity: number }>;
   rooms?: Array<{ _id: string; room_id: string; name: string }>;
 }
@@ -48,30 +53,27 @@ export default function TimetableGrid({
   };
 
   const isToday = (day: Dayjs) => {
-    return day.format("YYYY-MM-DD") === new Date().toISOString().split("T")[0];
+    return day.format("YYYY-MM-DD") === day.format("YYYY-MM-DD");
   };
 
   return (
     <div
-      style={{
-        background: brandColors.background,
-        borderRadius: 12,
-        padding: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-      }}
-      className="sm:p-6"
+      style={{ padding: "12px", background: brandColors.backgroundSecondary }}
     >
-      {/* Header - Days of week */}
+      {/* Day header */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "60px repeat(7, 1fr)",
           gap: "8px",
-          marginBottom: "12px",
+          marginBottom: "8px",
         }}
-        className="sm:grid-cols-[100px_repeat(7,1fr)] sm:gap-3 sm:mb-4 overflow-x-auto"
+        className="sm:grid-cols-[100px_repeat(7,1fr)] sm:gap-3 sm:mb-3"
       >
-        <div style={{ padding: "12px" }}></div>
+        {/* Empty corner */}
+        <div />
+
+        {/* Day cells */}
         {days.map((day, index) => {
           const isCurrentDay = isToday(day);
           return (
@@ -151,28 +153,21 @@ export default function TimetableGrid({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: gradients.accent,
-              borderRadius: 8,
+              background: brandColors.primary,
+              color: "white",
+              fontWeight: 600,
+              borderRadius: 6,
+              minWidth: "60px",
+              fontSize: "12px",
+              textAlign: "center",
               padding: "8px 4px",
-              boxShadow: `0 2px 8px ${brandColors.accent}30`,
-              minWidth: "50px",
             }}
-            className="sm:p-3"
+            className="sm:min-w-[100px] sm:text-sm"
           >
-            <Text
-              strong
-              style={{
-                color: "white",
-                fontSize: "12px",
-                textAlign: "center",
-              }}
-              className="sm:text-sm"
-            >
-              {PERIOD_LABELS[period - 1]}
-            </Text>
+            {PERIOD_LABELS[period - 1]}
           </div>
 
-          {/* Lessons for each day */}
+          {/* Time slot cells */}
           {days.map((day) => {
             const lessons = getLessonsForCell(day, period);
             const isCurrentDay = isToday(day);

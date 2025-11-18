@@ -10,7 +10,7 @@ export default function Home() {
     if (!isAuthenticated) {
       router.replace("/login");
     } else {
-      router.replace(`/timetables/${user?._id}`);
+      router.replace("/timetables");
     }
   }, [isAuthenticated, router]);
   // Không render gì ở trang chủ, chỉ chuyển hướng

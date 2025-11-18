@@ -15,6 +15,9 @@ import {
   BookOutlined,
   HomeOutlined,
   TeamOutlined,
+  CalendarOutlined,
+  UserOutlined,
+  FormOutlined,
 } from "@ant-design/icons";
 import { Timetable } from "@/types/timetable";
 import TeachingLogModal from "@/app/(dashboard)/teaching-logs/_components/TeachingLogModal";
@@ -192,25 +195,58 @@ export default function LessonCard({
       {/* Detail Modal */}
       <Modal
         title={
-          <Space>
-            <BookOutlined style={{ color: brandColors.primary }} />
-            <span>Chi tiết tiết học</span>
-          </Space>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "8px",
+                background: brandColors.primaryLight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <BookOutlined
+                style={{ color: brandColors.primary, fontSize: "20px" }}
+              />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 600,
+                  color: brandColors.textPrimary,
+                }}
+              >
+                {lesson.subject}
+              </div>
+              <div
+                style={{ fontSize: "12px", color: brandColors.textSecondary }}
+              >
+                Chi tiết tiết học
+              </div>
+            </div>
+          </div>
         }
         open={detailModalOpen}
         onCancel={() => setDetailModalOpen(false)}
+        width="98%"
+        style={{ maxWidth: "1200px" }}
+        bodyStyle={{ padding: "24px" }}
         footer={[
           <Button key="close" onClick={() => setDetailModalOpen(false)}>
             Đóng
           </Button>,
           <Button
             key="material"
+            type="dashed"
             onClick={() => {
               setDetailModalOpen(false);
               setMaterialModalOpen(true);
             }}
           >
-            Gửi yêu cầu vật tư
+            📦 Gửi yêu cầu vật tư
           </Button>,
           !isFuture && !hasLog && (
             <Button
@@ -227,51 +263,198 @@ export default function LessonCard({
             </Button>
           ),
         ]}
-        width="90%"
-        style={{ maxWidth: 600 }}
-        className="responsive-modal"
       >
         <Descriptions
-          column={{ xs: 1, sm: 1 }}
+          column={{ xs: 1, sm: 2, md: 4, lg: 4 }}
           bordered
-          size="small"
-          className="sm:size-middle"
+          size="middle"
+          style={{ marginBottom: "24px" }}
+          contentStyle={{ paddingRight: "24px" }}
+          labelStyle={{ paddingRight: "24px", fontWeight: 600 }}
         >
-          <Descriptions.Item label="Môn học">
-            <Text strong>{lesson.subject}</Text>
+          {/* Row 1 */}
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <BookOutlined /> Môn học
+              </span>
+            }
+          >
+            <Text
+              strong
+              style={{
+                fontSize: "14px",
+                color: brandColors.primary,
+                wordBreak: "break-word",
+              }}
+            >
+              {lesson.subject}
+            </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="Lớp">{lesson.className}</Descriptions.Item>
-          <Descriptions.Item label="Phòng">
-            {typeof lesson.room === "string" ? lesson.room : lesson.room?.name}
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <TeamOutlined /> Lớp
+              </span>
+            }
+          >
+            <Text style={{ fontSize: "14px", wordBreak: "break-word" }}>
+              {lesson.className}
+            </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="Ngày">
-            {lesson.date
-              ? new Date(lesson.date).toLocaleDateString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })
-              : ""}
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <HomeOutlined /> Phòng
+              </span>
+            }
+          >
+            <Text
+              style={{
+                fontSize: "14px",
+                color: brandColors.success,
+                wordBreak: "break-word",
+              }}
+            >
+              {typeof lesson.room === "string"
+                ? lesson.room
+                : lesson.room?.name}
+            </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="Ca học">{lesson.period}</Descriptions.Item>
-          <Descriptions.Item label="Giảng viên">
-            {typeof lesson.lecturer === "object"
-              ? lesson.lecturer?.name
-              : lesson.lecturer}
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <CalendarOutlined /> Ngày
+              </span>
+            }
+          >
+            <Text style={{ fontSize: "14px", wordBreak: "break-word" }}>
+              {lesson.date
+                ? new Date(lesson.date).toLocaleDateString("vi-VN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })
+                : ""}
+            </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="Trạng thái">
+          {/* Row 2 */}
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <ClockCircleOutlined /> Ca
+              </span>
+            }
+          >
+            <Tag color="blue" style={{ fontSize: "13px", padding: "4px 10px" }}>
+              Ca {lesson.period}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <UserOutlined /> Giảng viên
+              </span>
+            }
+          >
+            <Text style={{ fontSize: "14px", wordBreak: "break-word" }}>
+              {typeof lesson.lecturer === "object"
+                ? lesson.lecturer?.name
+                : lesson.lecturer}
+            </Text>
+          </Descriptions.Item>{" "}
+          {/* Row 3 */}
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <CheckCircleOutlined /> Trạng thái
+              </span>
+            }
+          >
             <Tag
               icon={hasLog ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
               color={hasLog ? "success" : statusInfo?.color || "default"}
+              style={{ fontSize: "12px", padding: "4px 10px" }}
             >
-              {hasLog ? "Đã ghi nhật ký" : statusInfo?.text || "Chưa ghi"}
+              {hasLog ? "Đã ghi nhật ký" : `${statusInfo?.text || "Chưa ghi"}`}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Ghi chú">
-            {String(
-              (lesson as unknown as { note?: string }).note ??
-                "Không có ghi chú"
-            )}
+          <Descriptions.Item
+            label={
+              <span
+                style={{
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <FormOutlined /> Ghi chú
+              </span>
+            }
+            span={3}
+          >
+            <Text
+              style={{
+                fontSize: "14px",
+                color: brandColors.textSecondary,
+                wordBreak: "break-word",
+              }}
+            >
+              {String(
+                (lesson as unknown as { note?: string }).note ??
+                  "Không có ghi chú"
+              )}
+            </Text>
           </Descriptions.Item>
         </Descriptions>
       </Modal>

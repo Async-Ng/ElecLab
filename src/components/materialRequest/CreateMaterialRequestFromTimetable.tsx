@@ -10,14 +10,20 @@ import {
   Table,
   InputNumber,
   Divider,
+  Button,
 } from "antd";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  PlusOutlined,
+  ShoppingOutlined,
+} from "@ant-design/icons";
 import { useMaterialRequestStore } from "@/stores/useMaterialRequestStore";
 import {
   MaterialRequestType,
   MaterialRequestPriority,
 } from "@/types/materialRequest";
 import { Timetable } from "@/types/timetable";
+import { brandColors } from "@/styles/theme";
 
 interface Material {
   _id: string;
@@ -174,79 +180,123 @@ export function CreateMaterialRequestFromTimetable({
 
   return (
     <Modal
-      title={`Yêu Cầu Vật Tư - ${timetable?.subject || ""} (${
-        timetable?.className || ""
-      })`}
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "8px",
+              background: brandColors.primaryLight,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ShoppingOutlined
+              style={{ color: brandColors.primary, fontSize: "20px" }}
+            />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: "18px",
+                fontWeight: 600,
+                color: brandColors.textPrimary,
+              }}
+            >
+              {timetable?.subject || "Yêu cầu vật tư"}
+            </div>
+            <div style={{ fontSize: "12px", color: brandColors.textSecondary }}>
+              {timetable?.className || ""}
+            </div>
+          </div>
+        </div>
+      }
       open={visible}
       onCancel={onClose}
       onOk={handleSubmit}
       confirmLoading={isSubmitting || loading}
-      width={700}
+      width="98%"
+      style={{ maxWidth: "1200px" }}
       okText="Gửi yêu cầu"
       cancelText="Hủy"
+      bodyStyle={{ padding: "24px" }}
     >
       <Form form={form} layout="vertical" className="mb-4">
-        <Form.Item
-          label="Loại Yêu Cầu"
-          name="requestType"
-          initialValue={MaterialRequestType.Allocation}
-          rules={[{ required: true, message: "Vui lòng chọn loại yêu cầu" }]}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: "16px",
+          }}
         >
-          <Select onChange={(value) => setRequestType(value)}>
-            <Select.Option value={MaterialRequestType.Allocation}>
-              Cấp phát vật tư
-            </Select.Option>
-            <Select.Option value={MaterialRequestType.Repair}>
-              Sửa chữa/Hư hỏng
-            </Select.Option>
-          </Select>
-        </Form.Item>
-
-        {requestType === MaterialRequestType.Repair && (
           <Form.Item
-            label="Phòng Thực Hành"
-            name="room"
-            rules={[
-              { required: true, message: "Vui lòng chọn phòng thực hành" },
-            ]}
+            label="Loại Yêu Cầu"
+            name="requestType"
+            initialValue={MaterialRequestType.Allocation}
+            rules={[{ required: true, message: "Vui lòng chọn loại yêu cầu" }]}
+            style={{ marginBottom: 0 }}
           >
-            <Select placeholder="Chọn phòng">
-              {rooms.map((r) => (
-                <Select.Option key={r._id} value={r._id}>
-                  {r.room_id} - {r.name}
-                </Select.Option>
-              ))}
+            <Select onChange={(value) => setRequestType(value)}>
+              <Select.Option value={MaterialRequestType.Allocation}>
+                Cấp phát vật tư
+              </Select.Option>
+              <Select.Option value={MaterialRequestType.Repair}>
+                Sửa chữa/Hư hỏng
+              </Select.Option>
             </Select>
           </Form.Item>
-        )}
+
+          <Form.Item
+            label="Mức Ưu Tiên"
+            name="priority"
+            initialValue={MaterialRequestPriority.Medium}
+            style={{ marginBottom: 0 }}
+          >
+            <Select>
+              <Select.Option value={MaterialRequestPriority.Low}>
+                Thấp
+              </Select.Option>
+              <Select.Option value={MaterialRequestPriority.Medium}>
+                Trung bình
+              </Select.Option>
+              <Select.Option value={MaterialRequestPriority.High}>
+                Cao
+              </Select.Option>
+            </Select>
+          </Form.Item>
+
+          {requestType === MaterialRequestType.Repair && (
+            <Form.Item
+              label="Phòng Thực Hành"
+              name="room"
+              rules={[
+                { required: true, message: "Vui lòng chọn phòng thực hành" },
+              ]}
+              style={{ marginBottom: 0 }}
+            >
+              <Select placeholder="Chọn phòng">
+                {rooms.map((r) => (
+                  <Select.Option key={r._id} value={r._id}>
+                    {r.room_id} - {r.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
+        </div>
 
         <Form.Item
           label="Mô Tả"
           name="description"
           rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
+          style={{ marginTop: "16px" }}
         >
           <Input.TextArea
             rows={3}
             placeholder="Mô tả chi tiết yêu cầu của bạn"
           />
-        </Form.Item>
-
-        <Form.Item
-          label="Mức Ưu Tiên"
-          name="priority"
-          initialValue={MaterialRequestPriority.Medium}
-        >
-          <Select>
-            <Select.Option value={MaterialRequestPriority.Low}>
-              Thấp
-            </Select.Option>
-            <Select.Option value={MaterialRequestPriority.Medium}>
-              Trung bình
-            </Select.Option>
-            <Select.Option value={MaterialRequestPriority.High}>
-              Cao
-            </Select.Option>
-          </Select>
         </Form.Item>
       </Form>
 
@@ -256,13 +306,16 @@ export function CreateMaterialRequestFromTimetable({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr auto",
-            gap: "8px",
+            gridTemplateColumns: "3fr 1fr 1.5fr auto",
+            gap: "12px",
+            alignItems: "flex-end",
           }}
         >
           <Form.Item
             name="materialId"
-            label="Vật Tư"
+            label={
+              <span style={{ fontSize: "13px", fontWeight: 500 }}>Vật Tư</span>
+            }
             rules={[{ required: true, message: "Chọn vật tư" }]}
             style={{ marginBottom: 0 }}
           >
@@ -277,40 +330,36 @@ export function CreateMaterialRequestFromTimetable({
 
           <Form.Item
             name="quantity"
-            label="Số Lượng"
+            label={
+              <span style={{ fontSize: "13px", fontWeight: 500 }}>
+                Số Lượng
+              </span>
+            }
             rules={[{ required: true, message: "Nhập số lượng" }]}
             style={{ marginBottom: 0 }}
           >
-            <InputNumber min={1} placeholder="SL" />
+            <InputNumber min={1} placeholder="SL" style={{ width: "100%" }} />
           </Form.Item>
 
           <Form.Item
             name="reason"
-            label="Lý Do"
+            label={
+              <span style={{ fontSize: "13px", fontWeight: 500 }}>Lý Do</span>
+            }
             rules={[{ required: true, message: "Nhập lý do" }]}
             style={{ marginBottom: 0 }}
           >
             <Input placeholder="Lý do" />
           </Form.Item>
 
-          <button
-            type="button"
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
             onClick={handleAddMaterial}
-            style={{
-              marginTop: "24px",
-              padding: "4px 12px",
-              backgroundColor: "#1890ff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
+            style={{ width: "100%" }}
           >
-            <PlusOutlined /> Thêm
-          </button>
+            Thêm
+          </Button>
         </div>
       </Form>
 

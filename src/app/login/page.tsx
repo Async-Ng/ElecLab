@@ -54,7 +54,7 @@ export default function LoginPage() {
 
       loginContext(data.token, data.user);
       message.success("Đăng nhập thành công!");
-      router.push(`/timetables/${data.user._id}`);
+      router.push("/timetables");
     } catch (error) {
       message.error("Đăng nhập thất bại, vui lòng thử lại");
     } finally {

@@ -1,7 +1,8 @@
 "use client";
 import TimetableModal from "./TimetableModal";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
 import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { DataTable } from "@/components/common";
@@ -19,10 +20,19 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
   const { user, hasRole } = useAuth();
+
+  // Load active role from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("activeRole");
+      setActiveRole(stored);
+    }
+  }, []);
+
   const { fetchTimetables } = useTimetables({
     userRole: user?.roles?.[0],
-    userId: user?._id,
   });
 
   // Kiểm tra xem user có phải Admin không
@@ -76,7 +86,10 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       prev.map((item) => (item._id === updated._id ? updated : item))
     );
     // Refetch timetables to get latest data (force bypass cache)
-    await fetchTimetables(user?.roles?.[0], user?._id, true);
+    // If active role is User, fetch only that user's timetables; if Admin, fetch all
+    const role = activeRole || user?.roles?.[0];
+    const userId = role === UserRole.User ? user?._id : undefined;
+    await fetchTimetables(role, userId, true);
   };
 
   const columns: ColumnsType<Timetable> = [
