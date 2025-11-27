@@ -16,6 +16,7 @@ interface FormModalProps {
   layout?: "horizontal" | "vertical" | "inline";
   twoColumns?: boolean;
   initialValues?: any; // Values to set when editing
+  footer?: React.ReactNode; // Custom footer
 }
 
 export default function FormModal({
@@ -32,6 +33,7 @@ export default function FormModal({
   layout = "vertical",
   twoColumns = false,
   initialValues,
+  footer,
 }: FormModalProps) {
   // Set initial values when modal opens or initialValues changes
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function FormModal({
       cancelText={cancelText}
       loading={loading}
       width={width}
+      customFooter={footer}
     >
       <Form form={form} layout={layout}>
         {twoColumns ? <Row gutter={16}>{children}</Row> : children}

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { UserRole, UserRoleLabels } from "@/types/user";
+import { UserRole } from "@/types/user";
 import { brandColors } from "@/styles/theme";
+import { Select } from "antd";
 
 type Props = {
   onClose?: () => void;
@@ -14,6 +15,18 @@ type Props = {
 
 export default function Sidebar({ onClose }: Props) {
   const { user, logout } = useAuth();
+  const [activeRole, setActiveRole] = useState<UserRole | null>(null);
+
+  // Initialize active role from localStorage or default to first role
+  useEffect(() => {
+    const stored = localStorage.getItem("activeRole");
+    if (stored && user?.roles.includes(stored as UserRole)) {
+      setActiveRole(stored as UserRole);
+    } else if (user?.roles.length) {
+      setActiveRole(user.roles[0]);
+      localStorage.setItem("activeRole", user.roles[0]);
+    }
+  }, [user?.roles]);
   // Định nghĩa các menu item với quyền truy cập
   const allMenuItems: Array<{
     href: string;
@@ -23,7 +36,7 @@ export default function Sidebar({ onClose }: Props) {
   }> = [
     {
       href: "/timetables",
-      label: "TKB của tôi",
+      label: "Thời khóa biểu",
       icon: (
         <svg
           className="w-5 h-5"
@@ -41,27 +54,6 @@ export default function Sidebar({ onClose }: Props) {
         </svg>
       ),
       roles: [UserRole.Admin, UserRole.User],
-    },
-    {
-      href: "/admin-timetables",
-      label: "Quản lý TKB",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M16 2v4M8 2v4M3 10h18"
-          />
-        </svg>
-      ),
-      roles: [UserRole.Admin],
     },
 
     {
@@ -82,6 +74,47 @@ export default function Sidebar({ onClose }: Props) {
             d="M8 2v4M16 2v4"
           />
           <circle cx="12" cy="14" r="3" />
+        </svg>
+      ),
+      roles: [UserRole.User],
+    },
+
+    {
+      href: "/requests",
+      label: "Yêu cầu của tôi",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12h6m-6 4h6m2-13H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2z"
+          />
+        </svg>
+      ),
+      roles: [UserRole.User],
+    },
+
+    {
+      href: "/material-requests",
+      label: "Yêu cầu vật tư",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
         </svg>
       ),
       roles: [UserRole.User],
@@ -147,17 +180,63 @@ export default function Sidebar({ onClose }: Props) {
       ),
       roles: [UserRole.Admin],
     },
+
+    {
+      href: "/admin/requests",
+      label: "Quản lý yêu cầu",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12h6m-6 4h6m2-13H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2z"
+          />
+        </svg>
+      ),
+      roles: [UserRole.Admin],
+    },
+
+    {
+      href: "/admin/material-requests",
+      label: "Quản lý yêu cầu vật tư",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+      ),
+      roles: [UserRole.Admin],
+    },
   ];
 
   // Lọc menu theo role (sau khi lấy user)
-  // Ưu tiên role Admin - nếu user có role Admin thì hiển thị toàn bộ menu
 
   let menuItems: typeof allMenuItems = [];
-  if (user?.roles?.includes(UserRole.Admin)) {
-    // Quản lý: thấy toàn bộ (ưu tiên Admin)
-    menuItems = allMenuItems;
-  } else if (user?.roles?.includes(UserRole.User)) {
-    // Người dùng: chỉ thấy các mục cho phép
+
+  // If user has selected a specific role, use that; otherwise use their primary role
+  const currentRole = activeRole || user?.roles?.[0];
+
+  if (currentRole === UserRole.Admin) {
+    // Quản lý: chỉ thấy admin items (items that have Admin in their roles)
+    menuItems = allMenuItems.filter((item) =>
+      item.roles.includes(UserRole.Admin)
+    );
+  } else if (currentRole === UserRole.User) {
+    // Người dùng: chỉ thấy các mục cho phép User
     menuItems = allMenuItems.filter((item) =>
       item.roles.includes(UserRole.User)
     );
@@ -202,13 +281,13 @@ export default function Sidebar({ onClose }: Props) {
         className="flex flex-col items-center py-8 gap-2"
         style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.15)" }}
       >
-        <div className="rounded-full bg-white shadow-lg">
+        <div className="rounded-md bg-white p-4 shadow-lg">
           <Image
             src="/images/logo.png"
             alt="ElecLab logo"
-            className="object-cover"
-            width={230}
-            height={230}
+            className="object-contain"
+            width={200}
+            height={200}
             priority
           />
         </div>
@@ -219,9 +298,47 @@ export default function Sidebar({ onClose }: Props) {
           </p>
           <p className="text-xs" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
             {user?.roles
-              .map((role) => UserRoleLabels[role as UserRole])
+              .map((role) =>
+                role === UserRole.Admin ? "Quản lý" : "Người dùng"
+              )
               .join(", ")}
           </p>
+
+          {/* Role switcher for dual-role users */}
+          {user?.roles && user.roles.length > 1 && (
+            <div className="mt-3">
+              <Select
+                value={activeRole}
+                onChange={(value) => {
+                  setActiveRole(value);
+                  localStorage.setItem("activeRole", value);
+                  window.location.reload();
+                }}
+                options={user.roles.map((role) => ({
+                  label: role === UserRole.Admin ? "Quản lý" : "Người dùng",
+                  value: role,
+                }))}
+                style={{ width: "100%" }}
+                className="role-switcher"
+              />
+              <style jsx>{`
+                :global(.role-switcher .ant-select-selector) {
+                  background: rgba(255, 255, 255, 0.2) !important;
+                  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+                  color: white !important;
+                }
+                :global(.role-switcher .ant-select-selector:hover) {
+                  background: rgba(255, 255, 255, 0.3) !important;
+                }
+                :global(.role-switcher .ant-select-arrow) {
+                  color: white !important;
+                }
+                :global(.role-switcher .ant-select-selection-item) {
+                  color: white !important;
+                }
+              `}</style>
+            </div>
+          )}
         </div>
       </div>
 

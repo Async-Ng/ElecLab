@@ -1,35 +1,34 @@
 import { useEffect, useRef } from "react";
 import { useTeachingLogsStore } from "@/stores/useTeachingLogsStore";
-import { useAuth } from "@/hooks/useAuth";
 
 interface UseTeachingLogsOptions {
+  userId?: string;
   autoFetch?: boolean;
-  lessonId?: string;
 }
 
 /**
  * Custom hook to manage teaching logs data with automatic fetching and caching
- * @param options - Configuration options for auto-fetching
+ * @param options - Configuration options for filtering and auto-fetching
  * @returns Teaching logs store state and actions
  */
 export const useTeachingLogs = (options: UseTeachingLogsOptions = {}) => {
-  const { autoFetch = true, lessonId } = options;
-  const { user } = useAuth();
+  const { userId, autoFetch = true } = options;
   const store = useTeachingLogsStore();
   const hasFetched = useRef(false);
-  const prevLessonId = useRef(lessonId);
+  const prevUserId = useRef(userId);
 
   useEffect(() => {
-    if (!autoFetch || !user?._id) return;
+    if (!autoFetch) return;
 
-    const lessonIdChanged = prevLessonId.current !== lessonId;
+    const userIdChanged = prevUserId.current !== userId;
 
-    if (!hasFetched.current || lessonIdChanged) {
+    if (!hasFetched.current || userIdChanged) {
       hasFetched.current = true;
-      prevLessonId.current = lessonId;
-      store.fetchTeachingLogs(user._id, user.roles, false, lessonId);
+      prevUserId.current = userId;
+      // Force refresh when userId changes to bypass cache
+      store.fetchTeachingLogs(userId, userIdChanged);
     }
-  }, [autoFetch, user, lessonId, store]);
+  }, [userId, autoFetch, store]);
 
   return store;
 };

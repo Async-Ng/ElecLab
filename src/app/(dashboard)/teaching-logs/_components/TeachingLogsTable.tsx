@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Tag } from "antd";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { useAuth } from "../../../../hooks/useAuth";
@@ -15,22 +15,16 @@ import { useTeachingLogs } from "@/hooks/stores";
 function getColumns(isHead: boolean) {
   const base = [
     {
-      title: "Năm học",
-      dataIndex: ["timetable", "schoolYear"],
-      key: "schoolYear",
-      render: (value: string | number) => value,
-    },
-    {
       title: "Học kỳ",
       dataIndex: ["timetable", "semester"],
       key: "semester",
       render: (value: string | number) => value,
     },
     {
-      title: "Tuần",
-      dataIndex: ["timetable", "week"],
-      key: "week",
-      render: (value: string | number) => value || "-",
+      title: "Năm học",
+      dataIndex: ["timetable", "schoolYear"],
+      key: "schoolYear",
+      render: (value: string | number) => value,
     },
     {
       title: "Ngày",
@@ -76,6 +70,12 @@ function getColumns(isHead: boolean) {
   }
   base.push(
     {
+      title: "Ghi chú",
+      dataIndex: ["note"],
+      key: "note",
+      render: (value: string) => value,
+    },
+    {
       title: "Trạng thái",
       dataIndex: ["status"],
       key: "status",
@@ -84,19 +84,13 @@ function getColumns(isHead: boolean) {
           {status}
         </Tag>
       ),
-    },
-    {
-      title: "Ghi chú",
-      dataIndex: ["note"],
-      key: "note",
-      render: (value: string) => value,
     }
   );
   return base;
 }
 
 const TeachingLogsTable: React.FC = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [editLog, setEditLog] = useState<TeachingLog | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [filters, setFilters] = useState<{
@@ -105,9 +99,49 @@ const TeachingLogsTable: React.FC = () => {
     room?: string;
     lecturer?: string;
   }>({});
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
+
+  // Load active role from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("activeRole");
+      setActiveRole(stored);
+    }
+  }, []);
 
   // Use Zustand store with auto-fetch and caching
-  const { teachingLogs: logs, loading, fetchTeachingLogs } = useTeachingLogs();
+  // If active role is User, fetch only that user's logs; if Admin, fetch all
+  const { teachingLogs: logs, loading } = useTeachingLogs({
+    userId: activeRole === UserRole.User ? user?._id : undefined,
+  });
+
+  // Fetch materials and rooms for material requests
+  React.useEffect(() => {
+    fetch("/api/materials")
+      .then((res) => res.json())
+      .then((d) =>
+        setMaterials(
+          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
+            _id: m._id,
+            name: m.name,
+            quantity: m.quantity,
+          }))
+        )
+      );
+    fetch("/api/rooms")
+      .then((res) => res.json())
+      .then((d) =>
+        setRooms(
+          (Array.isArray(d) ? d : d.rooms || []).map((r: any) => ({
+            _id: r._id,
+            room_id: r.room_id,
+            name: r.name,
+          }))
+        )
+      );
+  }, []);
 
   // Lọc logs theo các trường filter
   const filteredLogs = useMemo(() => {
@@ -148,35 +182,16 @@ const TeachingLogsTable: React.FC = () => {
 
       <DataTable
         data={filteredLogs}
-        columns={getColumns(isAdmin())}
+        columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
         loading={false}
         showActions={false}
-        onRow={(record) => {
-          // Kiểm tra xem user có phải là owner của log này không
-          const timetable = record.timetable as any;
-          let lecturerId = "";
-
-          if (timetable?.lecturer) {
-            lecturerId =
-              typeof timetable.lecturer === "object"
-                ? timetable.lecturer._id || ""
-                : timetable.lecturer || "";
-          }
-
-          const isOwner = user?._id === lecturerId;
-
-          return {
-            onClick: () => {
-              setEditLog(record);
-              setModalOpen(true);
-            },
-            style: {
-              cursor: "pointer",
-              // Thêm visual cue: log của mình có background khác
-              background: isOwner ? undefined : "#fafafa",
-            },
-          };
-        }}
+        onRow={(record) => ({
+          onClick: () => {
+            setEditLog(record);
+            setModalOpen(true);
+          },
+          style: { cursor: "pointer" },
+        })}
       />
 
       <TeachingLogModal
@@ -191,12 +206,13 @@ const TeachingLogsTable: React.FC = () => {
             : String(editLog?.timetable || "")
         }
         log={editLog}
+        materials={materials}
+        rooms={rooms}
         onSuccess={async () => {
-          if (!user) return;
           setModalOpen(false);
           setEditLog(undefined);
           // Refetch teaching logs to get latest data (force bypass cache)
-          await fetchTeachingLogs(user._id!, user.roles, true);
+          await fetchTeachingLogs(user?._id, true);
         }}
       />
     </div>

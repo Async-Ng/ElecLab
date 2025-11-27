@@ -11,6 +11,10 @@ interface RoomTableProps {
   onDelete: (id?: string) => void;
 }
 
+
+
+
+
 export default function RoomTable({
   rooms,
   loading,

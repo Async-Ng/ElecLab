@@ -1,120 +1,98 @@
 "use client";
 import TimetableModal from "./TimetableModal";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
 import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { DataTable } from "@/components/common";
 import { Button } from "antd";
 import { useTimetables } from "@/hooks/stores";
-import { authFetch, getApiEndpoint } from "@/lib/apiClient";
-
-// Extended type for timetable with hasLog and date status properties
-type TimetableWithLog = Timetable & {
-  hasLog?: boolean;
-  isPast?: boolean;
-  isFuture?: boolean;
-  isOverdue?: boolean;
-  canLog?: boolean;
-};
 
 interface TimetableTableProps {
-  data: TimetableWithLog[];
-  onEdit?: (record: TimetableWithLog) => void; // Click row → ghi log
-  onEditTimetable?: (record: TimetableWithLog) => void; // Nút "Chỉnh sửa" → edit TKB
-  isUserView?: boolean; // true = user view (limited actions), false = admin view (full actions)
-  loading?: boolean;
+  data: Timetable[];
 }
 
-export default function TimetableTable({
-  data,
-  onEdit: externalOnEdit,
-  onEditTimetable: externalOnEditTimetable,
-  isUserView = false,
-  loading = false,
-}: TimetableTableProps) {
+export default function TimetableTable({ data }: TimetableTableProps) {
   const [editVisible, setEditVisible] = useState(false);
   const [editRecord, setEditRecord] = useState<Timetable | null>(null);
   const [tableData, setTableData] = useState<Timetable[]>(data);
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const { user, isAdmin } = useAuth();
-  const { fetchTimetables } = useTimetables();
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
+  const { user, hasRole } = useAuth();
 
-  // Kiểm tra xem user có phải Admin không - ưu tiên role Admin
-  const isUserAdmin = isAdmin();
+  // Load active role from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("activeRole");
+      setActiveRole(stored);
+    }
+  }, []);
+
+  const { fetchTimetables } = useTimetables({
+    userRole: user?.roles?.[0],
+  });
+
+  // Kiểm tra xem user có phải Admin không
+  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
 
   React.useEffect(() => {
     setTableData(data);
   }, [data]);
-
   React.useEffect(() => {
-    // Fetch rooms and users data
-    if (!user) return;
-
-    Promise.all([
-      authFetch(getApiEndpoint("rooms", user.roles), user._id!, user.roles),
-      authFetch(getApiEndpoint("users", user.roles), user._id!, user.roles),
-    ])
-      .then(async ([roomsRes, usersRes]) => {
-        const roomsData = await roomsRes.json();
-        const usersData = await usersRes.json();
-
-        // Xử lý rooms
+    fetch("/api/rooms?userRole=Admin")
+      .then((res) => res.json())
+      .then((d) =>
         setRooms(
-          (roomsData.rooms || []).map((r: any) => ({
+          (d.rooms || []).map((r: any) => ({
             _id: r._id,
             name: r.name,
             room_id: r.room_id,
           }))
-        );
-
-        // Xử lý users
+        )
+      );
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((d) =>
         setUsers(
-          (usersData || []).map((u: any) => ({
+          (d || []).map((u: any) => ({
             _id: u._id,
             name: u.name,
             email: u.email,
           }))
-        );
-      })
-      .catch((error) => {
-        setRooms([]);
-        setUsers([]);
-      });
-  }, [user]);
+        )
+      );
+    fetch("/api/materials")
+      .then((res) => res.json())
+      .then((d) =>
+        setMaterials(
+          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
+            _id: m._id,
+            name: m.name,
+            quantity: m.quantity,
+          }))
+        )
+      );
+  }, []);
 
-  // Handler cho nút "Chỉnh sửa" - dùng để edit TKB
-  const handleEditTimetable = (record: TimetableWithLog) => {
-    if (externalOnEditTimetable) {
-      // Use external timetable edit handler
-      externalOnEditTimetable(record);
-    } else {
-      // Use internal modal for TKB editing
-      setEditRecord(record);
-      setEditVisible(true);
-    }
+  const handleEdit = (record: Timetable) => {
+    setEditRecord(record);
+    setEditVisible(true);
   };
-
-  // Handler cho click row - dùng để ghi log
-  const handleRowClick = (record: TimetableWithLog) => {
-    if (externalOnEdit) {
-      // Use external handler for logging
-      externalOnEdit(record);
-    }
-  };
-
   const handleEditSuccess = async (updated: Timetable) => {
-    if (!user) return;
     setTableData((prev) =>
       prev.map((item) => (item._id === updated._id ? updated : item))
     );
     // Refetch timetables to get latest data (force bypass cache)
-    const forceUserEndpoint = isUserView;
-    await fetchTimetables(user._id!, user.roles, true, forceUserEndpoint);
+    // If active role is User, fetch only that user's timetables; if Admin, fetch all
+    const role = activeRole || user?.roles?.[0];
+    const userId = role === UserRole.User ? user?._id : undefined;
+    await fetchTimetables(role, userId, true);
   };
 
-  const columns: ColumnsType<TimetableWithLog> = [
+  const columns: ColumnsType<Timetable> = [
     {
       title: "Năm học",
       dataIndex: "schoolYear",
@@ -157,13 +135,6 @@ export default function TimetableTable({
       },
     },
     {
-      title: "Tuần",
-      dataIndex: "week",
-      key: "week",
-      width: 60,
-      render: (value: number) => value || "-",
-    },
-    {
       title: "Ca học",
       dataIndex: "period",
       key: "period",
@@ -179,57 +150,6 @@ export default function TimetableTable({
       title: "Môn học",
       dataIndex: "subject",
       key: "subject",
-      render: (value: string, record: any) => (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span>{value}</span>
-          {/* Badge for different statuses */}
-          {record.hasLog && (
-            <span
-              style={{
-                backgroundColor: "#52c41a",
-                color: "white",
-                fontSize: "10px",
-                padding: "2px 6px",
-                borderRadius: "10px",
-                fontWeight: "normal",
-              }}
-              title="Đã có nhật ký giảng dạy"
-            >
-              ✓ ĐÃ GHI
-            </span>
-          )}
-          {record.isOverdue && (
-            <span
-              style={{
-                backgroundColor: "#ff7a45",
-                color: "white",
-                fontSize: "10px",
-                padding: "2px 6px",
-                borderRadius: "10px",
-                fontWeight: "normal",
-              }}
-              title="Quá hạn ghi log"
-            >
-              ⚠ QUÁ HẠN
-            </span>
-          )}
-          {record.isFuture && (
-            <span
-              style={{
-                backgroundColor: "#91d5ff",
-                color: "#1890ff",
-                fontSize: "10px",
-                padding: "2px 6px",
-                borderRadius: "10px",
-                fontWeight: "normal",
-              }}
-              title="Tiết học trong tương lai"
-            >
-              ⏳ TƯƠNG LAI
-            </span>
-          )}
-        </div>
-      ),
     },
     {
       title: "Phòng học",
@@ -242,23 +162,7 @@ export default function TimetableTable({
       dataIndex: "className",
       key: "className",
     },
-    {
-      title: "Ghi chú",
-      dataIndex: "note",
-      key: "note",
-      render: (note: string) =>
-        note ? (
-          <span
-            style={{ color: "#8c8c8c", fontSize: "12px", fontStyle: "italic" }}
-            title={note}
-          >
-            {note.length > 30 ? note.substring(0, 30) + "..." : note}
-          </span>
-        ) : (
-          "-"
-        ),
-    },
-    ...(isUserAdmin
+    ...(isAdmin
       ? [
           {
             title: "Giảng viên",
@@ -270,48 +174,23 @@ export default function TimetableTable({
         ]
       : []),
     {
-      title: "Hành động",
+      title: "Chỉnh sửa",
       key: "actions",
-      width: 220,
       render: (_: any, record: Timetable) => {
-        // User view: chỉ hiển thị nếu là owner
-        // Admin view: hiển thị cho tất cả
-        if (isUserView) {
-          const isOwner =
-            user &&
-            (record.lecturer === user._id ||
-              (typeof record.lecturer === "object" &&
-                record.lecturer._id === user._id));
-          if (!isOwner) return null;
-        } else {
-          // Admin view - kiểm tra có quyền admin
-          if (!isUserAdmin) return null;
+        // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
+        const isOwner =
+          user &&
+          (record.lecturer === user._id ||
+            (typeof record.lecturer === "object" &&
+              record.lecturer._id === user._id));
+        if (isAdmin || isOwner) {
+          return (
+            <Button type="link" onClick={() => handleEdit(record)}>
+              Chỉnh sửa
+            </Button>
+          );
         }
-
-        return (
-          <div style={{ display: "flex", gap: "8px" }}>
-            <Button
-              type="primary"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation(); // Ngăn event bubbling lên row click
-                handleRowClick(record);
-              }}
-            >
-              Ghi Log
-            </Button>
-            <Button
-              type="default"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation(); // Ngăn event bubbling lên row click
-                handleEditTimetable(record);
-              }}
-            >
-              Chỉnh sửa TKB
-            </Button>
-          </div>
-        );
+        return null;
       },
     },
   ];
@@ -321,19 +200,18 @@ export default function TimetableTable({
       <DataTable
         data={tableData}
         columns={columns}
-        loading={loading}
+        loading={false}
         showActions={false}
       />
-      {!externalOnEditTimetable && (
-        <TimetableModal
-          visible={editVisible}
-          onClose={() => setEditVisible(false)}
-          onSuccess={handleEditSuccess}
-          timetable={editRecord}
-          rooms={rooms}
-          users={users}
-        />
-      )}
+      <TimetableModal
+        visible={editVisible}
+        onClose={() => setEditVisible(false)}
+        onSuccess={handleEditSuccess}
+        timetable={editRecord}
+        rooms={rooms}
+        users={users}
+        materials={materials}
+      />
     </>
   );
 }
