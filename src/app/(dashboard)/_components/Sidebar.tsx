@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
 import { brandColors } from "@/styles/theme";
@@ -15,6 +15,7 @@ type Props = {
 
 export default function Sidebar({ onClose }: Props) {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const [activeRole, setActiveRole] = useState<UserRole | null>(null);
 
   // Initialize active role from localStorage or default to first role
@@ -53,7 +54,29 @@ export default function Sidebar({ onClose }: Props) {
           />
         </svg>
       ),
-      roles: [UserRole.Admin, UserRole.User],
+      roles: [UserRole.User],
+    },
+
+    {
+      href: "/admin-timetables",
+      label: "Quản lý TKB",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 2v4M8 2v4M3 10h18"
+          />
+        </svg>
+      ),
+      roles: [UserRole.Admin],
     },
 
     {
@@ -312,7 +335,12 @@ export default function Sidebar({ onClose }: Props) {
                 onChange={(value) => {
                   setActiveRole(value);
                   localStorage.setItem("activeRole", value);
-                  window.location.reload();
+                  // Navigate to appropriate page based on role
+                  if (value === UserRole.Admin) {
+                    router.push("/admin-timetables");
+                  } else {
+                    router.push("/timetables");
+                  }
                 }}
                 options={user.roles.map((role) => ({
                   label: role === UserRole.Admin ? "Quản lý" : "Người dùng",

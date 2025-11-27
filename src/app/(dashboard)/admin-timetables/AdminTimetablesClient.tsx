@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/common";
 import { useTimetables } from "@/hooks/stores";
 import { Segmented } from "antd";
 import { CalendarOutlined, TableOutlined } from "@ant-design/icons";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 // Lazy load components
 const TimetableTable = lazy(() => import("./_components/TimetableTable"));
@@ -55,9 +56,13 @@ export default function TimetablesClient() {
     return user?.roles?.[0] || UserRole.User;
   }, [user?.roles]);
 
-  // Fetch materials and rooms
+  // Fetch materials and rooms based on active role
   useEffect(() => {
-    fetch("/api/materials")
+    if (!user?._id) return;
+
+    // Fetch materials
+    const materialsUrl = getApiEndpoint("materials", getActiveRole);
+    authFetch(materialsUrl, user._id, getActiveRole)
       .then((res) => res.json())
       .then((d) =>
         setMaterials(
@@ -67,8 +72,12 @@ export default function TimetablesClient() {
             quantity: m.quantity,
           }))
         )
-      );
-    fetch("/api/rooms")
+      )
+      .catch((err) => console.error("Error fetching materials:", err));
+
+    // Fetch rooms
+    const roomsUrl = getApiEndpoint("rooms", getActiveRole);
+    authFetch(roomsUrl, user._id, getActiveRole)
       .then((res) => res.json())
       .then((d) =>
         setRooms(
@@ -78,8 +87,9 @@ export default function TimetablesClient() {
             name: r.name,
           }))
         )
-      );
-  }, []);
+      )
+      .catch((err) => console.error("Error fetching rooms:", err));
+  }, [user?._id, getActiveRole]);
 
   // Determine user role
   const isAdmin = useMemo(() => {
@@ -94,7 +104,7 @@ export default function TimetablesClient() {
   // - If current active role is "Admin": fetch all timetables (for management view)
   const { timetables: data, loading } = useTimetables({
     userRole: getActiveRole === UserRole.User ? "User" : "Admin",
-    userId: getActiveRole === UserRole.User ? user?._id : undefined,
+    userId: user?._id, // Always pass userId for authentication
   });
 
   // Auto filter when any filter state changes (for admin view)

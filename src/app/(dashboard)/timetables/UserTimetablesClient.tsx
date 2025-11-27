@@ -53,7 +53,8 @@ export default function UserTimetablesClient() {
     loading,
     fetchTimetables,
   } = useTimetables({
-    forceUserEndpoint: true,
+    userRole: "User",
+    userId: user?._id,
   });
 
   // Fetch teaching logs to check which timetables have logs

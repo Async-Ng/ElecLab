@@ -35,7 +35,7 @@ export default function PrivateRoute({
   const adminRoutes = ["/materials", "/users", "/rooms", "/admin"];
 
   useEffect(() => {
-    if (loading || activeRole === null) return;
+    if (loading) return;
 
     if (!isAuthenticated && pathname !== "/login") {
       router.replace("/login");
@@ -48,7 +48,7 @@ export default function PrivateRoute({
     }
 
     if (isAuthenticated && user) {
-      // Check if current active role is User
+      // Check if current active role is User (compare with enum value)
       const isCurrentRoleUser = activeRole === UserRole.User;
 
       // If active role is User, prevent access to admin routes
@@ -60,19 +60,22 @@ export default function PrivateRoute({
         return;
       }
 
-      // If not admin and is user, only allow user routes
+      // If user doesn't have admin role, check if trying to access admin routes
       const isAdmin = user.roles.includes(UserRole.Admin);
       const isUser = user.roles.includes(UserRole.User);
+
+      // If only has User role and trying to access admin route, redirect
       if (!isAdmin && isUser) {
-        if (!allowedRoutes.some((route) => pathname.startsWith(route))) {
+        if (adminRoutes.some((route) => pathname.startsWith(route))) {
           router.replace("/timetables");
+          return;
         }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, router, pathname, loading, user, activeRole]);
 
-  if (loading || activeRole === null) {
+  if (loading) {
     return null;
   }
 
@@ -95,14 +98,13 @@ export default function PrivateRoute({
       return null;
     }
 
+    // If user only has User role, don't allow access to admin routes
     const isAdmin = user.roles.includes(UserRole.Admin);
     const isUser = user.roles.includes(UserRole.User);
-    if (
-      !isAdmin &&
-      isUser &&
-      !allowedRoutes.some((route) => pathname.startsWith(route))
-    ) {
-      return null;
+    if (!isAdmin && isUser) {
+      if (adminRoutes.some((route) => pathname.startsWith(route))) {
+        return null;
+      }
     }
   }
   return children;

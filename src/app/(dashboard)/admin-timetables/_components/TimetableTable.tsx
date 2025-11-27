@@ -1,0 +1,232 @@
+"use client";
+import TimetableModal from "./TimetableModal";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
+import type { ColumnsType } from "antd/es/table";
+import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
+import { DataTable } from "@/components/common";
+import { Button } from "antd";
+import { useTimetables } from "@/hooks/stores";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
+
+interface TimetableTableProps {
+  data: Timetable[];
+}
+
+export default function TimetableTable({ data }: TimetableTableProps) {
+  const [editVisible, setEditVisible] = useState(false);
+  const [editRecord, setEditRecord] = useState<Timetable | null>(null);
+  const [tableData, setTableData] = useState<Timetable[]>(data);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
+  const { user, hasRole } = useAuth();
+
+  // Load active role from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("activeRole");
+      setActiveRole(stored);
+    }
+  }, []);
+
+  const { fetchTimetables } = useTimetables({
+    userRole: user?.roles?.[0],
+  });
+
+  // Kiểm tra xem user có phải Admin không
+  const isAdmin = hasRole && (hasRole("Admin") || hasRole("Quản lý"));
+
+  React.useEffect(() => {
+    setTableData(data);
+  }, [data]);
+
+  React.useEffect(() => {
+    if (!user?._id || !activeRole) return;
+
+    // Fetch rooms
+    const roomsUrl = getApiEndpoint("rooms", activeRole);
+    authFetch(roomsUrl, user._id, activeRole)
+      .then((res) => res.json())
+      .then((d) =>
+        setRooms(
+          (d.rooms || []).map((r: any) => ({
+            _id: r._id,
+            name: r.name,
+            room_id: r.room_id,
+          }))
+        )
+      )
+      .catch((err) => console.error("Error fetching rooms:", err));
+
+    // Fetch users
+    const usersUrl = getApiEndpoint("users", activeRole);
+    authFetch(usersUrl, user._id, activeRole)
+      .then((res) => res.json())
+      .then((d) =>
+        setUsers(
+          (d || []).map((u: any) => ({
+            _id: u._id,
+            name: u.name,
+            email: u.email,
+          }))
+        )
+      )
+      .catch((err) => console.error("Error fetching users:", err));
+
+    // Fetch materials
+    const materialsUrl = getApiEndpoint("materials", activeRole);
+    authFetch(materialsUrl, user._id, activeRole)
+      .then((res) => res.json())
+      .then((d) =>
+        setMaterials(
+          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
+            _id: m._id,
+            name: m.name,
+            quantity: m.quantity,
+          }))
+        )
+      )
+      .catch((err) => console.error("Error fetching materials:", err));
+  }, [user?._id, activeRole]);
+
+  const handleEdit = (record: Timetable) => {
+    setEditRecord(record);
+    setEditVisible(true);
+  };
+  const handleEditSuccess = async (updated: Timetable) => {
+    setTableData((prev) =>
+      prev.map((item) => (item._id === updated._id ? updated : item))
+    );
+    // Refetch timetables to get latest data (force bypass cache)
+    // If active role is User, fetch only that user's timetables; if Admin, fetch all
+    const role = activeRole || user?.roles?.[0];
+    const userId = role === UserRole.User ? user?._id : undefined;
+    await fetchTimetables(role, userId, true);
+  };
+
+  const columns: ColumnsType<Timetable> = [
+    {
+      title: "Năm học",
+      dataIndex: "schoolYear",
+      key: "schoolYear",
+    },
+    {
+      title: "Học kỳ",
+      dataIndex: "semester",
+      key: "semester",
+      render: (value: Semester) => `HK${value}`,
+    },
+    {
+      title: "Ngày",
+      dataIndex: "date",
+      key: "date",
+      render: (value: string) => {
+        let dateStr = String(value).trim();
+        // Excel serial
+        if (/^\d+$/.test(dateStr)) {
+          const serial = Number(dateStr);
+          const excelEpoch = new Date(1899, 11, 30);
+          const dateObj = new Date(
+            excelEpoch.getTime() + serial * 24 * 60 * 60 * 1000
+          );
+          const d = dateObj.getDate().toString().padStart(2, "0");
+          const m = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+          const y = dateObj.getFullYear();
+          dateStr = `${d}/${m}/${y}`;
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          const [y, m, d] = dateStr.split("-");
+          dateStr = `${d}/${m}/${y}`;
+        } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+          dateStr = dateStr.replace(/-/g, "/");
+        }
+        // Validate DD/MM/YYYY
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+          return dateStr;
+        }
+        return "";
+      },
+    },
+    {
+      title: "Ca học",
+      dataIndex: "period",
+      key: "period",
+      render: (value: Period) => `Ca ${value}`,
+    },
+    {
+      title: "Giờ học",
+      dataIndex: "time",
+      key: "time",
+      render: (value: StudyTime) => value,
+    },
+    {
+      title: "Môn học",
+      dataIndex: "subject",
+      key: "subject",
+    },
+    {
+      title: "Phòng học",
+      dataIndex: "room",
+      key: "room",
+      render: (room: any) => (typeof room === "string" ? room : room?.name),
+    },
+    {
+      title: "Lớp",
+      dataIndex: "className",
+      key: "className",
+    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Giảng viên",
+            dataIndex: "lecturer",
+            key: "lecturer",
+            render: (lecturer: any) =>
+              typeof lecturer === "string" ? lecturer : lecturer?.name,
+          },
+        ]
+      : []),
+    {
+      title: "Chỉnh sửa",
+      key: "actions",
+      render: (_: any, record: Timetable) => {
+        // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
+        const isOwner =
+          user &&
+          (record.lecturer === user._id ||
+            (typeof record.lecturer === "object" &&
+              record.lecturer._id === user._id));
+        if (isAdmin || isOwner) {
+          return (
+            <Button type="link" onClick={() => handleEdit(record)}>
+              Chỉnh sửa
+            </Button>
+          );
+        }
+        return null;
+      },
+    },
+  ];
+
+  return (
+    <>
+      <DataTable
+        data={tableData}
+        columns={columns}
+        loading={false}
+        showActions={false}
+      />
+      <TimetableModal
+        visible={editVisible}
+        onClose={() => setEditVisible(false)}
+        onSuccess={handleEditSuccess}
+        timetable={editRecord}
+        rooms={rooms}
+        users={users}
+        materials={materials}
+      />
+    </>
+  );
+}
