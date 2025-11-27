@@ -43,7 +43,7 @@ export function getAuthContext(request: Request): AuthContext | null {
  * Check if user has admin role
  */
 export function isAdmin(userRole: string | string[]): boolean {
-  const ADMIN_ROLES = ["Admin", "Quản lý"];
+  const ADMIN_ROLES = ["Admin"];
 
   if (Array.isArray(userRole)) {
     return userRole.some((role) => ADMIN_ROLES.includes(role));

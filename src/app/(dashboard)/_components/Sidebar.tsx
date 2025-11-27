@@ -5,7 +5,7 @@ import Image from "next/image";
 import React from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { UserRole } from "@/types/user";
+import { UserRole, UserRoleLabels } from "@/types/user";
 import { brandColors } from "@/styles/theme";
 
 type Props = {
@@ -219,9 +219,7 @@ export default function Sidebar({ onClose }: Props) {
           </p>
           <p className="text-xs" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
             {user?.roles
-              .map((role) =>
-                role === UserRole.Admin ? "Quản lý" : "Người dùng"
-              )
+              .map((role) => UserRoleLabels[role as UserRole])
               .join(", ")}
           </p>
         </div>

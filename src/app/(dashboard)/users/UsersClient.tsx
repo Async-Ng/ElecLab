@@ -2,7 +2,7 @@
 
 import { useState, lazy, Suspense } from "react";
 import { message } from "antd";
-import { User, UserFormData, UserRole } from "@/types/user";
+import { User, UserFormData, UserRole, UserRoleLabels } from "@/types/user";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PageHeader, ActionButtons } from "@/components/common";
 import { useUsers, useRooms } from "@/hooks/stores";
@@ -18,8 +18,8 @@ const UsersTable = lazy(() =>
 const UserModal = lazy(() => import("./_components/UserModal"));
 
 const availableRoles = [
-  { value: UserRole.User, label: "Người dùng" },
-  { value: UserRole.Admin, label: "Quản lý" },
+  { value: UserRole.User, label: UserRoleLabels[UserRole.User] },
+  { value: UserRole.Admin, label: UserRoleLabels[UserRole.Admin] },
 ];
 
 export default function UsersClient() {

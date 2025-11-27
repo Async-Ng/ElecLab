@@ -5,7 +5,7 @@ import { UserOutlined } from "@ant-design/icons";
 import { Avatar as AntdAvatar } from "antd";
 import Image from "next/image";
 import type { ColumnsType } from "antd/es/table";
-import { User, UserRole } from "@/types/user";
+import { User, UserRole, UserRoleLabels } from "@/types/user";
 import { Room } from "@/types/room";
 import { DataTable } from "@/components/common";
 
@@ -117,7 +117,7 @@ export const UsersTable = ({
         <>
           {roles.map((role) => (
             <Tag color={role === UserRole.Admin ? "red" : "blue"} key={role}>
-              {role === UserRole.Admin ? "Quản lý" : "Người dùng"}
+              {UserRoleLabels[role as UserRole]}
             </Tag>
           ))}
         </>

@@ -81,13 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getPrimaryRole = () => {
     if (!user || !user.roles || user.roles.length === 0) return null;
     // Nếu có role Admin thì ưu tiên Admin
-    if (user.roles.includes("Quản lý" as any)) return "Quản lý";
+    if (user.roles.includes("Admin" as any)) return "Admin";
     // Ngược lại trả về role đầu tiên
     return user.roles[0];
   };
 
   const isAdmin = () => {
-    return user?.roles.includes("Quản lý" as any) || false;
+    return user?.roles.includes("Admin" as any) || false;
   };
 
   return (
