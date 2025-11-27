@@ -4,7 +4,7 @@ import { message } from "antd";
 import ImportPreviewModal from "./ImportPreviewModal";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { Room } from "@/types/room";
-import { User } from "@/types/user";
+import { User, UserRole } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
 import ActionButtons from "@/components/common/ActionButtons";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
@@ -141,6 +141,24 @@ export default function ImportButtons() {
             timeValue = StudyTime.Period1;
           }
 
+          // Xử lý giảng viên: convert từ "Tên (Mã nhân viên)" sang email
+          let lecturerValue = "";
+          if (isUserAdmin) {
+            const lecturerDisplay = String(r["Giảng viên"] || "").trim();
+            if (lecturerDisplay) {
+              // Tìm giảng viên theo display name "Tên (Mã nhân viên)"
+              const foundLecturer = users.find(
+                (u) =>
+                  u.roles &&
+                  u.roles.includes(UserRole.User) &&
+                  `${u.name} (${u.staff_id})` === lecturerDisplay
+              );
+              lecturerValue = foundLecturer
+                ? foundLecturer.email
+                : lecturerDisplay;
+            }
+          }
+
           return {
             schoolYear: String(r["Năm học"] || "").trim(),
             semester: Number(r["Học kỳ"] || Semester.First),
@@ -151,10 +169,8 @@ export default function ImportButtons() {
             subject: String(r["Môn học"] || "").trim(),
             room: String(r["Phòng học"] || "").trim(),
             className: String(r["Lớp"] || "").trim(),
-            // Nếu không phải Admin và file không có cột Giảng viên, tự động gán user hiện tại
-            lecturer: isUserAdmin
-              ? String(r["Giảng viên"] || "").trim()
-              : user?.email || "",
+            // Sử dụng email giảng viên nếu admin, hoặc email user hiện tại
+            lecturer: lecturerValue || user?.email || "",
           };
         })
         .filter((row) => {
@@ -213,6 +229,18 @@ export default function ImportButtons() {
 
       // Định nghĩa các giá trị cho dropdown
       const roomValues = rooms.map((r) => r.room_id);
+      // Lọc chỉ lấy giảng viên (users với role "User") - bỏ admin
+      // Hiển thị: "Tên Giảng viên (Mã nhân viên)" nhưng lưu email để map
+      const lecturerObjects = isUserAdmin
+        ? users.filter((u) => u.roles && u.roles.includes(UserRole.User))
+        : [];
+      const lecturerValues = lecturerObjects.map(
+        (u) => `${u.name} (${u.staff_id})`
+      );
+      // Tạo map để lưu lại email tương ứng với display name
+      const lecturerDisplayToEmail = new Map(
+        lecturerObjects.map((u) => [`${u.name} (${u.staff_id})`, u.email])
+      );
 
       // Thêm data validation và formula cho 100 dòng (bắt đầu từ dòng 2)
       for (let row = 2; row <= 101; row++) {
@@ -272,6 +300,23 @@ export default function ImportButtons() {
             };
           }
         }
+
+        // Cột J: Giảng viên (dropdown nếu là admin và có danh sách giảng viên)
+        if (isUserAdmin && lecturerValues.length > 0) {
+          // Excel có giới hạn 255 ký tự cho formula, nếu quá nhiều giảng viên thì bỏ qua
+          const lecturerFormula = lecturerValues.join(",");
+          if (lecturerFormula.length < 255) {
+            worksheet.getCell(`J${row}`).dataValidation = {
+              type: "list",
+              allowBlank: false,
+              formulae: [`"${lecturerFormula}"`],
+              showErrorMessage: true,
+              errorTitle: "Giá trị không hợp lệ",
+              error:
+                "Vui lòng chọn giảng viên từ danh sách (Tên - Mã nhân viên)",
+            };
+          }
+        }
       }
 
       // Định dạng header
@@ -318,7 +363,7 @@ export default function ImportButtons() {
 
       if (isUserAdmin) {
         instructions.push([
-          "10. Giảng viên: Nhập EMAIL của giảng viên (ví dụ: abc@hcmct.edu.vn)",
+          "10. Giảng viên: Chọn từ dropdown (hiển thị Tên - Mã nhân viên)",
         ]);
       }
 
@@ -431,6 +476,8 @@ export default function ImportButtons() {
           email: u.email,
           _id: u._id || "",
           name: u.name || "",
+          staff_id: u.staff_id || "",
+          roles: u.roles || [],
         }))}
       />
       <input

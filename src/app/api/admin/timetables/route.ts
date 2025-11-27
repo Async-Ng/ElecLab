@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Timetable from "@/models/Timetable";
+import { User } from "@/models/User";
 import { requireAdmin } from "@/lib/apiMiddleware";
 import {
   isWeekValidForSemester,

@@ -14,6 +14,7 @@ import {
   Popconfirm,
 } from "antd";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
+import { UserRole } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
 import {
   isWeekValidForSemester,
@@ -26,7 +27,13 @@ interface ImportPreviewModalProps {
   data: Timetable[];
   onImport: (rows: Timetable[]) => void;
   rooms?: Array<{ room_id: string; _id: string; name: string }>;
-  users?: Array<{ email: string; _id: string; name: string }>;
+  users?: Array<{
+    email: string;
+    _id: string;
+    name: string;
+    staff_id?: string;
+    roles?: string[];
+  }>;
 }
 
 function normalizeDate(val: any): string {
@@ -293,11 +300,18 @@ export default function ImportPreviewModal({
                   );
                 }}
               >
-                {users.map((u) => (
-                  <Select.Option key={u.email} value={u.email}>
-                    {u.name}
-                  </Select.Option>
-                ))}
+                {users
+                  .filter(
+                    (u: any) => u.roles && u.roles.includes(UserRole.User)
+                  )
+                  .map((u) => (
+                    <Select.Option
+                      key={u.email}
+                      value={`${u.name} (${u.staff_id})`}
+                    >
+                      {u.name} - {u.staff_id}
+                    </Select.Option>
+                  ))}
               </Select>
             ),
           },

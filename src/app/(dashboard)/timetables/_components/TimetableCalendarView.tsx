@@ -280,7 +280,7 @@ export default function TimetableCalendarView({
         return {
           backgroundColor: "#f6f6f6", // Gray if has log
           border: "1px solid #d9d9d9",
-          cursor: "not-allowed",
+          cursor: "pointer",
           opacity: 0.8,
         };
       } else if (ttWithLog.isOverdue) {
@@ -294,8 +294,8 @@ export default function TimetableCalendarView({
         return {
           backgroundColor: "#f0f8ff", // Light blue for future
           border: "1px solid #91d5ff",
-          cursor: "not-allowed",
-          opacity: 0.7,
+          cursor: "pointer",
+          opacity: 1,
         };
       } else {
         return {

@@ -221,7 +221,7 @@ export function CreateMaterialRequestFromTimetable({
       style={{ maxWidth: "1200px" }}
       okText="Gửi yêu cầu"
       cancelText="Hủy"
-      bodyStyle={{ padding: "24px" }}
+      styles={{ body: { padding: "24px" } }}
     >
       <Form form={form} layout="vertical" className="mb-4">
         <div

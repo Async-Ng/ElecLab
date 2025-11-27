@@ -89,7 +89,7 @@ export default function LessonCard({
           transition: "all 0.3s ease",
           height: "100%",
         }}
-        bodyStyle={{ padding: "8px" }}
+        styles={{ body: { padding: "8px" } }}
         className="sm:body-style-[padding:12px] sm:rounded-lg"
         onClick={() => setDetailModalOpen(true)}
       >
@@ -233,7 +233,7 @@ export default function LessonCard({
         onCancel={() => setDetailModalOpen(false)}
         width="98%"
         style={{ maxWidth: "1200px" }}
-        bodyStyle={{ padding: "24px" }}
+        styles={{ body: { padding: "24px" } }}
         footer={[
           <Button key="close" onClick={() => setDetailModalOpen(false)}>
             Đóng

@@ -92,7 +92,7 @@ export default function TimetableGrid({
                   : "none",
                 minWidth: "80px",
               }}
-              bodyStyle={{ padding: "8px 4px" }}
+              styles={{ body: { padding: "8px 4px" } }}
               className="sm:body-style-[padding:12px_8px]"
             >
               <Text

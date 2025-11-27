@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { RoomModel } from "@/models/Room";
+import { User } from "@/models/User";
 import { requireAdmin } from "@/lib/apiMiddleware";
 import mongoose from "mongoose";
 

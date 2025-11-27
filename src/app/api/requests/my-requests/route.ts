@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/mongodb";
 import Request from "@/models/Request";
+import { User } from "@/models/User";
 
 interface DecodedToken {
   userId: string;
