@@ -41,7 +41,7 @@ export default function TimetableModal({
 
   // Prepare initial values for form
   const initialValues = React.useMemo(() => {
-    if (!timetable || rooms.length === 0 || users.length === 0) return null;
+    if (!timetable) return null;
 
     let d = timetable.date;
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {

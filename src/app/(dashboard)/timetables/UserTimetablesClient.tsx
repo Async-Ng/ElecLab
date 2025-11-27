@@ -10,6 +10,7 @@ import {
   useRooms,
   useUsers,
   useTeachingLogs,
+  useMaterials,
 } from "@/hooks/stores";
 import { Segmented, message } from "antd";
 import { CalendarOutlined, TableOutlined } from "@ant-design/icons";
@@ -65,6 +66,14 @@ export default function UserTimetablesClient() {
   // User không cần fetch tất cả users - chỉ admin mới cần
   // Khi user xem/sửa TKB, chỉ cần user hiện tại
   const { users } = useUsers();
+
+  // Fetch materials for material request modal
+  const { materials: rawMaterials } = useMaterials();
+  const materials = rawMaterials.map((m) => ({
+    _id: m._id || "",
+    name: m.name,
+    quantity: 10, // Default quantity since Material model doesn't have quantity field
+  }));
 
   // Tạo mảng users tối thiểu cho modal (chỉ user hiện tại)
   const modalUsers = useMemo(() => {
@@ -289,7 +298,7 @@ export default function UserTimetablesClient() {
           <TimetableCalendarView
             timetables={filteredTimetables}
             loading={loading}
-            onEdit={handleCreateLog} // Calendar chỉ ghi log
+            onEdit={handleEditTimetable} // Calendar: click để xem chi tiết
             onAdd={handleAdd}
             schoolYear={schoolYear}
             setSchoolYear={setSchoolYear}
@@ -326,6 +335,7 @@ export default function UserTimetablesClient() {
             timetable={editingTimetable}
             rooms={rooms}
             users={modalUsers}
+            materials={materials}
           />
         </Suspense>
       )}

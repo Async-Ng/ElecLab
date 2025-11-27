@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import TeachingLog from "@/models/TeachingLog";
+import Timetable from "@/models/Timetable";
+import { User } from "@/models/User";
 import { requireAuth, getAuthContext } from "@/lib/apiMiddleware";
 import { uploadImagesToImgBB } from "@/lib/imgbb";
 

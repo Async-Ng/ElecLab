@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Material } from "@/models/Material";
+import { RoomModel } from "@/models/Room";
 import { requireAuth } from "@/lib/apiMiddleware";
 
 /**

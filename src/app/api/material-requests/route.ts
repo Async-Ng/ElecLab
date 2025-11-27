@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/mongodb";
 import MaterialRequest from "@/models/MaterialRequest";
 import { User } from "@/models/User";
+import { Material } from "@/models/Material";
+import { RoomModel } from "@/models/Room";
 
 interface DecodedToken {
   userId: string;
@@ -23,7 +25,10 @@ function verifyToken(token: string | null | undefined): DecodedToken | null {
     console.log("Token verified successfully, userId:", decoded.userId);
     return decoded;
   } catch (error) {
-    console.log("Token verification failed:", error instanceof Error ? error.message : "Unknown error");
+    console.log(
+      "Token verification failed:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     return null;
   }
 }

@@ -41,6 +41,8 @@ interface TimetableCalendarViewProps {
   setSemester: (value: Semester | "") => void;
   className: string;
   setClassName: (value: string) => void;
+  materials?: Array<{ _id: string; name: string; quantity: number }>;
+  rooms?: Array<{ _id: string; room_id: string; name: string }>;
 }
 
 // Map Period enum to StudyTime enum and time ranges for calendar
@@ -100,6 +102,8 @@ export default function TimetableCalendarView({
   setSemester,
   className,
   setClassName,
+  materials = [],
+  rooms = [],
 }: TimetableCalendarViewProps) {
   const [currentWeek, setCurrentWeek] = useState(dayjs());
 
