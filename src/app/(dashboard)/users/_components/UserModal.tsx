@@ -55,7 +55,15 @@ const UserModal: React.FC<UserModalProps> = ({
           setFileList([]);
         }
       } else {
-        form.resetFields();
+        // For new users, set default values
+        form.setFieldsValue({
+          staff_id: "",
+          name: "",
+          email: "",
+          position: "",
+          roles: [],
+          rooms_manage: [],
+        });
         setFileList([]);
       }
     }
@@ -63,6 +71,21 @@ const UserModal: React.FC<UserModalProps> = ({
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
+
+    console.log("Form values:", values);
+    console.log("Roles value:", values.roles, "Type:", typeof values.roles);
+    console.log(
+      "Rooms manage value:",
+      values.rooms_manage,
+      "Type:",
+      typeof values.rooms_manage
+    );
+
+    // Ensure roles and rooms_manage are arrays
+    const safeRoles = Array.isArray(values.roles) ? values.roles : [];
+    const safeRoomsManage = Array.isArray(values.rooms_manage)
+      ? values.rooms_manage
+      : [];
 
     // If there's a file to upload, convert to base64
     if (fileList.length && fileList[0].originFileObj) {
@@ -74,10 +97,11 @@ const UserModal: React.FC<UserModalProps> = ({
         formData.append("email", values.email);
         formData.append("position", values.position || "");
         if (values.password) formData.append("password", values.password);
-        formData.append("roles", JSON.stringify(values.roles));
-        formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
+        formData.append("roles", JSON.stringify(safeRoles));
+        formData.append("rooms_manage", JSON.stringify(safeRoomsManage));
         // Append base64 avatar
         formData.append("avatar", reader.result as string);
+        console.log("FormData with avatar:", Object.fromEntries(formData));
         onSubmit(formData);
       };
       reader.readAsDataURL(fileList[0].originFileObj);
@@ -89,8 +113,9 @@ const UserModal: React.FC<UserModalProps> = ({
       formData.append("email", values.email);
       formData.append("position", values.position || "");
       if (values.password) formData.append("password", values.password);
-      formData.append("roles", JSON.stringify(values.roles));
-      formData.append("rooms_manage", JSON.stringify(values.rooms_manage));
+      formData.append("roles", JSON.stringify(safeRoles));
+      formData.append("rooms_manage", JSON.stringify(safeRoomsManage));
+      console.log("FormData without avatar:", Object.fromEntries(formData));
       onSubmit(formData);
     }
   };

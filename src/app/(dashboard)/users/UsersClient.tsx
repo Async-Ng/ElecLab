@@ -58,8 +58,15 @@ export default function UsersClient() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Xóa thất bại");
+        let errorMessage = "Xóa thất bại";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          // If response is not valid JSON, use status text
+          errorMessage = response.statusText || `HTTP ${response.status}`;
+        }
+        throw new Error(errorMessage);
       }
 
       message.success("Xóa giảng viên thành công!");
@@ -84,8 +91,24 @@ export default function UsersClient() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Lưu thất bại");
+        let errorMessage = "Lưu thất bại";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          // If response is not valid JSON, use status text
+          errorMessage = response.statusText || `HTTP ${response.status}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Try to parse success response
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        // If response is not JSON, just continue
+        responseData = null;
       }
 
       message.success(
@@ -138,14 +161,39 @@ export default function UsersClient() {
               const rolesString = formData.get("roles") as string;
               const roomsString = formData.get("rooms_manage") as string;
 
+              console.log("FormData received:", {
+                staff_id: formData.get("staff_id"),
+                name: formData.get("name"),
+                email: formData.get("email"),
+                rolesString,
+                roomsString,
+              });
+
+              let roles = [];
+              let rooms_manage = [];
+
+              try {
+                roles = rolesString ? JSON.parse(rolesString) : [];
+              } catch (e) {
+                console.error("Error parsing roles:", e, rolesString);
+                roles = [];
+              }
+
+              try {
+                rooms_manage = roomsString ? JSON.parse(roomsString) : [];
+              } catch (e) {
+                console.error("Error parsing rooms_manage:", e, roomsString);
+                rooms_manage = [];
+              }
+
               const userFormData: any = {
                 staff_id: formData.get("staff_id"),
                 name: formData.get("name"),
                 email: formData.get("email"),
                 password: formData.get("password"),
                 position: formData.get("position"),
-                roles: rolesString ? JSON.parse(rolesString) : [],
-                rooms_manage: roomsString ? JSON.parse(roomsString) : [],
+                roles,
+                rooms_manage,
               };
 
               // Avatar is already base64 or string from UserModal
