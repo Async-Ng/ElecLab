@@ -32,12 +32,7 @@ export default function RoomsClient() {
   }, []);
 
   // Use Zustand stores with auto-fetch and caching
-  const {
-    rooms,
-    updateRoom,
-    deleteRoom: removeRoom,
-    fetchRooms,
-  } = useRooms();
+  const { rooms, updateRoom, deleteRoom: removeRoom, fetchRooms } = useRooms();
   const { users } = useUsers();
 
   function openCreate() {
