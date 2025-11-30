@@ -43,7 +43,9 @@ export default function PrivateRoute({
     }
 
     if (isAuthenticated && pathname === "/login") {
-      router.replace("/timetables");
+      const redirectPath =
+        activeRole === UserRole.Admin ? "/admin-timetables" : "/timetables";
+      router.replace(redirectPath);
       return;
     }
 

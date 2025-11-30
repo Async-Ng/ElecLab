@@ -6,6 +6,7 @@ import { Room } from "@/types/room";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PageHeader, ActionButtons } from "@/components/common";
 import { useRooms, useUsers } from "@/hooks/stores";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 // Lazy load components
 const RoomTable = lazy(() => import("./_components/RoomTable"));
@@ -36,10 +37,7 @@ export default function RoomsClient() {
     updateRoom,
     deleteRoom: removeRoom,
     fetchRooms,
-  } = useRooms({
-    userRole: user?.roles?.[0],
-    // Don't pass userId for admin page - should fetch all rooms
-  });
+  } = useRooms();
   const { users } = useUsers();
 
   function openCreate() {
@@ -55,9 +53,12 @@ export default function RoomsClient() {
   }
 
   async function handleDelete(id?: string) {
-    if (!id) return;
+    if (!id || !user) return;
     try {
-      const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
+      const endpoint = getApiEndpoint("rooms", user.roles);
+      const res = await authFetch(`${endpoint}/${id}`, user._id, user.roles, {
+        method: "DELETE",
+      });
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -72,15 +73,16 @@ export default function RoomsClient() {
   }
 
   async function handleOk() {
+    if (!user) return;
     setSubmitting(true);
     try {
       const values = await form.validateFields();
       const method = editing ? "PUT" : "POST";
-      const url = editing ? `/api/rooms/${editing._id}` : "/api/rooms";
+      const endpoint = getApiEndpoint("rooms", user.roles);
+      const url = editing ? `${endpoint}/${editing._id}` : endpoint;
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, user._id, user.roles, {
         method,
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
 
@@ -97,7 +99,7 @@ export default function RoomsClient() {
       setModalOpen(false);
 
       // Refetch rooms to get latest data (force bypass cache)
-      await fetchRooms(user?.roles?.[0], user?._id, true);
+      await fetchRooms(user.roles?.[0], user._id, true);
     } catch (err: any) {
       message.error(err?.message || "Có lỗi xảy ra khi lưu phòng");
     } finally {
