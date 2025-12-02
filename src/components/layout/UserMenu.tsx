@@ -103,7 +103,7 @@ export default function UserMenu() {
 
   return (
     <Dropdown
-      dropdownRender={() => dropdownContent}
+      menu={{ items: menuItems }}
       trigger={["click"]}
       open={open}
       onOpenChange={setOpen}

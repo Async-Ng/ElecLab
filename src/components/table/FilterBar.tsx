@@ -58,17 +58,21 @@ export default function FilterBar({
     onReset?.();
   };
 
-  const hasActiveFilters = Object.values(values).some(
-    (value) => value !== undefined && value !== "" && value !== null
-  );
+  const hasActiveFilters = values
+    ? Object.values(values).some(
+        (value) => value !== undefined && value !== "" && value !== null
+      )
+    : false;
 
-  const activeFilterCount = Object.values(values).filter(
-    (value) =>
-      value !== undefined &&
-      value !== "" &&
-      value !== null &&
-      (Array.isArray(value) ? value.length > 0 : true)
-  ).length;
+  const activeFilterCount = values
+    ? Object.values(values).filter(
+        (value) =>
+          value !== undefined &&
+          value !== "" &&
+          value !== null &&
+          (Array.isArray(value) ? value.length > 0 : true)
+      ).length
+    : 0;
 
   const renderFilter = (filter: FilterConfig) => {
     const value = values[filter.key];
@@ -130,8 +134,8 @@ export default function FilterBar({
     }
   };
 
-  const visibleFilters = expanded ? filters : filters.slice(0, 3);
-  const hasMore = filters.length > 3;
+  const visibleFilters = expanded ? filters : (filters || []).slice(0, 3);
+  const hasMore = (filters || []).length > 3;
 
   return (
     <div className={cn("space-y-3", className)}>
