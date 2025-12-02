@@ -9,6 +9,13 @@ import Button from "@/components/ui/Button";
 import FormField from "@/components/form/FormField";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
+import {
+  BarcodeOutlined,
+  TagOutlined,
+  AppstoreOutlined,
+  CheckCircleOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 
 type Props = {
   open: boolean;
@@ -106,15 +113,16 @@ export default function MaterialModal(props: Props) {
     onSubmit(formData as Material);
   };
 
-  const categoryOptions = Object.values(MaterialCategory).map((v) => ({
-    label: v,
-    value: v,
-  }));
+  const categoryOptions = [
+    { label: "Thiết bị cố định", value: MaterialCategory.EQUIPMENT },
+    { label: "Vật tư tiêu hao", value: MaterialCategory.CONSUMABLE },
+  ];
 
-  const statusOptions = Object.values(MaterialStatus).map((v) => ({
-    label: v,
-    value: v,
-  }));
+  const statusOptions = [
+    { label: "Có sẵn", value: MaterialStatus.AVAILABLE },
+    { label: "Đang sử dụng", value: MaterialStatus.IN_USE },
+    { label: "Hư hỏng", value: MaterialStatus.BROKEN },
+  ];
 
   const roomOptions = rooms.map((room) => ({
     label: room.name,
@@ -125,68 +133,172 @@ export default function MaterialModal(props: Props) {
     <Modal
       open={open}
       onClose={onCancel}
-      title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
+      title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư mới"}
       size="medium"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Material ID */}
-        <FormField label="Mã vật tư" required error={errors.material_id}>
-          <Input
-            value={formData.material_id}
-            onChange={(e) => handleChange("material_id", e.target.value)}
-            placeholder="Ví dụ: MAT-001"
-            error={!!errors.material_id}
-          />
-        </FormField>
+        {/* Group 1: Thông tin chính */}
+        <div
+          style={{
+            backgroundColor: "#F8FAFC",
+            padding: "20px",
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "16px",
+              color: "#1E293B",
+              fontWeight: 600,
+              fontSize: "16px",
+            }}
+          >
+            <TagOutlined style={{ fontSize: "20px", color: "#0090D9" }} />
+            <span>Thông tin chính</span>
+          </div>
 
-        {/* Name */}
-        <FormField label="Tên" required error={errors.name}>
-          <Input
-            value={formData.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            placeholder="Nhập tên vật tư"
-            error={!!errors.name}
-          />
-        </FormField>
+          {/* Material ID */}
+          <div style={{ marginBottom: "16px" }}>
+            <FormField label="Mã vật tư" required error={errors.material_id}>
+              <Input
+                value={formData.material_id}
+                onChange={(e) => handleChange("material_id", e.target.value)}
+                placeholder="VD: MAT-001"
+                prefix={<BarcodeOutlined style={{ color: "#94A3B8" }} />}
+                error={!!errors.material_id}
+                style={{ fontSize: "16px", height: "44px" }}
+              />
+            </FormField>
+          </div>
 
-        {/* Category */}
-        <FormField label="Danh mục" required error={errors.category}>
-          <Select
-            value={formData.category}
-            onChange={(value) => handleChange("category", value as string)}
-            options={categoryOptions}
-            placeholder="Chọn danh mục"
-            error={!!errors.category}
-          />
-        </FormField>
+          {/* Name */}
+          <div style={{ marginBottom: "16px" }}>
+            <FormField label="Tên vật tư" required error={errors.name}>
+              <Input
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                placeholder="VD: Máy hàn HAKKO"
+                error={!!errors.name}
+                style={{ fontSize: "16px", height: "44px" }}
+              />
+            </FormField>
+          </div>
 
-        {/* Status */}
-        <FormField label="Tình trạng" error={errors.status}>
-          <Select
-            value={formData.status}
-            onChange={(value) => handleChange("status", value as string)}
-            options={statusOptions}
-            placeholder="Chọn tình trạng"
-          />
-        </FormField>
+          {/* Category */}
+          <div>
+            <FormField label="Danh mục" required error={errors.category}>
+              <Select
+                value={formData.category}
+                onChange={(value) => handleChange("category", value as string)}
+                options={categoryOptions}
+                placeholder="Chọn danh mục vật tư"
+                error={!!errors.category}
+                suffixIcon={<AppstoreOutlined style={{ color: "#94A3B8" }} />}
+                style={{ fontSize: "16px" }}
+              />
+            </FormField>
+          </div>
+        </div>
 
-        {/* Place Used */}
-        <FormField label="Vị trí sử dụng" error={errors.place_used}>
-          <Select
-            value={formData.place_used}
-            onChange={(value) => handleChange("place_used", value as string)}
-            options={roomOptions}
-            placeholder="Chọn phòng"
-          />
-        </FormField>
+        {/* Group 2: Trạng thái & Vị trí */}
+        <div
+          style={{
+            backgroundColor: "#F8FAFC",
+            padding: "20px",
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "16px",
+              color: "#1E293B",
+              fontWeight: 600,
+              fontSize: "16px",
+            }}
+          >
+            <CheckCircleOutlined
+              style={{ fontSize: "20px", color: "#10B981" }}
+            />
+            <span>Trạng thái & Vị trí</span>
+          </div>
+
+          {/* Status */}
+          <div style={{ marginBottom: "16px" }}>
+            <FormField label="Tình trạng" error={errors.status}>
+              <Select
+                value={formData.status}
+                onChange={(value) => handleChange("status", value as string)}
+                options={statusOptions}
+                placeholder="Chọn tình trạng hiện tại"
+                style={{ fontSize: "16px" }}
+              />
+            </FormField>
+          </div>
+
+          {/* Place Used */}
+          <div>
+            <FormField label="Vị trí sử dụng" error={errors.place_used}>
+              <Select
+                value={formData.place_used}
+                onChange={(value) =>
+                  handleChange("place_used", value as string)
+                }
+                options={roomOptions}
+                placeholder="Chọn phòng thực hành"
+                suffixIcon={
+                  <EnvironmentOutlined style={{ color: "#94A3B8" }} />
+                }
+                style={{ fontSize: "16px" }}
+              />
+            </FormField>
+          </div>
+        </div>
 
         {/* Modal Footer Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
-            Hủy
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            paddingTop: "20px",
+            borderTop: "2px solid #E2E8F0",
+          }}
+        >
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={loading}
+            style={{
+              fontSize: "16px",
+              height: "44px",
+              paddingLeft: "24px",
+              paddingRight: "24px",
+              fontWeight: 600,
+            }}
+          >
+            Hủy bỏ
           </Button>
-          <Button type="submit" variant="primary" loading={loading}>
-            {editing ? "Cập nhật" : "Thêm mới"}
+          <Button
+            type="submit"
+            variant="primary"
+            loading={loading}
+            style={{
+              fontSize: "16px",
+              height: "44px",
+              paddingLeft: "24px",
+              paddingRight: "24px",
+              fontWeight: 600,
+            }}
+          >
+            {editing ? "Cập nhật thông tin" : "Lưu thông tin"}
           </Button>
         </div>
       </form>

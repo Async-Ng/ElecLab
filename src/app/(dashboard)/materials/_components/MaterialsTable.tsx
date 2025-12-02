@@ -1,19 +1,18 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, InboxOutlined } from "@ant-design/icons";
+import { Table, Tag, Popconfirm, Empty } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import Button from "@/components/ui/Button";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
 import {
-  SmartTable,
-  SmartTableColumn,
   FilterBar,
   FilterConfig,
   FilterValues,
   ExportButton,
   ExportColumn,
 } from "@/components/table";
-import { Badge } from "@/components/ui";
 
 type Props = {
   materials: Material[];
@@ -89,29 +88,29 @@ export default React.memo(function MaterialsTable({
     });
   }, [materials, filters]);
 
-  // Get status badge variant
-  const getStatusVariant = (status?: MaterialStatus) => {
+  // Get status tag color and text
+  const getStatusTag = (status?: MaterialStatus) => {
     switch (status) {
       case MaterialStatus.AVAILABLE:
-        return "success";
+        return { color: "success", text: "Có sẵn" };
       case MaterialStatus.IN_USE:
-        return "primary";
+        return { color: "processing", text: "Đang sử dụng" };
       case MaterialStatus.BROKEN:
-        return "error";
+        return { color: "error", text: "Hư hỏng" };
       default:
-        return "secondary";
+        return { color: "default", text: "-" };
     }
   };
 
-  // Get category badge variant
-  const getCategoryVariant = (category?: MaterialCategory) => {
+  // Get category tag color
+  const getCategoryTag = (category?: MaterialCategory) => {
     switch (category) {
       case MaterialCategory.EQUIPMENT:
-        return "info";
+        return { color: "blue", text: "Thiết bị cố định" };
       case MaterialCategory.CONSUMABLE:
-        return "warning";
+        return { color: "orange", text: "Vật tư tiêu hao" };
       default:
-        return "secondary";
+        return { color: "default", text: "-" };
     }
   };
 
@@ -124,70 +123,109 @@ export default React.memo(function MaterialsTable({
   };
 
   // Table columns
-  const columns: SmartTableColumn<Material>[] = [
+  const columns: ColumnsType<Material> = [
     {
-      key: "material_id",
       title: "Mã vật tư",
       dataIndex: "material_id",
-      width: 120,
-      mobile: true,
+      key: "material_id",
+      width: 140,
       sorter: (a, b) => a.material_id.localeCompare(b.material_id),
+      render: (value: string) => (
+        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
+          {value}
+        </span>
+      ),
     },
     {
-      key: "name",
       title: "Tên vật tư",
       dataIndex: "name",
-      mobile: true,
+      key: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (value: string) => (
+        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
+          {value}
+        </span>
+      ),
     },
     {
-      key: "category",
       title: "Danh mục",
       dataIndex: "category",
-      width: 160,
-      mobile: true,
-      render: (category: MaterialCategory) => (
-        <Badge variant={getCategoryVariant(category)}>{category}</Badge>
-      ),
+      key: "category",
+      width: 180,
+      render: (category: MaterialCategory) => {
+        const { color, text } = getCategoryTag(category);
+        return (
+          <Tag color={color} style={{ fontSize: "14px", padding: "4px 12px" }}>
+            {text}
+          </Tag>
+        );
+      },
     },
     {
-      key: "status",
       title: "Tình trạng",
       dataIndex: "status",
-      width: 140,
-      mobile: true,
-      render: (status: MaterialStatus) => (
-        <Badge variant={getStatusVariant(status)} dot>
-          {status || "-"}
-        </Badge>
+      key: "status",
+      width: 160,
+      render: (status: MaterialStatus) => {
+        const { color, text } = getStatusTag(status);
+        return (
+          <Tag color={color} style={{ fontSize: "14px", padding: "4px 12px" }}>
+            {text}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: "Vị trí sử dụng",
+      dataIndex: "place_used",
+      key: "place_used",
+      width: 180,
+      render: (place_used: string | { name?: string } | undefined) => (
+        <span style={{ color: "#334155", fontSize: "15px" }}>
+          {getPlaceName(place_used)}
+        </span>
       ),
     },
     {
-      key: "place_used",
-      title: "Vị trí",
-      dataIndex: "place_used",
-      width: 200,
-      mobile: true,
-      render: (place_used: string | { name?: string } | undefined) =>
-        getPlaceName(place_used),
-    },
-    {
-      key: "actions",
       title: "Thao tác",
-      width: 150,
-      fixed: "right",
+      key: "actions",
+      width: 200,
+      fixed: "right" as const,
       render: (_: any, record: Material) => (
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => onEdit(record)}>
-            <EditOutlined /> Sửa
-          </Button>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDelete(record._id)}
+            icon={<EditOutlined />}
+            onClick={() => onEdit(record)}
+            style={{
+              fontSize: "15px",
+              height: "40px",
+              paddingLeft: "16px",
+              paddingRight: "16px",
+            }}
           >
-            <DeleteOutlined /> Xóa
+            Sửa
           </Button>
+          <Popconfirm
+            title="Xóa vật tư"
+            description="Bạn chắc chắn muốn xóa vật tư này?"
+            onConfirm={() => onDelete(record._id)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              style={{
+                fontSize: "15px",
+                height: "40px",
+                paddingLeft: "16px",
+                paddingRight: "16px",
+              }}
+            >
+              Xóa
+            </Button>
+          </Popconfirm>
         </div>
       ),
     },
@@ -223,48 +261,42 @@ export default React.memo(function MaterialsTable({
       />
 
       {/* Table */}
-      <SmartTable
-        data={filteredMaterials}
+      <Table
         columns={columns}
+        dataSource={filteredMaterials}
+        rowKey={(record) => record._id || ""}
         loading={loading}
-        responsive={{
-          mobile: "card",
-          tablet: "table",
-          desktop: "table",
-        }}
-        enableColumnManager
-        cardConfig={{
-          title: (record) => record.name,
-          subtitle: (record) => `Mã: ${record.material_id}`,
-          badge: (record) => (
-            <Badge variant={getStatusVariant(record.status)} dot>
-              {record.status || "-"}
-            </Badge>
-          ),
-          actions: (record) => (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(record)}
-              >
-                <EditOutlined /> Sửa
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDelete(record._id)}
-              >
-                <DeleteOutlined /> Xóa
-              </Button>
-            </div>
-          ),
-        }}
+        size="middle"
         pagination={{
           pageSize: 10,
           showSizeChanger: true,
           showTotal: (total) => `Tổng ${total} vật tư`,
+          pageSizeOptions: ["10", "20", "50"],
         }}
+        rowClassName={(_, index) =>
+          index % 2 === 0 ? "bg-white" : "bg-slate-50"
+        }
+        locale={{
+          emptyText: (
+            <Empty
+              image={
+                <InboxOutlined style={{ fontSize: 64, color: "#94A3B8" }} />
+              }
+              imageStyle={{ height: 80 }}
+              description={
+                <div style={{ color: "#64748B", fontSize: "16px" }}>
+                  <div style={{ fontWeight: 600, marginBottom: "4px" }}>
+                    Chưa có vật tư nào
+                  </div>
+                  <div style={{ fontSize: "14px" }}>
+                    Thêm vật tư mới để bắt đầu quản lý
+                  </div>
+                </div>
+              }
+            />
+          ),
+        }}
+        scroll={{ x: 1200 }}
       />
     </div>
   );

@@ -5,8 +5,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
 import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
-import { DataTable } from "@/components/common";
+import { Table, Popconfirm, Empty } from "antd";
 import Button from "@/components/ui/Button";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  CalendarOutlined,
+} from "@ant-design/icons";
 import { useTimetables } from "@/hooks/stores";
 import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
@@ -96,6 +101,35 @@ export default function TimetableTable({ data }: TimetableTableProps) {
     setEditRecord(record);
     setEditVisible(true);
   };
+
+  const handleDelete = async (record: Timetable) => {
+    try {
+      const role = activeRole || user?.roles?.[0];
+      const endpoint = getApiEndpoint("timetables", role);
+
+      const response = await authFetch(
+        `${endpoint}/${record._id}`,
+        user?._id || "",
+        role,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        // Remove from local state
+        setTableData((prev) => prev.filter((item) => item._id !== record._id));
+        // Refetch to ensure consistency
+        const userId = role === UserRole.User ? user?._id : undefined;
+        await fetchTimetables(role, userId, true);
+      } else {
+        console.error("Failed to delete timetable");
+      }
+    } catch (error) {
+      console.error("Error deleting timetable:", error);
+    }
+  };
+
   const handleEditSuccess = async (updated: Timetable) => {
     setTableData((prev) =>
       prev.map((item) => (item._id === updated._id ? updated : item))
@@ -109,20 +143,25 @@ export default function TimetableTable({ data }: TimetableTableProps) {
 
   const columns: ColumnsType<Timetable> = [
     {
-      title: "Năm học",
-      dataIndex: "schoolYear",
-      key: "schoolYear",
+      title: "Học kỳ / Năm học",
+      key: "semester-year",
+      width: 150,
+      render: (_, record) => (
+        <div>
+          <div style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
+            HK{record.semester}
+          </div>
+          <div style={{ color: "#64748B", fontSize: "14px" }}>
+            {record.schoolYear}
+          </div>
+        </div>
+      ),
     },
     {
-      title: "Học kỳ",
-      dataIndex: "semester",
-      key: "semester",
-      render: (value: Semester) => `HK${value}`,
-    },
-    {
-      title: "Ngày",
+      title: "Ngày học",
       dataIndex: "date",
       key: "date",
+      width: 120,
       render: (value: string) => {
         let dateStr = String(value).trim();
         // Excel serial
@@ -144,38 +183,57 @@ export default function TimetableTable({ data }: TimetableTableProps) {
         }
         // Validate DD/MM/YYYY
         if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-          return dateStr;
+          return (
+            <span
+              style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}
+            >
+              {dateStr}
+            </span>
+          );
         }
         return "";
       },
     },
     {
-      title: "Ca học",
-      dataIndex: "period",
-      key: "period",
-      render: (value: Period) => `Ca ${value}`,
-    },
-    {
-      title: "Giờ học",
-      dataIndex: "time",
-      key: "time",
-      render: (value: StudyTime) => value,
+      title: "Ca học / Giờ",
+      key: "period-time",
+      width: 140,
+      render: (_, record) => (
+        <div>
+          <div style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
+            Ca {record.period}
+          </div>
+          <div style={{ color: "#64748B", fontSize: "14px" }}>
+            {record.time}
+          </div>
+        </div>
+      ),
     },
     {
       title: "Môn học",
       dataIndex: "subject",
       key: "subject",
+      width: 200,
+      render: (value: string) => (
+        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
+          {value}
+        </span>
+      ),
     },
     {
-      title: "Phòng học",
-      dataIndex: "room",
-      key: "room",
-      render: (room: any) => (typeof room === "string" ? room : room?.name),
-    },
-    {
-      title: "Lớp",
-      dataIndex: "className",
-      key: "className",
+      title: "Phòng học / Lớp",
+      key: "room-class",
+      width: 160,
+      render: (_, record) => (
+        <div>
+          <div style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
+            {typeof record.room === "string" ? record.room : record.room?.name}
+          </div>
+          <div style={{ color: "#64748B", fontSize: "14px" }}>
+            Lớp: {record.className}
+          </div>
+        </div>
+      ),
     },
     ...(isAdmin
       ? [
@@ -183,14 +241,20 @@ export default function TimetableTable({ data }: TimetableTableProps) {
             title: "Giảng viên",
             dataIndex: "lecturer",
             key: "lecturer",
-            render: (lecturer: any) =>
-              typeof lecturer === "string" ? lecturer : lecturer?.name,
+            width: 180,
+            render: (lecturer: any) => (
+              <span style={{ color: "#334155", fontSize: "15px" }}>
+                {typeof lecturer === "string" ? lecturer : lecturer?.name}
+              </span>
+            ),
           },
         ]
       : []),
     {
-      title: "Chỉnh sửa",
+      title: "Thao tác",
       key: "actions",
+      width: 200,
+      fixed: "right" as const,
       render: (_: any, record: Timetable) => {
         // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
         const isOwner =
@@ -198,11 +262,44 @@ export default function TimetableTable({ data }: TimetableTableProps) {
           (record.lecturer === user._id ||
             (typeof record.lecturer === "object" &&
               record.lecturer._id === user._id));
+
         if (isAdmin || isOwner) {
           return (
-            <Button type="link" onClick={() => handleEdit(record)}>
-              Chỉnh sửa
-            </Button>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+                style={{
+                  fontSize: "15px",
+                  height: "40px",
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                }}
+              >
+                Sửa
+              </Button>
+              <Popconfirm
+                title="Xóa lịch dạy"
+                description="Bạn chắc chắn muốn xóa lịch dạy này?"
+                onConfirm={() => handleDelete(record)}
+                okText="Xóa"
+                cancelText="Hủy"
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  style={{
+                    fontSize: "15px",
+                    height: "40px",
+                    paddingLeft: "16px",
+                    paddingRight: "16px",
+                  }}
+                >
+                  Xóa
+                </Button>
+              </Popconfirm>
+            </div>
           );
         }
         return null;
@@ -212,11 +309,42 @@ export default function TimetableTable({ data }: TimetableTableProps) {
 
   return (
     <>
-      <DataTable
-        data={tableData}
+      <Table
         columns={columns}
+        dataSource={tableData}
+        rowKey={(record) => record._id || ""}
         loading={false}
-        showActions={false}
+        size="middle"
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Tổng ${total} lịch dạy`,
+          pageSizeOptions: ["10", "20", "50"],
+        }}
+        rowClassName={(_, index) =>
+          index % 2 === 0 ? "bg-white" : "bg-slate-50"
+        }
+        locale={{
+          emptyText: (
+            <Empty
+              image={
+                <CalendarOutlined style={{ fontSize: 64, color: "#94A3B8" }} />
+              }
+              imageStyle={{ height: 80 }}
+              description={
+                <div style={{ color: "#64748B", fontSize: "16px" }}>
+                  <div style={{ fontWeight: 600, marginBottom: "4px" }}>
+                    Chưa có lịch dạy nào
+                  </div>
+                  <div style={{ fontSize: "14px" }}>
+                    Thêm lịch dạy mới để bắt đầu quản lý
+                  </div>
+                </div>
+              }
+            />
+          ),
+        }}
+        scroll={{ x: 1200 }}
       />
       <TimetableModal
         visible={editVisible}

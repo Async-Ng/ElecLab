@@ -7,6 +7,14 @@ import Select from "@/components/ui/Select";
 import Upload from "@/components/ui/Upload";
 import Button from "@/components/ui/Button";
 import FormField from "@/components/form/FormField";
+import {
+  UserOutlined,
+  MailOutlined,
+  BarcodeOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
+  HomeOutlined,
+} from "@ant-design/icons";
 
 interface UserModalProps {
   open: boolean;
@@ -154,120 +162,245 @@ const UserModal: React.FC<UserModalProps> = ({
     <Modal
       open={open}
       onClose={onCancel}
-      title={editingUser ? "Chỉnh sửa người dùng" : "Thêm người dùng mới"}
+      title={
+        editingUser ? "Chỉnh sửa thông tin người dùng" : "Thêm người dùng mới"
+      }
       size="large"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Avatar Upload */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Avatar
-          </label>
-          <Upload
-            value={avatarFile}
-            onChange={handleAvatarChange}
-            accept="image/*"
-            maxSize={5}
-            preview={avatarPreview}
-          />
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column: Thông tin cá nhân */}
+          <div
+            style={{
+              backgroundColor: "#F8FAFC",
+              padding: "20px",
+              borderRadius: "12px",
+              border: "1px solid #E2E8F0",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "16px",
+                color: "#1E293B",
+                fontWeight: 600,
+                fontSize: "16px",
+              }}
+            >
+              <UserOutlined style={{ fontSize: "20px", color: "#0090D9" }} />
+              <span>Thông tin cá nhân</span>
+            </div>
+
+            {/* Avatar Upload */}
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "15px",
+                  fontWeight: 500,
+                  color: "#334155",
+                  marginBottom: "8px",
+                }}
+              >
+                Ảnh đại diện
+              </label>
+              <Upload
+                value={avatarFile}
+                onChange={handleAvatarChange}
+                accept="image/*"
+                maxSize={5}
+                preview={avatarPreview}
+              />
+            </div>
+
+            {/* Name */}
+            <div style={{ marginBottom: "16px" }}>
+              <FormField label="Họ và tên" required error={errors.name}>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  placeholder="VD: Nguyễn Văn A"
+                  prefix={<UserOutlined style={{ color: "#94A3B8" }} />}
+                  error={!!errors.name}
+                  style={{ fontSize: "16px", height: "44px" }}
+                />
+              </FormField>
+            </div>
+
+            {/* Email */}
+            <div>
+              <FormField label="Email" required error={errors.email}>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  placeholder="VD: nguyenvana@hcmct.edu.vn"
+                  prefix={<MailOutlined style={{ color: "#94A3B8" }} />}
+                  error={!!errors.email}
+                  style={{ fontSize: "16px", height: "44px" }}
+                />
+              </FormField>
+            </div>
+          </div>
+
+          {/* Right Column: Thông tin công tác */}
+          <div
+            style={{
+              backgroundColor: "#F8FAFC",
+              padding: "20px",
+              borderRadius: "12px",
+              border: "1px solid #E2E8F0",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "16px",
+                color: "#1E293B",
+                fontWeight: 600,
+                fontSize: "16px",
+              }}
+            >
+              <SafetyCertificateOutlined
+                style={{ fontSize: "20px", color: "#10B981" }}
+              />
+              <span>Thông tin công tác</span>
+            </div>
+
+            {/* Staff ID */}
+            <div style={{ marginBottom: "16px" }}>
+              <FormField label="Mã nhân viên" required error={errors.staff_id}>
+                <Input
+                  value={formData.staff_id}
+                  onChange={(e) => handleChange("staff_id", e.target.value)}
+                  placeholder="VD: GV001"
+                  prefix={<BarcodeOutlined style={{ color: "#94A3B8" }} />}
+                  error={!!errors.staff_id}
+                  style={{ fontSize: "16px", height: "44px" }}
+                />
+              </FormField>
+            </div>
+
+            {/* Position */}
+            <div style={{ marginBottom: "16px" }}>
+              <FormField label="Chức vụ" error={errors.position}>
+                <Input
+                  value={formData.position}
+                  onChange={(e) => handleChange("position", e.target.value)}
+                  placeholder="VD: Giảng viên"
+                  style={{ fontSize: "16px", height: "44px" }}
+                />
+              </FormField>
+            </div>
+
+            {/* Roles */}
+            <div style={{ marginBottom: "16px" }}>
+              <FormField label="Vai trò" required error={errors.roles}>
+                <Select
+                  mode="multiple"
+                  value={formData.roles}
+                  onChange={(value) => handleChange("roles", value as string[])}
+                  options={roles}
+                  placeholder="Chọn vai trò hệ thống"
+                  error={!!errors.roles}
+                  suffixIcon={<TeamOutlined style={{ color: "#94A3B8" }} />}
+                  style={{ fontSize: "16px" }}
+                />
+              </FormField>
+            </div>
+
+            {/* Rooms Manage */}
+            <div>
+              <FormField label="Quản lý phòng" error={errors.rooms_manage}>
+                <Select
+                  mode="multiple"
+                  value={formData.rooms_manage}
+                  onChange={(value) =>
+                    handleChange("rooms_manage", value as string[])
+                  }
+                  options={rooms.map((room) => ({
+                    label: room.name,
+                    value: room._id,
+                  }))}
+                  placeholder="Chọn phòng thực hành"
+                  suffixIcon={<HomeOutlined style={{ color: "#94A3B8" }} />}
+                  style={{ fontSize: "16px" }}
+                />
+              </FormField>
+            </div>
+          </div>
         </div>
 
-        {/* Two column grid for form fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Staff ID */}
-          <FormField label="Mã nhân viên" required error={errors.staff_id}>
-            <Input
-              value={formData.staff_id}
-              onChange={(e) => handleChange("staff_id", e.target.value)}
-              placeholder="Nhập mã nhân viên"
-              error={!!errors.staff_id}
-            />
-          </FormField>
-
-          {/* Name */}
-          <FormField label="Họ và tên" required error={errors.name}>
-            <Input
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Nhập họ và tên"
-              error={!!errors.name}
-            />
-          </FormField>
-
-          {/* Email */}
-          <FormField label="Email" required error={errors.email}>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              placeholder="Nhập email"
-              error={!!errors.email}
-            />
-          </FormField>
-
-          {/* Position */}
-          <FormField label="Chức vụ" error={errors.position}>
-            <Input
-              value={formData.position}
-              onChange={(e) => handleChange("position", e.target.value)}
-              placeholder="Nhập chức vụ"
-            />
-          </FormField>
-
-          {/* Password - only for new users */}
-          {!editingUser && (
-            <FormField
-              label="Mật khẩu"
-              required
-              error={errors.password}
-              className="md:col-span-2"
-            >
+        {/* Password - Full Width for New Users */}
+        {!editingUser && (
+          <div
+            style={{
+              backgroundColor: "#FEF3C7",
+              padding: "20px",
+              borderRadius: "12px",
+              border: "1px solid #FDE68A",
+            }}
+          >
+            <FormField label="Mật khẩu" required error={errors.password}>
               <Input
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleChange("password", e.target.value)}
-                placeholder="Nhập mật khẩu"
+                placeholder="Nhập mật khẩu cho tài khoản mới"
                 error={!!errors.password}
+                style={{ fontSize: "16px", height: "44px" }}
               />
+              <div
+                style={{ fontSize: "13px", color: "#92400E", marginTop: "6px" }}
+              >
+                💡 Mật khẩu nên có ít nhất 8 ký tự
+              </div>
             </FormField>
-          )}
-
-          {/* Roles */}
-          <FormField label="Vai trò" required error={errors.roles}>
-            <Select
-              mode="multiple"
-              value={formData.roles}
-              onChange={(value) => handleChange("roles", value as string[])}
-              options={roles}
-              placeholder="Chọn vai trò"
-              error={!!errors.roles}
-            />
-          </FormField>
-
-          {/* Rooms Manage */}
-          <FormField label="Quản lý phòng" error={errors.rooms_manage}>
-            <Select
-              mode="multiple"
-              value={formData.rooms_manage}
-              onChange={(value) =>
-                handleChange("rooms_manage", value as string[])
-              }
-              options={rooms.map((room) => ({
-                label: room.name,
-                value: room._id,
-              }))}
-              placeholder="Chọn phòng"
-            />
-          </FormField>
-        </div>
+          </div>
+        )}
 
         {/* Modal Footer Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
-            Hủy
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            paddingTop: "20px",
+            borderTop: "2px solid #E2E8F0",
+          }}
+        >
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={loading}
+            style={{
+              fontSize: "16px",
+              height: "44px",
+              paddingLeft: "24px",
+              paddingRight: "24px",
+              fontWeight: 600,
+            }}
+          >
+            Hủy bỏ
           </Button>
-          <Button type="submit" variant="primary" loading={loading}>
-            {editingUser ? "Cập nhật" : "Thêm mới"}
+          <Button
+            type="submit"
+            variant="primary"
+            loading={loading}
+            style={{
+              fontSize: "16px",
+              height: "44px",
+              paddingLeft: "24px",
+              paddingRight: "24px",
+              fontWeight: 600,
+            }}
+          >
+            {editingUser ? "Cập nhật thông tin" : "Tạo tài khoản"}
           </Button>
         </div>
       </form>

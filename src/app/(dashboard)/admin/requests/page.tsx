@@ -19,6 +19,14 @@ import {
   MATERIAL_REQUEST_TYPES,
 } from "@/types/unifiedRequest";
 import { authFetch } from "@/lib/apiClient";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  MinusOutlined,
+} from "@ant-design/icons";
+import { Tag } from "antd";
 
 export default function AdminRequestsPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -94,7 +102,7 @@ export default function AdminRequestsPage() {
 
       setAlertMessage({
         type: "success",
-        message: approved ? "Đã phê duyệt" : "Đã từ chối",
+        message: approved ? "Đã phê duyệt yêu cầu" : "Đã từ chối yêu cầu",
       });
       setTimeout(() => setAlertMessage(null), 3000);
       fetchRequests(user?._id!, user?.roles || []);
@@ -106,6 +114,54 @@ export default function AdminRequestsPage() {
       setTimeout(() => setAlertMessage(null), 5000);
     } finally {
       setReviewing(null);
+    }
+  };
+
+  // Get priority icon and color
+  const getPriorityDisplay = (priority: string) => {
+    switch (priority) {
+      case "Cao":
+        return {
+          icon: <ArrowUpOutlined />,
+          color: "error",
+          text: "Ưu tiên cao",
+        };
+      case "Trung bình":
+        return {
+          icon: <MinusOutlined />,
+          color: "warning",
+          text: "Ưu tiên trung bình",
+        };
+      case "Thấp":
+        return {
+          icon: <ArrowDownOutlined />,
+          color: "default",
+          text: "Ưu tiên thấp",
+        };
+      default:
+        return {
+          icon: <MinusOutlined />,
+          color: "default",
+          text: priority,
+        };
+    }
+  };
+
+  // Get status tag
+  const getStatusTag = (status: string) => {
+    switch (status) {
+      case "Chờ duyệt":
+        return { color: "warning", text: "Chờ duyệt" };
+      case "Chấp thuận":
+        return { color: "success", text: "Đã chấp thuận" };
+      case "Từ chối":
+        return { color: "error", text: "Đã từ chối" };
+      case "Đang xử lý":
+        return { color: "processing", text: "Đang xử lý" };
+      case "Hoàn thành":
+        return { color: "default", text: "Hoàn thành" };
+      default:
+        return { color: "default", text: status };
     }
   };
 
@@ -195,85 +251,150 @@ export default function AdminRequestsPage() {
                     Không có yêu cầu nào
                   </div>
                 ) : (
-                  filteredRequests.map((request) => (
-                    <Card
-                      key={request._id}
-                      className="hover:shadow-md transition-shadow"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                        <div className="md:col-span-2">
-                          <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                            {request.requester?.name}
+                  filteredRequests.map((request) => {
+                    const statusTag = getStatusTag(request.status);
+                    const priorityDisplay = getPriorityDisplay(
+                      request.priority
+                    );
+
+                    return (
+                      <Card
+                        key={request._id}
+                        className="hover:shadow-md transition-shadow"
+                        style={{ padding: "20px" }}
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                          {/* Requester Info */}
+                          <div className="md:col-span-2">
+                            <div
+                              style={{
+                                fontSize: "15px",
+                                fontWeight: 600,
+                                color: "#1E293B",
+                              }}
+                            >
+                              {request.requester?.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "13px",
+                                color: "#64748B",
+                                marginTop: "2px",
+                              }}
+                            >
+                              {new Date(request.createdAt).toLocaleDateString(
+                                "vi-VN"
+                              )}
+                            </div>
                           </div>
-                          <div className="text-xs text-neutral-500">
-                            {new Date(request.createdAt).toLocaleDateString(
-                              "vi-VN"
+
+                          {/* Request Info */}
+                          <div className="md:col-span-3">
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                color: "#1E293B",
+                                fontSize: "15px",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              {request.title}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                color: "#64748B",
+                              }}
+                            >
+                              {UnifiedRequestTypeLabels[request.type]}
+                            </div>
+                          </div>
+
+                          {/* Status */}
+                          <div className="md:col-span-2">
+                            <Tag
+                              color={statusTag.color}
+                              style={{
+                                fontSize: "14px",
+                                padding: "4px 12px",
+                                border: "none",
+                              }}
+                            >
+                              {statusTag.text}
+                            </Tag>
+                          </div>
+
+                          {/* Priority */}
+                          <div className="md:col-span-2">
+                            <Tag
+                              color={priorityDisplay.color}
+                              icon={priorityDisplay.icon}
+                              style={{
+                                fontSize: "14px",
+                                padding: "4px 12px",
+                                border: "none",
+                              }}
+                            >
+                              {priorityDisplay.text}
+                            </Tag>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="md:col-span-3 flex justify-end gap-2">
+                            {request.status === "Chờ duyệt" && (
+                              <>
+                                <Button
+                                  icon={<CheckCircleOutlined />}
+                                  onClick={() =>
+                                    handleReview(request._id, true)
+                                  }
+                                  loading={reviewing === request._id}
+                                  className="bg-green-600 hover:bg-green-700"
+                                  style={{
+                                    backgroundColor: "#16A34A",
+                                    borderColor: "#16A34A",
+                                    color: "white",
+                                    fontSize: "15px",
+                                    height: "40px",
+                                    paddingLeft: "16px",
+                                    paddingRight: "16px",
+                                    fontWeight: 600,
+                                  }}
+                                  onMouseEnter={(e: any) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      "#15803D";
+                                  }}
+                                  onMouseLeave={(e: any) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      "#16A34A";
+                                  }}
+                                >
+                                  Duyệt
+                                </Button>
+                                <Button
+                                  danger
+                                  icon={<CloseCircleOutlined />}
+                                  onClick={() =>
+                                    handleReview(request._id, false)
+                                  }
+                                  loading={reviewing === request._id}
+                                  style={{
+                                    fontSize: "15px",
+                                    height: "40px",
+                                    paddingLeft: "16px",
+                                    paddingRight: "16px",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Từ chối
+                                </Button>
+                              </>
                             )}
                           </div>
                         </div>
-                        <div className="md:col-span-3">
-                          <div className="font-medium text-neutral-900 dark:text-neutral-100">
-                            {request.title}
-                          </div>
-                          <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                            {UnifiedRequestTypeLabels[request.type]}
-                          </div>
-                        </div>
-                        <div className="md:col-span-2">
-                          <Badge
-                            variant={
-                              request.status === "Chờ duyệt"
-                                ? "warning"
-                                : request.status === "Chấp thuận"
-                                ? "success"
-                                : request.status === "Từ chối"
-                                ? "error"
-                                : request.status === "Đang xử lý"
-                                ? "info"
-                                : "neutral"
-                            }
-                          >
-                            {UnifiedRequestStatusLabels[request.status]}
-                          </Badge>
-                        </div>
-                        <div className="md:col-span-2">
-                          <Badge
-                            variant={
-                              request.priority === "Cao"
-                                ? "error"
-                                : request.priority === "Trung bình"
-                                ? "warning"
-                                : "info"
-                            }
-                          >
-                            {request.priority}
-                          </Badge>
-                        </div>
-                        <div className="md:col-span-3 flex justify-end gap-2">
-                          {request.status === "Chờ duyệt" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="success"
-                                onClick={() => handleReview(request._id, true)}
-                                loading={reviewing === request._id}
-                              >
-                                ✓ Duyệt
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="danger"
-                                onClick={() => handleReview(request._id, false)}
-                                loading={reviewing === request._id}
-                              >
-                                ✗ Từ chối
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  ))
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             )}
