@@ -1,13 +1,6 @@
-import {
-  Card,
-  Typography,
-  Button,
-  Tag,
-  Modal,
-  Descriptions,
-  Space,
-  Tooltip,
-} from "antd";
+"use client";
+import React, { useState } from "react";
+import { Modal, Descriptions, Button as AntButton, Tag, Tooltip } from "antd";
 import {
   FileAddOutlined,
   CheckCircleOutlined,
@@ -20,14 +13,13 @@ import {
   FormOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
+import Card from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
 import { Timetable } from "@/types/timetable";
 import TeachingLogModal from "@/app/(dashboard)/teaching-logs/_components/TeachingLogModal";
 import { CreateMaterialRequestFromTimetable } from "@/components/materialRequest/CreateMaterialRequestFromTimetable";
-import { useState } from "react";
 import { useLessonLogStatus } from "@/hooks/useLessonLogStatus";
-import { brandColors } from "@/styles/theme";
-
-const { Text } = Typography;
+import { cn } from "@/design-system/utilities";
 
 interface LessonCardProps {
   lesson: Timetable;
@@ -55,178 +47,169 @@ export default function LessonCard({
     lesson.date
   );
 
-  // Get status color
-  const getStatusColor = () => {
-    if (hasLog) return brandColors.success;
-    if (isFuture) return brandColors.textDisabled;
-    return statusInfo?.color === "red"
-      ? brandColors.error
-      : brandColors.primary;
-  };
-
-  const getGradient = () => {
+  // Get status styles based on lesson state
+  const getStatusStyle = () => {
     if (hasLog) {
-      return `linear-gradient(135deg, ${brandColors.primaryLight} 0%, #f0f9ff 100%)`;
+      return {
+        bgClass: "bg-gradient-to-br from-green-50 to-emerald-50",
+        borderClass: "border-green-500",
+        badgeVariant: "success" as const,
+        statusText: "Đã ghi log",
+        statusIcon: <CheckCircleOutlined />,
+      };
     }
     if (isFuture) {
-      return `linear-gradient(135deg, ${brandColors.backgroundSecondary} 0%, #f5f5f5 100%)`;
+      return {
+        bgClass: "bg-gradient-to-br from-gray-50 to-slate-50",
+        borderClass: "border-gray-300",
+        badgeVariant: "secondary" as const,
+        statusText: "Sắp tới",
+        statusIcon: <ClockCircleOutlined />,
+      };
     }
     if (statusInfo?.color === "red") {
-      return `linear-gradient(135deg, ${brandColors.accentLight} 0%, #ffccc7 100%)`;
+      return {
+        bgClass: "bg-gradient-to-br from-red-50 to-rose-50",
+        borderClass: "border-red-500",
+        badgeVariant: "error" as const,
+        statusText: statusInfo.text || "Cần ghi log",
+        statusIcon: <ClockCircleOutlined />,
+      };
     }
-    return `linear-gradient(135deg, ${brandColors.primaryLight} 0%, #bae7ff 100%)`;
+    return {
+      bgClass: "bg-gradient-to-br from-blue-50 to-cyan-50",
+      borderClass: "border-blue-500",
+      badgeVariant: "primary" as const,
+      statusText: statusInfo?.text || "Chờ ghi",
+      statusIcon: <ClockCircleOutlined />,
+    };
   };
+
+  const statusStyle = getStatusStyle();
 
   return (
     <>
-      <Card
-        size="small"
-        hoverable
-        style={{
-          background: getGradient(),
-          border: `2px solid ${getStatusColor()}`,
-          borderRadius: 6,
-          cursor: "pointer",
-          transition: "all 0.3s ease",
-          height: "100%",
-        }}
-        styles={{ body: { padding: "8px" } }}
-        className="sm:body-style-[padding:12px] sm:rounded-lg"
+      <div
         onClick={() => setDetailModalOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setDetailModalOpen(true);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        className="cursor-pointer"
       >
-        <Space
-          direction="vertical"
-          size="small"
-          style={{ width: "100%" }}
-          className="space-y-1 sm:space-y-2"
+        <Card
+          hoverable
+          padding="none"
+          className={cn(
+            "border-2 transition-all duration-300 h-full",
+            "hover:shadow-xl hover:-translate-y-1",
+            statusStyle.bgClass,
+            statusStyle.borderClass
+          )}
         >
-          {/* Subject with status icon */}
-          <div
-            style={{ display: "flex", alignItems: "flex-start", gap: 6 }}
-            className="sm:gap-2"
-          >
-            <BookOutlined
-              style={{
-                color: getStatusColor(),
-                fontSize: 14,
-                marginTop: 2,
-              }}
-              className="sm:text-base"
-            />
-            <div style={{ flex: 1 }}>
-              <Text
-                strong
-                style={{
-                  fontSize: "11px",
-                  display: "block",
-                  lineHeight: "1.3",
-                  color: brandColors.textPrimary,
-                }}
-                className="sm:text-sm sm:leading-normal"
-              >
+          {/* Card Header - Subject */}
+          <div className="p-3 sm:p-4 border-b border-gray-200/50">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <div
+              className={cn(
+                "flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg",
+                "flex items-center justify-center",
+                hasLog
+                  ? "bg-green-500/10"
+                  : isFuture
+                  ? "bg-gray-400/10"
+                  : statusInfo?.color === "red"
+                  ? "bg-red-500/10"
+                  : "bg-blue-500/10"
+              )}
+            >
+              <BookOutlined
+                className={cn(
+                  "text-base sm:text-lg",
+                  hasLog
+                    ? "text-green-600"
+                    : isFuture
+                    ? "text-gray-500"
+                    : statusInfo?.color === "red"
+                    ? "text-red-600"
+                    : "text-blue-600"
+                )}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900 line-clamp-2 leading-tight">
                 {lesson.subject}
-              </Text>
+              </h3>
+              {/* Mobile status badge */}
+              <Badge
+                variant={statusStyle.badgeVariant}
+                className="mt-1.5 sm:hidden text-[10px]"
+              >
+                {statusStyle.statusIcon}
+                <span className="ml-1">{statusStyle.statusText}</span>
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* Card Body - Info Tags */}
+        <div className="p-3 sm:p-4 space-y-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {/* Class Tag */}
+            <Tooltip title="Lớp học">
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-[10px] sm:text-xs font-medium">
+                <TeamOutlined className="text-[10px] sm:text-xs" />
+                <span>{lesson.className}</span>
+              </div>
+            </Tooltip>
+
+            {/* Room Tag */}
+            <Tooltip title="Phòng học">
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-[10px] sm:text-xs font-medium">
+                <HomeOutlined className="text-[10px] sm:text-xs" />
+                <span>
+                  {typeof lesson.room === "string"
+                    ? lesson.room
+                    : lesson.room?.room_id || lesson.room?.name}
+                </span>
+              </div>
+            </Tooltip>
+
+            {/* Period Tag */}
+            <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-[10px] sm:text-xs font-medium">
+              <CalendarOutlined className="text-[10px] sm:text-xs" />
+              <span>Ca {lesson.period}</span>
             </div>
           </div>
 
-          {/* Class and Room info */}
-          <Space
-            size={3}
-            wrap
-            style={{ fontSize: "10px" }}
-            className="sm:text-xs sm:space-x-1"
+          {/* Desktop status badge */}
+          <Badge
+            variant={statusStyle.badgeVariant}
+            className="hidden sm:inline-flex text-xs"
           >
-            <Tooltip title="Lớp học">
-              <Tag
-                icon={<TeamOutlined />}
-                color="blue"
-                style={{ margin: 0, fontSize: "9px" }}
-                className="sm:text-[10px]"
-              >
-                {lesson.className}
-              </Tag>
-            </Tooltip>
-            <Tooltip title="Phòng học">
-              <Tag
-                icon={<HomeOutlined />}
-                color="green"
-                style={{ margin: 0, fontSize: "9px" }}
-                className="sm:text-[10px]"
-              >
-                {typeof lesson.room === "string"
-                  ? lesson.room
-                  : lesson.room?.name}
-              </Tag>
-            </Tooltip>
-          </Space>
-
-          {/* Status tag - hidden on mobile */}
-          {statusInfo?.text && (
-            <Tag
-              icon={
-                hasLog ? (
-                  <CheckCircleOutlined />
-                ) : isFuture ? (
-                  <ClockCircleOutlined />
-                ) : null
-              }
-              color={hasLog ? "success" : statusInfo.color || "default"}
-              style={{
-                margin: 0,
-                fontSize: "9px",
-                borderRadius: 4,
-              }}
-              className="hidden sm:inline-flex sm:text-[10px]"
-            >
-              {hasLog ? "Đã ghi log" : statusInfo.text}
-            </Tag>
-          )}
-        </Space>
-
-        <TeachingLogModal
-          open={logModalOpen}
-          onClose={() => setLogModalOpen(false)}
-          timetableId={lesson._id as string}
-          onSuccess={() => setLogModalOpen(false)}
-          materials={materials}
-          rooms={rooms}
-        />
+            {statusStyle.statusIcon}
+            <span className="ml-1.5">{statusStyle.statusText}</span>
+          </Badge>
+        </div>
       </Card>
+      </div>
 
       {/* Detail Modal */}
       <Modal
         title={
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "8px",
-                background: brandColors.primaryLight,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <BookOutlined
-                style={{ color: brandColors.primary, fontSize: "20px" }}
-              />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <BookOutlined className="text-blue-600 text-lg" />
             </div>
             <div>
-              <div
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 600,
-                  color: brandColors.textPrimary,
-                }}
-              >
+              <div className="text-lg font-semibold text-gray-900">
                 {lesson.subject}
               </div>
-              <div
-                style={{ fontSize: "12px", color: brandColors.textSecondary }}
-              >
-                Chi tiết tiết học
-              </div>
+              <div className="text-xs text-gray-500">Chi tiết tiết học</div>
             </div>
           </div>
         }
@@ -236,10 +219,10 @@ export default function LessonCard({
         style={{ maxWidth: "1200px" }}
         styles={{ body: { padding: "24px" } }}
         footer={[
-          <Button key="close" onClick={() => setDetailModalOpen(false)}>
+          <AntButton key="close" onClick={() => setDetailModalOpen(false)}>
             Đóng
-          </Button>,
-          <Button
+          </AntButton>,
+          <AntButton
             key="material"
             type="dashed"
             icon={<ShoppingOutlined />}
@@ -248,10 +231,10 @@ export default function LessonCard({
               setMaterialModalOpen(true);
             }}
           >
-            Gửi yêu cầu vật tư
-          </Button>,
+            Yêu cầu vật tư
+          </AntButton>,
           !isFuture && !hasLog && (
-            <Button
+            <AntButton
               key="log"
               type="primary"
               icon={<FileAddOutlined />}
@@ -260,206 +243,122 @@ export default function LessonCard({
                 setLogModalOpen(true);
               }}
             >
-              <span className="hidden sm:inline">Ghi nhật ký</span>
-              <span className="sm:hidden">Ghi log</span>
-            </Button>
+              Ghi nhật ký
+            </AntButton>
           ),
         ]}
       >
         <Descriptions
-          column={{ xs: 1, sm: 2, md: 4, lg: 4 }}
+          column={{ xs: 1, sm: 2, md: 4 }}
           bordered
           size="middle"
-          style={{ marginBottom: "24px" }}
-          contentStyle={{ paddingRight: "24px" }}
-          labelStyle={{ paddingRight: "24px", fontWeight: 600 }}
+          className="mb-6"
         >
-          {/* Row 1 */}
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <span className="flex items-center gap-1.5 font-semibold">
                 <BookOutlined /> Môn học
               </span>
             }
           >
-            <Text
-              strong
-              style={{
-                fontSize: "14px",
-                color: brandColors.primary,
-                wordBreak: "break-word",
-              }}
-            >
-              {lesson.subject}
-            </Text>
+            <span className="font-medium text-blue-600">{lesson.subject}</span>
           </Descriptions.Item>
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <span className="flex items-center gap-1.5 font-semibold">
                 <TeamOutlined /> Lớp
               </span>
             }
           >
-            <Text style={{ fontSize: "14px", wordBreak: "break-word" }}>
-              {lesson.className}
-            </Text>
+            {lesson.className}
           </Descriptions.Item>
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <span className="flex items-center gap-1.5 font-semibold">
                 <HomeOutlined /> Phòng
               </span>
             }
           >
-            <Text
-              style={{
-                fontSize: "14px",
-                color: brandColors.success,
-                wordBreak: "break-word",
-              }}
-            >
+            <span className="font-medium text-green-600">
               {typeof lesson.room === "string"
                 ? lesson.room
-                : lesson.room?.name}
-            </Text>
+                : lesson.room?.name || lesson.room?.room_id}
+            </span>
           </Descriptions.Item>
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <span className="flex items-center gap-1.5 font-semibold">
                 <CalendarOutlined /> Ngày
               </span>
             }
           >
-            <Text style={{ fontSize: "14px", wordBreak: "break-word" }}>
-              {lesson.date
-                ? new Date(lesson.date).toLocaleDateString("vi-VN", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })
-                : ""}
-            </Text>
+            {lesson.date
+              ? new Date(lesson.date).toLocaleDateString("vi-VN", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : ""}
           </Descriptions.Item>
-          {/* Row 2 */}
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <ClockCircleOutlined /> Ca
+              <span className="flex items-center gap-1.5 font-semibold">
+                <ClockCircleOutlined /> Ca học
               </span>
             }
           >
-            <Tag color="blue" style={{ fontSize: "13px", padding: "4px 10px" }}>
-              Ca {lesson.period}
+            <Tag color="blue" className="text-sm">
+              Ca {lesson.period} - {lesson.time}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <span className="flex items-center gap-1.5 font-semibold">
                 <UserOutlined /> Giảng viên
               </span>
             }
           >
-            <Text style={{ fontSize: "14px", wordBreak: "break-word" }}>
-              {typeof lesson.lecturer === "object"
-                ? lesson.lecturer?.name
-                : lesson.lecturer}
-            </Text>
-          </Descriptions.Item>{" "}
-          {/* Row 3 */}
+            {typeof lesson.lecturer === "object"
+              ? lesson.lecturer?.name
+              : lesson.lecturer}
+          </Descriptions.Item>
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <span className="flex items-center gap-1.5 font-semibold">
                 <CheckCircleOutlined /> Trạng thái
               </span>
             }
           >
-            <Tag
-              icon={hasLog ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-              color={hasLog ? "success" : statusInfo?.color || "default"}
-              style={{ fontSize: "12px", padding: "4px 10px" }}
-            >
-              {hasLog ? "Đã ghi nhật ký" : `${statusInfo?.text || "Chưa ghi"}`}
-            </Tag>
+            <Badge variant={statusStyle.badgeVariant}>
+              {statusStyle.statusIcon}
+              <span className="ml-1.5">{statusStyle.statusText}</span>
+            </Badge>
           </Descriptions.Item>
           <Descriptions.Item
             label={
-              <span
-                style={{
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <span className="flex items-center gap-1.5 font-semibold">
                 <FormOutlined /> Ghi chú
               </span>
             }
-            span={3}
           >
-            <Text
-              style={{
-                fontSize: "14px",
-                color: brandColors.textSecondary,
-                wordBreak: "break-word",
-              }}
-            >
+            <span className="text-gray-600">
               {String(
-                (lesson as unknown as { note?: string }).note ??
+                (lesson as unknown as { note?: string }).note ||
                   "Không có ghi chú"
               )}
-            </Text>
+            </span>
           </Descriptions.Item>
         </Descriptions>
       </Modal>
+
+      <TeachingLogModal
+        open={logModalOpen}
+        onClose={() => setLogModalOpen(false)}
+        timetableId={lesson._id as string}
+        onSuccess={() => setLogModalOpen(false)}
+        materials={materials}
+        rooms={rooms}
+      />
 
       <CreateMaterialRequestFromTimetable
         visible={materialModalOpen}

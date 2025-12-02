@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Timetable from "@/models/Timetable";
-import { User } from "@/models/User";
+import { User as UserModel } from "@/models/User";
+import { RoomModel } from "@/models/Room";
 import { requireAdmin } from "@/lib/apiMiddleware";
 import {
   isWeekValidForSemester,
@@ -21,6 +22,10 @@ export async function GET(request: Request) {
 
   try {
     await connectToDatabase();
+
+    // Ensure models are registered
+    UserModel;
+    RoomModel;
 
     const timetables = await Timetable.find()
       .populate("room", "name room_id")

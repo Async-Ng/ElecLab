@@ -22,6 +22,9 @@ export async function PUT(
     const updateData = await request.json();
     await connectToDatabase();
 
+    // Ensure User model is registered
+    User;
+
     const updated = await RoomModel.findByIdAndUpdate(id, updateData, {
       new: true,
     }).populate("users_manage", "name email staff_id");

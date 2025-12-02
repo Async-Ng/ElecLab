@@ -10,7 +10,7 @@ import {
   Empty,
   Badge,
   Typography,
-  message as antMessage,
+  message,
 } from "antd";
 import { PlusOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
@@ -117,6 +117,7 @@ export default function TimetableCalendarView({
   materials = [],
   rooms = [],
 }: TimetableCalendarViewProps) {
+  const [messageApi, contextHolder] = message.useMessage();
   const [currentWeek, setCurrentWeek] = useState(dayjs());
 
   // Get semester week from current week's timetables
@@ -329,19 +330,13 @@ export default function TimetableCalendarView({
     const handleCellClick = () => {
       // Scenario 1: Already has log - just show info message
       if (ttWithLog.hasLog) {
-        antMessage.info({
-          content: "Tiết học này đã có nhật ký giảng dạy rồi!",
-          duration: 2,
-        });
+        messageApi.info("Tiết học này đã có nhật ký giảng dạy rồi!");
         return;
       }
 
       // Scenario 2: Future timetable - show warning
       if (ttWithLog.isFuture) {
-        antMessage.warning({
-          content: "Chưa đến giờ học, không thể ghi nhật ký!",
-          duration: 2,
-        });
+        messageApi.warning("Chưa đến giờ học, không thể ghi nhật ký!");
         return;
       }
 
@@ -471,8 +466,10 @@ export default function TimetableCalendarView({
   };
 
   return (
-    <Card style={{ marginTop: 16 }}>
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+    <>
+      {contextHolder}
+      <Card style={{ marginTop: 16 }}>
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={8}>
           <Select
             placeholder="Năm học"
@@ -718,6 +715,7 @@ export default function TimetableCalendarView({
           </div>
         </div>
       )}
-    </Card>
+      </Card>
+    </>
   );
 }
