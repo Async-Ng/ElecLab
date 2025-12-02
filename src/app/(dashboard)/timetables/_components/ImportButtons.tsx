@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { message } from "antd";
 import ImportPreviewModal from "./ImportPreviewModal";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { Room } from "@/types/room";
@@ -10,6 +9,13 @@ import ActionButtons from "@/components/common/ActionButtons";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 import { useTimetablesStore } from "@/stores/useTimetablesStore";
 import { useTeachingLogsStore } from "@/stores/useTeachingLogsStore";
+
+// Toast notification helper
+const showMessage = {
+  success: (msg: string) => alert(msg),
+  error: (msg: string) => alert(msg),
+  warning: (msg: string) => alert(msg),
+};
 
 export default function ImportButtons() {
   const { isAdmin, user } = useAuth();
@@ -187,7 +193,7 @@ export default function ImportButtons() {
       setPreviewRows(preview);
       setPreviewOpen(true);
     } catch (err) {
-      message.error("Import thất bại");
+      showshowMessage.error("Import thất bại");
     }
   }
 
@@ -398,9 +404,9 @@ export default function ImportButtons() {
       a.remove();
       URL.revokeObjectURL(url);
 
-      message.success("Đã tải template thành công");
+      showMessage.success("Đã tải template thành công");
     } catch (err) {
-      message.error("Không thể tạo file mẫu");
+      showMessage.error("Không thể tạo file mẫu");
     }
   }
 
@@ -427,7 +433,7 @@ export default function ImportButtons() {
     });
     try {
       if (!user) {
-        message.error("Vui lòng đăng nhập để thực hiện import");
+        showMessage.error("Vui lòng đăng nhập để thực hiện import");
         return;
       }
 
@@ -438,7 +444,7 @@ export default function ImportButtons() {
       });
 
       if (res.ok) {
-        message.success("Đã import thời khóa biểu");
+        showMessage.success("Đã import thời khóa biểu");
 
         // Refresh both timetables and teaching logs data sau khi import thành công
         if (user._id && user.roles) {
@@ -450,10 +456,12 @@ export default function ImportButtons() {
       } else {
         const errorData = await res.json();
 
-        message.error(`Import thất bại: ${errorData.error || "Unknown error"}`);
+        showMessage.error(
+          `Import thất bại: ${errorData.error || "Unknown error"}`
+        );
       }
     } catch (err) {
-      message.error("Import thất bại");
+      showMessage.error("Import thất bại");
     }
   }
 
@@ -484,7 +492,7 @@ export default function ImportButtons() {
         ref={fileInputRef}
         type="file"
         accept=".xlsx,.xls,.csv"
-        style={{ display: "none" }}
+        className="hidden"
         onChange={handleFileChange}
       />
       <ActionButtons

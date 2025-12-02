@@ -1,6 +1,6 @@
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import LessonCard from "./LessonCard";
+import LessonCard from "@/components/timetable/LessonCard";
 import { Timetable } from "@/types/timetable";
 import { Dayjs } from "dayjs";
 import { brandColors, gradients } from "@/styles/theme";

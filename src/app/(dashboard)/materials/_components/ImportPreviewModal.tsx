@@ -78,7 +78,7 @@ export default function ImportPreviewModal(props: Props) {
       }),
       render: (val: string, record: Row) => (
         <Input
-          style={{ width: "100%" }}
+          className="w-full"
           value={val}
           onChange={(e) =>
             updateRow(record.key, { material_id: e.target.value })
@@ -95,7 +95,7 @@ export default function ImportPreviewModal(props: Props) {
       }),
       render: (val: string, record: Row) => (
         <Input
-          style={{ width: "100%" }}
+          className="w-full"
           value={val}
           onChange={(e) => updateRow(record.key, { name: e.target.value })}
         />
@@ -111,7 +111,7 @@ export default function ImportPreviewModal(props: Props) {
       render: (val: string, record: Row) => (
         <Select
           value={val || undefined}
-          style={{ width: "100%" }}
+          className="w-full"
           onChange={(v) => updateRow(record.key, { category: String(v) })}
         >
           {Object.values(MaterialCategory).map((v) => (
@@ -132,7 +132,7 @@ export default function ImportPreviewModal(props: Props) {
       render: (val: string, record: Row) => (
         <Select
           value={val || undefined}
-          style={{ width: "100%" }}
+          className="w-full"
           onChange={(v) => updateRow(record.key, { status: String(v) })}
           allowClear
         >
@@ -154,7 +154,7 @@ export default function ImportPreviewModal(props: Props) {
       render: (val: string, record: Row) => (
         <Select
           showSearch
-          style={{ width: "100%" }}
+          className="w-full"
           value={val || undefined}
           placeholder="Chọn phòng theo mã phòng"
           optionFilterProp="children"
@@ -237,7 +237,7 @@ export default function ImportPreviewModal(props: Props) {
       width="90vw"
       destroyOnHidden
     >
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <span>
           Hợp lệ: <b>{validCount}</b> &nbsp;|&nbsp; Tổng: <b>{data.length}</b>
         </span>
@@ -246,7 +246,7 @@ export default function ImportPreviewModal(props: Props) {
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 12 }}
+          className="mb-3"
           message={`Có ${invalidRoomRows.length} bản ghi có mã phòng không hợp lệ (không tìm thấy trong hệ thống). Các bản ghi này sẽ không được liên kết phòng.`}
         />
       )}

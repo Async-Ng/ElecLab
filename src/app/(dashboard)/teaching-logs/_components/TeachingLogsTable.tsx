@@ -9,87 +9,9 @@ import TeachingLogModal from "./TeachingLogModal";
 import TeachingLogsFilter from "./TeachingLogsFilter";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PageHeader } from "@/components/common";
-import { DataTable } from "@/components/common";
+import { SmartTable, SmartTableColumn } from "@/components/table";
 import { useTeachingLogs } from "@/hooks/stores";
-
-function getColumns(isHead: boolean) {
-  const base = [
-    {
-      title: "Học kỳ",
-      dataIndex: ["timetable", "semester"],
-      key: "semester",
-      render: (value: string | number) => value,
-    },
-    {
-      title: "Năm học",
-      dataIndex: ["timetable", "schoolYear"],
-      key: "schoolYear",
-      render: (value: string | number) => value,
-    },
-    {
-      title: "Ngày",
-      dataIndex: ["timetable", "date"],
-      key: "date",
-      render: (value: string) => {
-        if (!value) return "";
-        const d = new Date(value);
-        if (isNaN(d.getTime())) return value;
-        return d.toLocaleDateString("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-      },
-    },
-    {
-      title: "Ca học",
-      dataIndex: ["timetable", "period"],
-      key: "period",
-      render: (value: number) => `Ca ${value}`,
-    },
-    {
-      title: "Phòng học",
-      dataIndex: ["timetable", "room"],
-      key: "room",
-      render: (room: any) => room?.name || room,
-    },
-    {
-      title: "Môn học",
-      dataIndex: ["timetable", "subject"],
-      key: "subject",
-      render: (subject: any) => subject?.name || subject || "",
-    },
-  ];
-  if (isHead) {
-    base.push({
-      title: "Giảng viên",
-      dataIndex: ["timetable", "lecturer"],
-      key: "lecturer",
-      render: (lecturer: any) => lecturer?.name || lecturer,
-    });
-  }
-  base.push(
-    {
-      title: "Ghi chú",
-      dataIndex: ["note"],
-      key: "note",
-      render: (value: string) => value,
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: ["status"],
-      key: "status",
-      render: (status: TeachingLogStatus) => (
-        <Badge
-          variant={status === TeachingLogStatus.NORMAL ? "success" : "danger"}
-        >
-          {status}
-        </Badge>
-      ),
-    }
-  );
-  return base;
-}
+import { EyeOutlined } from "@ant-design/icons";
 
 const TeachingLogsTable: React.FC = () => {
   const { user } = useAuth();
@@ -115,7 +37,11 @@ const TeachingLogsTable: React.FC = () => {
 
   // Use Zustand store with auto-fetch and caching
   // If active role is User, fetch only that user's logs; if Admin, fetch all
-  const { teachingLogs: logs, loading } = useTeachingLogs({
+  const {
+    teachingLogs: logs,
+    loading,
+    fetchTeachingLogs,
+  } = useTeachingLogs({
     userId: activeRole === UserRole.User ? user?._id : undefined,
   });
 
@@ -144,6 +70,116 @@ const TeachingLogsTable: React.FC = () => {
         )
       );
   }, []);
+
+  // Check if user is admin
+  const isAdmin = user?.roles?.includes(UserRole.Admin);
+
+  // Define columns with SmartTable API
+  const columns: SmartTableColumn<TeachingLog>[] = useMemo(() => {
+    const baseColumns: SmartTableColumn<TeachingLog>[] = [
+      {
+        key: "semester",
+        title: "Học kỳ",
+        dataIndex: ["timetable", "semester"],
+        width: "8%",
+        mobile: true,
+      },
+      {
+        key: "schoolYear",
+        title: "Năm học",
+        dataIndex: ["timetable", "schoolYear"],
+        width: "10%",
+        mobile: true,
+      },
+      {
+        key: "date",
+        title: "Ngày",
+        dataIndex: ["timetable", "date"],
+        width: "12%",
+        mobile: true,
+        render: (value: string) => {
+          if (!value) return "";
+          const d = new Date(value);
+          if (isNaN(d.getTime())) return value;
+          return d.toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          });
+        },
+      },
+      {
+        key: "period",
+        title: "Ca học",
+        dataIndex: ["timetable", "period"],
+        width: "8%",
+        render: (value: number) => `Ca ${value}`,
+      },
+      {
+        key: "room",
+        title: "Phòng học",
+        dataIndex: ["timetable", "room"],
+        width: "12%",
+        render: (room: any) => room?.name || room || "-",
+      },
+      {
+        key: "subject",
+        title: "Môn học",
+        dataIndex: ["timetable", "subject"],
+        width: "15%",
+        mobile: true,
+        render: (subject: any) => subject?.name || subject || "-",
+      },
+    ];
+
+    // Add lecturer column only for admin
+    if (isAdmin) {
+      baseColumns.push({
+        key: "lecturer",
+        title: "Giảng viên",
+        dataIndex: ["timetable", "lecturer"],
+        width: "15%",
+        render: (lecturer: any) => lecturer?.name || lecturer || "-",
+      });
+    }
+
+    // Add note and status columns
+    baseColumns.push(
+      {
+        key: "note",
+        title: "Ghi chú",
+        dataIndex: "note",
+        width: "20%",
+        render: (value: string) => (
+          <span className="line-clamp-2" title={value}>
+            {value || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        title: "Trạng thái",
+        dataIndex: "status",
+        width: "10%",
+        mobile: true,
+        isStatus: true, // Auto-render as Badge
+        render: (status: TeachingLogStatus) => {
+          // Custom status rendering with specific variants
+          const variant =
+            status === TeachingLogStatus.NORMAL ? "success" : "warning";
+          const label =
+            status === TeachingLogStatus.NORMAL ? "Bình thường" : "Sự cố";
+          return (
+            <Badge variant={variant} size="md">
+              {label}
+            </Badge>
+          );
+        },
+      }
+    );
+
+    return baseColumns;
+  }, [isAdmin]);
 
   // Lọc logs theo các trường filter
   const filteredLogs = useMemo(() => {
@@ -182,18 +218,65 @@ const TeachingLogsTable: React.FC = () => {
 
       <TeachingLogsFilter logs={logs} filters={filters} onChange={setFilters} />
 
-      <DataTable
+      <SmartTable
         data={filteredLogs}
-        columns={getColumns(!!user?.roles?.includes(UserRole.Admin))}
+        columns={columns}
         loading={false}
-        showActions={false}
-        onRow={(record) => ({
-          onClick: () => {
-            setEditLog(record);
-            setModalOpen(true);
+        rowKey="_id"
+        onRowClick={(record) => {
+          setEditLog(record);
+          setModalOpen(true);
+        }}
+        emptyState={{
+          title: "Chưa có nhật ký giảng dạy",
+          description:
+            "Nhật ký sẽ xuất hiện sau khi bạn ghi log cho các ca học",
+          illustration: "search",
+        }}
+        stickyHeader
+        zebraStriping
+        cardConfig={{
+          title: (record) => {
+            const t = (record.timetable as any) || {};
+            return t.subject?.name || t.subject || "Môn học";
           },
-          style: { cursor: "pointer" },
-        })}
+          subtitle: (record) => {
+            const t = (record.timetable as any) || {};
+            const date = t.date
+              ? new Date(t.date).toLocaleDateString("vi-VN")
+              : "";
+            return `${date} • Ca ${t.period || "-"} • ${
+              t.room?.name || t.room || "-"
+            }`;
+          },
+          badge: (record) => {
+            const variant =
+              record.status === TeachingLogStatus.NORMAL
+                ? "success"
+                : "warning";
+            const label =
+              record.status === TeachingLogStatus.NORMAL
+                ? "Bình thường"
+                : "Sự cố";
+            return (
+              <Badge variant={variant} size="sm">
+                {label}
+              </Badge>
+            );
+          },
+        }}
+        actions={[
+          {
+            key: "view",
+            label: "Xem chi tiết",
+            icon: <EyeOutlined />,
+            onClick: (record) => {
+              setEditLog(record);
+              setModalOpen(true);
+            },
+            tooltip: "Xem và chỉnh sửa nhật ký",
+          },
+        ]}
       />
 
       <TeachingLogModal
@@ -214,7 +297,7 @@ const TeachingLogsTable: React.FC = () => {
           setModalOpen(false);
           setEditLog(undefined);
           // Refetch teaching logs to get latest data (force bypass cache)
-          await fetchTeachingLogs(user?._id, true);
+          await fetchTeachingLogs(user?._id, user?.roles, true);
         }}
       />
     </div>

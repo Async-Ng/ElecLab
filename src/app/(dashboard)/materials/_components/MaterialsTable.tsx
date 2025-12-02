@@ -2,9 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import { EditOutlined, DeleteOutlined, InboxOutlined } from "@ant-design/icons";
-import { Table, Tag, Popconfirm, Empty } from "antd";
-import type { ColumnsType } from "antd/es/table";
 import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
 import {
   FilterBar,
@@ -12,6 +11,8 @@ import {
   FilterValues,
   ExportButton,
   ExportColumn,
+  SmartTable,
+  SmartTableColumn,
 } from "@/components/table";
 
 type Props = {
@@ -122,111 +123,81 @@ export default React.memo(function MaterialsTable({
     return String(place_used);
   };
 
-  // Table columns
-  const columns: ColumnsType<Material> = [
+  // Table columns for SmartTable
+  const columns: SmartTableColumn<Material>[] = [
     {
+      key: "material_id",
       title: "Mã vật tư",
       dataIndex: "material_id",
-      key: "material_id",
-      width: 140,
-      sorter: (a, b) => a.material_id.localeCompare(b.material_id),
+      width: "15%",
+      mobile: true,
       render: (value: string) => (
-        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-          {value}
-        </span>
+        <span className="font-semibold text-gray-800 text-[15px]">{value}</span>
       ),
     },
     {
+      key: "name",
       title: "Tên vật tư",
       dataIndex: "name",
-      key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      width: "25%",
+      mobile: true,
       render: (value: string) => (
-        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-          {value}
-        </span>
+        <span className="font-semibold text-gray-800 text-[15px]">{value}</span>
       ),
     },
     {
+      key: "category",
       title: "Danh mục",
       dataIndex: "category",
-      key: "category",
-      width: 180,
+      width: "18%",
+      mobile: true,
       render: (category: MaterialCategory) => {
-        const { color, text } = getCategoryTag(category);
+        const variant =
+          category === MaterialCategory.EQUIPMENT ? "info" : "warning";
+        const text =
+          category === MaterialCategory.EQUIPMENT
+            ? "Thiết bị cố định"
+            : "Vật tư tiêu hao";
         return (
-          <Tag color={color} style={{ fontSize: "14px", padding: "4px 12px" }}>
+          <Badge variant={variant} size="md">
             {text}
-          </Tag>
+          </Badge>
         );
       },
     },
     {
+      key: "status",
       title: "Tình trạng",
       dataIndex: "status",
-      key: "status",
-      width: 160,
+      width: "16%",
+      mobile: true,
+      isStatus: true,
       render: (status: MaterialStatus) => {
-        const { color, text } = getStatusTag(status);
+        let variant: "success" | "info" | "danger" = "success";
+        let text = "Có sẵn";
+        if (status === MaterialStatus.IN_USE) {
+          variant = "info";
+          text = "Đang sử dụng";
+        } else if (status === MaterialStatus.BROKEN) {
+          variant = "danger";
+          text = "Hư hỏng";
+        }
         return (
-          <Tag color={color} style={{ fontSize: "14px", padding: "4px 12px" }}>
+          <Badge variant={variant} size="md">
             {text}
-          </Tag>
+          </Badge>
         );
       },
     },
     {
+      key: "place_used",
       title: "Vị trí sử dụng",
       dataIndex: "place_used",
-      key: "place_used",
-      width: 180,
+      width: "18%",
       render: (place_used: string | { name?: string } | undefined) => (
-        <span style={{ color: "#334155", fontSize: "15px" }}>
+        <span className="text-gray-700 text-[15px]">
           {getPlaceName(place_used)}
         </span>
-      ),
-    },
-    {
-      title: "Thao tác",
-      key: "actions",
-      width: 200,
-      fixed: "right" as const,
-      render: (_: any, record: Material) => (
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-            style={{
-              fontSize: "15px",
-              height: "40px",
-              paddingLeft: "16px",
-              paddingRight: "16px",
-            }}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xóa vật tư"
-            description="Bạn chắc chắn muốn xóa vật tư này?"
-            onConfirm={() => onDelete(record._id)}
-            okText="Xóa"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true }}
-          >
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              style={{
-                fontSize: "15px",
-                height: "40px",
-                paddingLeft: "16px",
-                paddingRight: "16px",
-              }}
-            >
-              Xóa
-            </Button>
-          </Popconfirm>
-        </div>
       ),
     },
   ];
@@ -261,42 +232,61 @@ export default React.memo(function MaterialsTable({
       />
 
       {/* Table */}
-      <Table
+      <SmartTable
         columns={columns}
-        dataSource={filteredMaterials}
-        rowKey={(record) => record._id || ""}
+        data={filteredMaterials}
         loading={loading}
-        size="middle"
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng ${total} vật tư`,
-          pageSizeOptions: ["10", "20", "50"],
+        rowKey="_id"
+        emptyState={{
+          title: "Chưa có vật tư nào",
+          description: "Thêm vật tư mới để bắt đầu quản lý",
+          illustration: "search",
+          icon: <InboxOutlined />,
         }}
-        rowClassName={(_, index) =>
-          index % 2 === 0 ? "bg-white" : "bg-slate-50"
-        }
-        locale={{
-          emptyText: (
-            <Empty
-              image={
-                <InboxOutlined style={{ fontSize: 64, color: "#94A3B8" }} />
-              }
-              imageStyle={{ height: 80 }}
-              description={
-                <div style={{ color: "#64748B", fontSize: "16px" }}>
-                  <div style={{ fontWeight: 600, marginBottom: "4px" }}>
-                    Chưa có vật tư nào
-                  </div>
-                  <div style={{ fontSize: "14px" }}>
-                    Thêm vật tư mới để bắt đầu quản lý
-                  </div>
-                </div>
-              }
-            />
-          ),
+        stickyHeader
+        zebraStriping
+        cardConfig={{
+          title: (record) => record.name,
+          subtitle: (record) => `Mã: ${record.material_id}`,
+          meta: (record) => getPlaceName(record.place_used),
+          badge: (record) => {
+            let variant: "success" | "info" | "danger" = "success";
+            let text = "Có sẵn";
+            if (record.status === MaterialStatus.IN_USE) {
+              variant = "info";
+              text = "Đang sử dụng";
+            } else if (record.status === MaterialStatus.BROKEN) {
+              variant = "danger";
+              text = "Hư hỏng";
+            }
+            return (
+              <Badge variant={variant} size="sm">
+                {text}
+              </Badge>
+            );
+          },
         }}
-        scroll={{ x: 1200 }}
+        actions={[
+          {
+            key: "edit",
+            label: "Sửa",
+            icon: <EditOutlined />,
+            onClick: onEdit,
+            tooltip: "Chỉnh sửa vật tư",
+          },
+          {
+            key: "delete",
+            label: "Xóa",
+            icon: <DeleteOutlined />,
+            onClick: (record) => {
+              if (window.confirm("Bạn chắc chắn muốn xóa vật tư này?")) {
+                onDelete(record._id);
+              }
+            },
+            danger: true,
+            tooltip: "Xóa vật tư",
+          },
+        ]}
       />
     </div>
   );

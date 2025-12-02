@@ -9,68 +9,68 @@
 
 .timetable-calendar th {
   padding: 12px;
-  background-color: #1890ff;
-  color: white;
+  background-color: var(--color-primary-500);
+  color: var(--color-white);
   font-weight: 600;
-  border: 1px solid #0050b3;
+  border: 1px solid var(--color-primary-700);
   text-align: center;
 }
 
 .timetable-calendar td {
   padding: 8px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-gray-300);
   vertical-align: top;
 }
 
 /* Timetable cells */
 .timetable-cell {
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   transition: all 0.3s ease;
 }
 
 .timetable-cell.empty {
   min-height: 80px;
-  border: 1px dashed #d9d9d9;
+  border: 1px dashed var(--color-gray-300);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #bfbfbf;
+  color: var(--color-gray-400);
 }
 
 .timetable-cell.empty:hover {
-  background-color: #fafafa;
-  border-color: #1890ff;
+  background-color: var(--color-gray-50);
+  border-color: var(--color-primary-500);
 }
 
 .timetable-cell.filled {
   min-height: 80px;
   padding: 8px;
-  background-color: #e6f7ff;
-  border: 1px solid #1890ff;
+  background-color: var(--color-primary-50);
+  border: 1px solid var(--color-primary-500);
   cursor: pointer;
 }
 
 .timetable-cell.filled:hover {
-  background-color: #bae7ff;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+  background-color: var(--color-primary-100);
+  box-shadow: var(--shadow-primary-md);
   transform: translateY(-1px);
 }
 
 /* Today highlight */
 .today-column {
-  background-color: #f6ffed !important;
+  background-color: var(--color-success-50) !important;
 }
 
 .today-header {
-  background-color: #52c41a !important;
+  background-color: var(--color-success-600) !important;
 }
 
 /* Period label */
 .period-label {
   position: sticky;
   left: 0;
-  background-color: #fafafa;
+  background-color: var(--color-gray-50);
   z-index: 5;
 }
 
@@ -81,8 +81,8 @@
   align-items: center;
   margin-bottom: 16px;
   padding: 12px 16px;
-  background-color: #fafafa;
-  border-radius: 4px;
+  background-color: var(--color-gray-50);
+  border-radius: var(--radius-sm);
 }
 
 /* Responsive design */

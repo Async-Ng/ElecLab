@@ -1,7 +1,17 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Button, Card, Select, Row, Col, Empty, Badge, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Select,
+  Row,
+  Col,
+  Empty,
+  Badge,
+  Typography,
+  message as antMessage,
+} from "antd";
 import { PlusOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -27,6 +37,7 @@ interface TimetableCalendarViewProps {
   timetables: TimetableWithLog[];
   loading: boolean;
   onEdit: (timetable: TimetableWithLog) => void;
+  onCreateLog: (timetable: TimetableWithLog) => void;
   onAdd: (prefillData?: {
     date: string;
     period: Period;
@@ -95,6 +106,7 @@ export default function TimetableCalendarView({
   timetables,
   loading,
   onEdit,
+  onCreateLog,
   onAdd,
   schoolYear,
   setSchoolYear,
@@ -282,15 +294,15 @@ export default function TimetableCalendarView({
     const getCardStyle = () => {
       if (ttWithLog.hasLog) {
         return {
-          backgroundColor: "#f6f6f6", // Gray if has log
+          backgroundColor: "#f0f0f0", // Gray if has log (read-only)
           border: "1px solid #d9d9d9",
-          cursor: "pointer",
-          opacity: 0.8,
+          cursor: "default",
+          opacity: 0.85,
         };
       } else if (ttWithLog.isOverdue) {
         return {
           backgroundColor: "#fff2e8", // Orange background for overdue
-          border: "1px solid #ff7a45",
+          border: "2px solid #ff7a45",
           cursor: "pointer",
           opacity: 1,
         };
@@ -298,13 +310,13 @@ export default function TimetableCalendarView({
         return {
           backgroundColor: "#f0f8ff", // Light blue for future
           border: "1px solid #91d5ff",
-          cursor: "pointer",
+          cursor: "default",
           opacity: 1,
         };
       } else {
         return {
-          backgroundColor: "#e6f7ff", // Normal blue for current/past available
-          border: "1px solid #1890ff",
+          backgroundColor: "#e6fffb", // Light cyan for available to log
+          border: "1px solid #13c2c2",
           cursor: "pointer",
           opacity: 1,
         };
@@ -313,10 +325,40 @@ export default function TimetableCalendarView({
 
     const cardStyle = getCardStyle();
 
+    // Smart click handler based on status
+    const handleCellClick = () => {
+      // Scenario 1: Already has log - just show info message
+      if (ttWithLog.hasLog) {
+        antMessage.info({
+          content: "Tiết học này đã có nhật ký giảng dạy rồi!",
+          duration: 2,
+        });
+        return;
+      }
+
+      // Scenario 2: Future timetable - show warning
+      if (ttWithLog.isFuture) {
+        antMessage.warning({
+          content: "Chưa đến giờ học, không thể ghi nhật ký!",
+          duration: 2,
+        });
+        return;
+      }
+
+      // Scenario 3: Can log (past or today, no log yet) - open TeachingLogModal
+      if (ttWithLog.canLog) {
+        onCreateLog(tt);
+        return;
+      }
+
+      // Scenario 4: Default - open edit modal (for admin/special cases)
+      onEdit(tt);
+    };
+
     return (
       <div
         className="timetable-cell filled"
-        onClick={() => onEdit(tt)}
+        onClick={handleCellClick}
         style={{
           minHeight: "80px",
           padding: "8px",
@@ -326,13 +368,15 @@ export default function TimetableCalendarView({
         }}
         onMouseEnter={(e) => {
           if (ttWithLog.canLog) {
-            e.currentTarget.style.backgroundColor = "#bae7ff";
+            e.currentTarget.style.backgroundColor = "#b5f5ec";
             e.currentTarget.style.boxShadow =
-              "0 2px 8px rgba(24, 144, 255, 0.2)";
+              "0 2px 8px rgba(19, 194, 194, 0.3)";
           } else if (ttWithLog.isOverdue) {
             e.currentTarget.style.backgroundColor = "#ffe7ba";
             e.currentTarget.style.boxShadow =
-              "0 2px 8px rgba(255, 122, 69, 0.2)";
+              "0 2px 8px rgba(255, 122, 69, 0.3)";
+          } else if (ttWithLog.hasLog) {
+            e.currentTarget.style.backgroundColor = "#e8e8e8";
           }
         }}
         onMouseLeave={(e) => {
@@ -499,6 +543,69 @@ export default function TimetableCalendarView({
             <Button icon={<RightOutlined />} onClick={goToNextWeek}>
               Tuần sau
             </Button>
+          </div>
+
+          {/* Status Legend */}
+          <div
+            style={{
+              display: "flex",
+              gap: "16px",
+              flexWrap: "wrap",
+              marginBottom: "16px",
+              padding: "12px",
+              backgroundColor: "#fafafa",
+              borderRadius: "4px",
+              fontSize: "13px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  backgroundColor: "#e6fffb",
+                  border: "1px solid #13c2c2",
+                  borderRadius: "2px",
+                }}
+              />
+              <span>Có thể ghi log</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  backgroundColor: "#fff2e8",
+                  border: "2px solid #ff7a45",
+                  borderRadius: "2px",
+                }}
+              />
+              <span>⚠ Quá hạn</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  backgroundColor: "#f0f0f0",
+                  border: "1px solid #d9d9d9",
+                  borderRadius: "2px",
+                }}
+              />
+              <span>✓ Đã ghi log</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  backgroundColor: "#f0f8ff",
+                  border: "1px solid #91d5ff",
+                  borderRadius: "2px",
+                }}
+              />
+              <span>⏳ Tương lai</span>
+            </div>
           </div>
 
           {/* Calendar Grid */}

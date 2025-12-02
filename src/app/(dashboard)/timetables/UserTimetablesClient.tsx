@@ -13,6 +13,11 @@ import {
   useTeachingLogs,
   useMaterials,
 } from "@/hooks/stores";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+// Initialize dayjs plugins for consistent date parsing
+dayjs.extend(customParseFormat);
 
 // Lazy load components
 const TimetableCalendarView = lazy(
@@ -114,54 +119,40 @@ export default function UserTimetablesClient() {
     return logMap;
   }, [teachingLogs]);
 
-  // Utility function to parse Vietnamese date format (DD/MM/YYYY or DD-MM-YYYY)
-  const parseVietnameseDate = (dateString: string): Date | null => {
+  // Utility function to parse Vietnamese date format (DD/MM/YYYY or DD-MM-YYYY) using dayjs
+  const parseDate = (dateString: string): dayjs.Dayjs | null => {
     if (!dateString) return null;
 
-    // Handle DD/MM/YYYY or DD-MM-YYYY format
-    let cleanDate = dateString.trim();
+    // Try multiple formats common in Vietnamese data
+    const formats = ["DD/MM/YYYY", "DD-MM-YYYY", "YYYY-MM-DD"];
 
-    // Replace dash with slash for consistency
-    cleanDate = cleanDate.replace(/-/g, "/");
-
-    // Check if it matches DD/MM/YYYY format
-    const dateMatch = cleanDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-
-    if (dateMatch) {
-      const [, day, month, year] = dateMatch;
-      // Create date object (month is 0-indexed in JS)
-      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-
-      // Validate the date is real (not Feb 30th, etc.)
-      if (
-        date.getFullYear() === parseInt(year) &&
-        date.getMonth() === parseInt(month) - 1 &&
-        date.getDate() === parseInt(day)
-      ) {
-        return date;
+    for (const format of formats) {
+      const parsed = dayjs(dateString, format, true); // strict parsing
+      if (parsed.isValid()) {
+        return parsed;
       }
     }
 
-    return null;
+    // Fallback: try auto-detection
+    const parsed = dayjs(dateString);
+    return parsed.isValid() ? parsed : null;
   };
 
-  // Utility functions for date checking
+  // Utility functions for date checking using dayjs
   const isDateInPast = (dateString: string) => {
-    const timetableDate = parseVietnameseDate(dateString);
+    const timetableDate = parseDate(dateString);
     if (!timetableDate) return false;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to start of day
-    return timetableDate < today;
+    const today = dayjs().startOf("day");
+    return timetableDate.isBefore(today, "day");
   };
 
   const isDateInFuture = (dateString: string) => {
-    const timetableDate = parseVietnameseDate(dateString);
+    const timetableDate = parseDate(dateString);
     if (!timetableDate) return false;
 
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // Set to end of day
-    return timetableDate > today;
+    const today = dayjs().endOf("day");
+    return timetableDate.isAfter(today, "day");
   };
 
   // Filter timetables and add hasLog info + date status
@@ -279,7 +270,7 @@ export default function UserTimetablesClient() {
   };
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div className="p-6">
       {showAlert && (
         <div
           className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg text-white ${
@@ -293,7 +284,7 @@ export default function UserTimetablesClient() {
         title="Thời khóa biểu của tôi"
         description="Xem và quản lý thời khóa biểu giảng dạy của bạn"
         extra={
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <div className="flex gap-3 items-center">
             <Suspense fallback={null}>
               <ImportButtons />
             </Suspense>
@@ -328,7 +319,8 @@ export default function UserTimetablesClient() {
           <TimetableCalendarView
             timetables={filteredTimetables}
             loading={loading}
-            onEdit={handleEditTimetable} // Calendar: click để xem chi tiết
+            onEdit={handleEditTimetable} // Calendar: click để edit TKB
+            onCreateLog={handleCreateLog} // Calendar: click để ghi log
             onAdd={handleAdd}
             schoolYear={schoolYear}
             setSchoolYear={setSchoolYear}

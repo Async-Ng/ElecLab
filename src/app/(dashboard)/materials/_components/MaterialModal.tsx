@@ -138,52 +138,35 @@ export default function MaterialModal(props: Props) {
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Group 1: Thông tin chính */}
-        <div
-          style={{
-            backgroundColor: "#F8FAFC",
-            padding: "20px",
-            borderRadius: "12px",
-            border: "1px solid #E2E8F0",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "16px",
-              color: "#1E293B",
-              fontWeight: 600,
-              fontSize: "16px",
-            }}
-          >
-            <TagOutlined style={{ fontSize: "20px", color: "#0090D9" }} />
+        <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
+            <TagOutlined className="text-xl text-primary-500" />
             <span>Thông tin chính</span>
           </div>
 
           {/* Material ID */}
-          <div style={{ marginBottom: "16px" }}>
+          <div className="mb-4">
             <FormField label="Mã vật tư" required error={errors.material_id}>
               <Input
                 value={formData.material_id}
                 onChange={(e) => handleChange("material_id", e.target.value)}
                 placeholder="VD: MAT-001"
-                prefix={<BarcodeOutlined style={{ color: "#94A3B8" }} />}
+                prefix={<BarcodeOutlined className="text-gray-400" />}
                 error={!!errors.material_id}
-                style={{ fontSize: "16px", height: "44px" }}
+                className="text-base h-11"
               />
             </FormField>
           </div>
 
           {/* Name */}
-          <div style={{ marginBottom: "16px" }}>
+          <div className="mb-4">
             <FormField label="Tên vật tư" required error={errors.name}>
               <Input
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="VD: Máy hàn HAKKO"
                 error={!!errors.name}
-                style={{ fontSize: "16px", height: "44px" }}
+                className="text-base h-11"
               />
             </FormField>
           </div>
@@ -197,48 +180,29 @@ export default function MaterialModal(props: Props) {
                 options={categoryOptions}
                 placeholder="Chọn danh mục vật tư"
                 error={!!errors.category}
-                suffixIcon={<AppstoreOutlined style={{ color: "#94A3B8" }} />}
-                style={{ fontSize: "16px" }}
+                suffixIcon={<AppstoreOutlined className="text-gray-400" />}
+                className="text-base"
               />
             </FormField>
           </div>
         </div>
 
         {/* Group 2: Trạng thái & Vị trí */}
-        <div
-          style={{
-            backgroundColor: "#F8FAFC",
-            padding: "20px",
-            borderRadius: "12px",
-            border: "1px solid #E2E8F0",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "16px",
-              color: "#1E293B",
-              fontWeight: 600,
-              fontSize: "16px",
-            }}
-          >
-            <CheckCircleOutlined
-              style={{ fontSize: "20px", color: "#10B981" }}
-            />
+        <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
+            <CheckCircleOutlined className="text-xl text-green-600" />
             <span>Trạng thái & Vị trí</span>
           </div>
 
           {/* Status */}
-          <div style={{ marginBottom: "16px" }}>
+          <div className="mb-4">
             <FormField label="Tình trạng" error={errors.status}>
               <Select
                 value={formData.status}
                 onChange={(value) => handleChange("status", value as string)}
                 options={statusOptions}
                 placeholder="Chọn tình trạng hiện tại"
-                style={{ fontSize: "16px" }}
+                className="text-base"
               />
             </FormField>
           </div>
@@ -253,36 +217,20 @@ export default function MaterialModal(props: Props) {
                 }
                 options={roomOptions}
                 placeholder="Chọn phòng thực hành"
-                suffixIcon={
-                  <EnvironmentOutlined style={{ color: "#94A3B8" }} />
-                }
-                style={{ fontSize: "16px" }}
+                suffixIcon={<EnvironmentOutlined className="text-gray-400" />}
+                className="text-base"
               />
             </FormField>
           </div>
         </div>
 
         {/* Modal Footer Actions */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            paddingTop: "20px",
-            borderTop: "2px solid #E2E8F0",
-          }}
-        >
+        <div className="flex justify-end gap-3 pt-5 border-t-2 border-gray-200">
           <Button
             variant="outline"
             onClick={onCancel}
             disabled={loading}
-            style={{
-              fontSize: "16px",
-              height: "44px",
-              paddingLeft: "24px",
-              paddingRight: "24px",
-              fontWeight: 600,
-            }}
+            className="text-base h-11 px-6 font-semibold"
           >
             Hủy bỏ
           </Button>
@@ -290,13 +238,7 @@ export default function MaterialModal(props: Props) {
             type="submit"
             variant="primary"
             loading={loading}
-            style={{
-              fontSize: "16px",
-              height: "44px",
-              paddingLeft: "24px",
-              paddingRight: "24px",
-              fontWeight: 600,
-            }}
+            className="text-base h-11 px-6 font-semibold"
           >
             {editing ? "Cập nhật thông tin" : "Lưu thông tin"}
           </Button>

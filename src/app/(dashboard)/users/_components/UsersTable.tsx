@@ -1,9 +1,9 @@
 "use client";
 
 import { UserOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Table, Tag, Popconfirm, Empty, Avatar as AntAvatar } from "antd";
-import type { ColumnsType } from "antd/es/table";
 import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
+import Avatar from "@/components/ui/Avatar";
 import { User, UserRole, UserRoleLabels } from "@/types/user";
 import { Room } from "@/types/room";
 import {
@@ -12,6 +12,8 @@ import {
   FilterValues,
   ExportButton,
   ExportColumn,
+  SmartTable,
+  SmartTableColumn,
 } from "@/components/table";
 import { useState, useMemo } from "react";
 
@@ -99,155 +101,99 @@ export const UsersTable = ({
     return `data:image/png;base64,${avatar}`;
   };
 
-  // Table columns
-  const columns: ColumnsType<User> = [
+  // Table columns for SmartTable
+  const columns: SmartTableColumn<User>[] = [
     {
+      key: "avatar",
       title: "Avatar",
       dataIndex: "avatar",
-      key: "avatar",
-      width: 100,
+      width: "8%",
+      mobile: true,
       render: (avatar: string | undefined, record: User) => (
-        <AntAvatar
-          size={48}
+        <Avatar
+          size="lg"
           src={getAvatarSrc(avatar)}
-          icon={<UserOutlined />}
-          style={{
-            border: "2px solid #E2E8F0",
-            backgroundColor: "#F1F5F9",
-            color: "#64748B",
-          }}
-        >
-          {!avatar && record.name.charAt(0).toUpperCase()}
-        </AntAvatar>
+          alt={record.name}
+          fallback={record.name.charAt(0).toUpperCase()}
+        />
       ),
     },
     {
+      key: "staff_id",
       title: "Mã nhân viên",
       dataIndex: "staff_id",
-      key: "staff_id",
-      width: 140,
+      width: "10%",
+      mobile: true,
       render: (value: string) => (
-        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-          {value}
-        </span>
+        <span className="font-semibold text-gray-800 text-[15px]">{value}</span>
       ),
     },
     {
+      key: "name",
       title: "Họ và tên",
       dataIndex: "name",
-      key: "name",
-      width: 200,
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      width: "15%",
+      mobile: true,
       render: (value: string) => (
-        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-          {value}
-        </span>
+        <span className="font-semibold text-gray-800 text-[15px]">{value}</span>
       ),
     },
     {
+      key: "email",
       title: "Email",
       dataIndex: "email",
-      key: "email",
-      width: 220,
+      width: "18%",
       render: (value: string) => (
-        <span style={{ color: "#334155", fontSize: "15px" }}>{value}</span>
+        <span className="text-gray-700 text-[15px]">{value}</span>
       ),
     },
     {
+      key: "position",
       title: "Chức vụ",
       dataIndex: "position",
-      key: "position",
-      width: 160,
+      width: "12%",
       render: (position: string | undefined) => (
-        <span style={{ color: "#334155", fontSize: "15px" }}>
-          {position || "-"}
-        </span>
+        <span className="text-gray-700 text-[15px]">{position || "-"}</span>
       ),
     },
     {
+      key: "roles",
       title: "Vai trò",
       dataIndex: "roles",
-      key: "roles",
-      width: 180,
+      width: "14%",
+      mobile: true,
       render: (roles: string[]) => (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+        <div className="flex flex-wrap gap-1.5">
           {roles.map((role) => {
             const isAdmin = role === UserRole.Admin;
             return (
-              <Tag
+              <Badge
                 key={role}
-                color={isAdmin ? "volcano" : "geekblue"}
-                style={{ fontSize: "14px", padding: "4px 12px" }}
+                variant={isAdmin ? "warning" : "info"}
+                size="md"
               >
                 {isAdmin ? "Quản trị viên" : "Giảng viên"}
-              </Tag>
+              </Badge>
             );
           })}
         </div>
       ),
     },
     {
+      key: "rooms_manage",
       title: "Quản lý phòng",
       dataIndex: "rooms_manage",
-      key: "rooms_manage",
-      width: 200,
+      width: "15%",
       render: (roomIds: string[]) => (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+        <div className="flex flex-wrap gap-1.5">
           {roomIds?.map((roomId) => {
             const room = rooms.find((r) => r._id === roomId);
             return (
-              <Tag
-                key={roomId}
-                color="green"
-                style={{ fontSize: "14px", padding: "4px 10px" }}
-              >
+              <Badge key={roomId} variant="success" size="sm">
                 {room?.name || roomId}
-              </Tag>
+              </Badge>
             );
           })}
-        </div>
-      ),
-    },
-    {
-      title: "Thao tác",
-      key: "actions",
-      width: 200,
-      fixed: "right" as const,
-      render: (_: any, record: User) => (
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-            style={{
-              fontSize: "15px",
-              height: "40px",
-              paddingLeft: "16px",
-              paddingRight: "16px",
-            }}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xóa tài khoản người dùng"
-            description="Bạn chắc chắn muốn xóa tài khoản này? Hành động này không thể hoàn tác."
-            onConfirm={() => record._id && onDelete(record._id)}
-            okText="Xóa tài khoản"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true }}
-          >
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              style={{
-                fontSize: "15px",
-                height: "40px",
-                paddingLeft: "16px",
-                paddingRight: "16px",
-              }}
-            >
-              Xóa
-            </Button>
-          </Popconfirm>
         </div>
       ),
     },
@@ -295,42 +241,57 @@ export const UsersTable = ({
       />
 
       {/* Table */}
-      <Table
+      <SmartTable
         columns={columns}
-        dataSource={filteredUsers}
-        rowKey={(record) => record._id || ""}
+        data={filteredUsers}
         loading={loading}
-        size="middle"
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng ${total} giảng viên`,
-          pageSizeOptions: ["10", "20", "50"],
+        rowKey="_id"
+        emptyState={{
+          title: "Chưa có người dùng nào",
+          description: "Thêm người dùng mới để bắt đầu quản lý",
+          illustration: "search",
+          icon: <UserOutlined />,
         }}
-        rowClassName={(_, index) =>
-          index % 2 === 0 ? "bg-white" : "bg-slate-50"
-        }
-        locale={{
-          emptyText: (
-            <Empty
-              image={
-                <UserOutlined style={{ fontSize: 64, color: "#94A3B8" }} />
-              }
-              imageStyle={{ height: 80 }}
-              description={
-                <div style={{ color: "#64748B", fontSize: "16px" }}>
-                  <div style={{ fontWeight: 600, marginBottom: "4px" }}>
-                    Chưa có người dùng nào
-                  </div>
-                  <div style={{ fontSize: "14px" }}>
-                    Thêm người dùng mới để bắt đầu quản lý
-                  </div>
-                </div>
-              }
-            />
-          ),
+        stickyHeader
+        zebraStriping
+        cardConfig={{
+          title: (record) => record.name,
+          subtitle: (record) => `${record.staff_id} • ${record.email}`,
+          meta: (record) => record.position || undefined,
+          badge: (record) => {
+            const isAdmin = record.roles.includes(UserRole.Admin);
+            return (
+              <Badge variant={isAdmin ? "warning" : "info"} size="sm">
+                {isAdmin ? "Quản trị viên" : "Giảng viên"}
+              </Badge>
+            );
+          },
         }}
-        scroll={{ x: 1400 }}
+        actions={[
+          {
+            key: "edit",
+            label: "Sửa",
+            icon: <EditOutlined />,
+            onClick: onEdit,
+            tooltip: "Chỉnh sửa thông tin người dùng",
+          },
+          {
+            key: "delete",
+            label: "Xóa",
+            icon: <DeleteOutlined />,
+            onClick: (record) => {
+              if (
+                window.confirm(
+                  "Bạn chắc chắn muốn xóa tài khoản này? Hành động này không thể hoàn tác."
+                )
+              ) {
+                record._id && onDelete(record._id);
+              }
+            },
+            danger: true,
+            tooltip: "Xóa người dùng",
+          },
+        ]}
       />
     </div>
   );

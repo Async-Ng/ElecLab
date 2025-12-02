@@ -1,12 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, message, Space } from "antd";
+import Button from "@/components/ui/Button";
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import { MaterialCategory, MaterialStatus } from "@/types/material";
 import ImportPreviewModal from "./ImportPreviewModal";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
+
+// Toast notification helper
+const showMessage = {
+  success: (msg: string) => alert(msg),
+  error: (msg: string) => alert(msg),
+  warning: (msg: string) => alert(msg),
+};
 
 type Props = {
   onImported?: () => void;
@@ -76,7 +83,7 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
       setPreviewRows(preview);
       setPreviewOpen(true);
     } catch (err) {
-      message.error("Import thất bại");
+      showshowMessage.error("Import thất bại");
     } finally {
       setLoading?.(false);
     }
@@ -132,7 +139,7 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      message.error("Không thể tạo file mẫu");
+      showMessage.error("Không thể tạo file mẫu");
     }
   }
 
@@ -146,7 +153,7 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
         onConfirm={async (rows) => {
           // rows already filtered to valid ones by modal
           if (!rows || rows.length === 0) {
-            message.warning("Không có bản ghi hợp lệ để import");
+            showMessage.warning("Không có bản ghi hợp lệ để import");
             return;
           }
           setPreviewOpen(false);
@@ -172,13 +179,13 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
             (r) => r._room_id_input && !r.place_used
           );
           if (invalidRooms.length > 0) {
-            message.warning(
+            showMessage.warning(
               `Có ${invalidRooms.length} bản ghi có mã phòng không hợp lệ và sẽ không được liên kết phòng. Kiểm tra lại cột 'Vị trí sử dụng'.`
             );
           }
           try {
             if (!user) {
-              message.error("Vui lòng đăng nhập để thực hiện import");
+              showMessage.error("Vui lòng đăng nhập để thực hiện import");
               return;
             }
 
@@ -193,22 +200,22 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
               const data = await res.json();
               const inserted =
                 data.insertedCount ?? (Array.isArray(data) ? data.length : 1);
-              message.success(`Đã import ${inserted} bản ghi`);
+              showMessage.success(`Đã import ${inserted} bản ghi`);
               onImported?.();
             } else if (res.status === 207) {
               const data = await res.json().catch(() => ({}));
               const inserted = data.insertedCount ?? 0;
-              message.warning(
+              showMessage.warning(
                 `Import một phần: ${inserted} bản ghi được import. Một số bản ghi bị trùng hoặc lỗi.`
               );
               onImported?.();
             } else {
               const err = await res.json().catch(() => ({}));
 
-              message.error("Import thất bại");
+              showMessage.error("Import thất bại");
             }
           } catch (err) {
-            message.error("Import thất bại");
+            showMessage.error("Import thất bại");
           } finally {
             setLoading?.(false);
           }
@@ -218,7 +225,7 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
         ref={fileInputRef}
         type="file"
         accept=".xlsx,.xls,csv"
-        style={{ display: "none" }}
+        className="hidden"
         onChange={handleFileChange}
       />
       <Button

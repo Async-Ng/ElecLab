@@ -73,10 +73,10 @@ export const themeConfig: ThemeConfig = {
     colorBorder: brandColors.border,
     colorBorderSecondary: brandColors.borderLight,
 
-    // Border radius - Slightly larger for better visual separation
-    borderRadius: 8,
-    borderRadiusLG: 12,
-    borderRadiusSM: 6,
+    // Border radius - Soft & Clean (8-10px range)
+    borderRadius: 10,
+    borderRadiusLG: 14,
+    borderRadiusSM: 8,
 
     // Font - LARGER for readability (16px base instead of 14px)
     fontSize: 16, // Increased from 14px
@@ -110,8 +110,8 @@ export const themeConfig: ThemeConfig = {
       colorPrimary: brandColors.primary,
       colorPrimaryHover: brandColors.primaryHover,
       colorPrimaryActive: brandColors.primaryActive,
-      borderRadius: 8,
-      controlHeight: 44, // Increased from 36px (Fitts's Law - larger touch targets)
+      borderRadius: 10,
+      controlHeight: 48, // Increased to 48px (Fitts's Law - optimal touch targets)
       fontSize: 16, // Increased from 14px
       fontWeight: 600, // Bolder for better affordance
       paddingContentHorizontal: 20, // More generous padding
@@ -119,34 +119,34 @@ export const themeConfig: ThemeConfig = {
       defaultShadow: "0 1px 2px rgba(0, 0, 0, 0.08)", // Subtle shadow for depth
     },
     Input: {
-      borderRadius: 8,
-      controlHeight: 44, // Increased from 36px
+      borderRadius: 10,
+      controlHeight: 48, // Increased to 48px for better usability
       fontSize: 16, // Increased from default
-      paddingBlock: 10, // More vertical padding
-      paddingInline: 14, // More horizontal padding
-      colorBorder: brandColors.border, // Visible border
+      paddingBlock: 12, // More vertical padding
+      paddingInline: 16, // More horizontal padding
+      colorBorder: "#CBD5E1", // High contrast border (gray-300)
       colorPrimaryHover: brandColors.primaryHover,
       activeBorderColor: brandColors.primary,
       hoverBorderColor: brandColors.primaryHover,
     },
     Select: {
-      borderRadius: 8,
-      controlHeight: 44, // Increased from 36px
+      borderRadius: 10,
+      controlHeight: 48, // Increased to 48px for better touch targets
       fontSize: 16, // Increased from default
-      colorBorder: brandColors.border, // Visible border
+      colorBorder: "#CBD5E1", // High contrast border (gray-300)
       colorPrimaryHover: brandColors.primaryHover,
       optionFontSize: 16,
       optionLineHeight: 1.6,
       optionPadding: "10px 14px", // Larger touch targets in dropdown
     },
     Card: {
-      borderRadius: 12,
+      borderRadius: 14,
       boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)", // More visible shadow
       colorBorderSecondary: brandColors.border, // More visible border
       paddingLG: 24,
     },
     Table: {
-      borderRadius: 8,
+      borderRadius: 10,
       headerBg: brandColors.primaryLight,
       headerColor: brandColors.textPrimary, // High contrast header text
       rowHoverBg: brandColors.primaryLight,
@@ -207,7 +207,7 @@ export const themeConfig: ThemeConfig = {
       itemSelectedColor: "#FFFFFF",
       itemHoverBg: brandColors.primaryLight,
       itemHoverColor: brandColors.primary,
-      controlHeight: 44, // Larger segmented controls
+      controlHeight: 48, // Larger segmented controls
       fontSize: 16,
     },
     Checkbox: {
@@ -224,9 +224,9 @@ export const themeConfig: ThemeConfig = {
       trackMinWidth: 48, // Wider switch
     },
     DatePicker: {
-      controlHeight: 44,
+      controlHeight: 48,
       fontSize: 16,
-      borderRadius: 8,
+      borderRadius: 10,
     },
     Tooltip: {
       fontSize: 15,

@@ -1,12 +1,11 @@
 "use client";
 import TimetableModal from "./TimetableModal";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
-import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
-import { Table, Popconfirm, Empty } from "antd";
-import Button from "@/components/ui/Button";
+import { SmartTable, SmartTableColumn } from "@/components/table";
+import { Popconfirm } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -135,216 +134,223 @@ export default function TimetableTable({ data }: TimetableTableProps) {
       prev.map((item) => (item._id === updated._id ? updated : item))
     );
     // Refetch timetables to get latest data (force bypass cache)
-    // If active role is User, fetch only that user's timetables; if Admin, fetch all
     const role = activeRole || user?.roles?.[0];
     const userId = role === UserRole.User ? user?._id : undefined;
     await fetchTimetables(role, userId, true);
   };
 
-  const columns: ColumnsType<Timetable> = [
-    {
-      title: "Học kỳ / Năm học",
-      key: "semester-year",
-      width: 150,
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-            HK{record.semester}
+  // Helper to check if user can edit/delete
+  const canModify = (record: Timetable): boolean => {
+    const isOwner =
+      user &&
+      (record.lecturer === user._id ||
+        (typeof record.lecturer === "object" &&
+          record.lecturer._id === user._id));
+    return !!(isAdmin || isOwner);
+  };
+
+  // Date formatting helper
+  const formatDate = (value: string): string => {
+    let dateStr = String(value).trim();
+    // Excel serial
+    if (/^\d+$/.test(dateStr)) {
+      const serial = Number(dateStr);
+      const excelEpoch = new Date(1899, 11, 30);
+      const dateObj = new Date(
+        excelEpoch.getTime() + serial * 24 * 60 * 60 * 1000
+      );
+      const d = dateObj.getDate().toString().padStart(2, "0");
+      const m = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+      const y = dateObj.getFullYear();
+      dateStr = `${d}/${m}/${y}`;
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [y, m, d] = dateStr.split("-");
+      dateStr = `${d}/${m}/${y}`;
+    } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+      dateStr = dateStr.replace(/-/g, "/");
+    }
+    // Validate DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      return dateStr;
+    }
+    return "";
+  };
+
+  const columns: SmartTableColumn<Timetable>[] = useMemo(() => {
+    const cols: SmartTableColumn<Timetable>[] = [
+      {
+        key: "semester-year",
+        title: "Học kỳ / Năm học",
+        dataIndex: "semester",
+        width: "12%",
+        mobile: true,
+        render: (semester: Semester, record) => (
+          <div>
+            <div
+              style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}
+            >
+              HK{semester}
+            </div>
+            <div style={{ color: "#64748B", fontSize: "14px" }}>
+              {record.schoolYear}
+            </div>
           </div>
-          <div style={{ color: "#64748B", fontSize: "14px" }}>
-            {record.schoolYear}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Ngày học",
-      dataIndex: "date",
-      key: "date",
-      width: 120,
-      render: (value: string) => {
-        let dateStr = String(value).trim();
-        // Excel serial
-        if (/^\d+$/.test(dateStr)) {
-          const serial = Number(dateStr);
-          const excelEpoch = new Date(1899, 11, 30);
-          const dateObj = new Date(
-            excelEpoch.getTime() + serial * 24 * 60 * 60 * 1000
-          );
-          const d = dateObj.getDate().toString().padStart(2, "0");
-          const m = (dateObj.getMonth() + 1).toString().padStart(2, "0");
-          const y = dateObj.getFullYear();
-          dateStr = `${d}/${m}/${y}`;
-        } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-          const [y, m, d] = dateStr.split("-");
-          dateStr = `${d}/${m}/${y}`;
-        } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
-          dateStr = dateStr.replace(/-/g, "/");
-        }
-        // Validate DD/MM/YYYY
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        ),
+      },
+      {
+        key: "date",
+        title: "Ngày học",
+        dataIndex: "date",
+        width: "10%",
+        mobile: true,
+        render: (value: string) => {
+          const formatted = formatDate(value);
           return (
             <span
               style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}
             >
-              {dateStr}
+              {formatted}
             </span>
           );
-        }
-        return "";
+        },
       },
-    },
-    {
-      title: "Ca học / Giờ",
-      key: "period-time",
-      width: 140,
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-            Ca {record.period}
-          </div>
-          <div style={{ color: "#64748B", fontSize: "14px" }}>
-            {record.time}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Môn học",
-      dataIndex: "subject",
-      key: "subject",
-      width: 200,
-      render: (value: string) => (
-        <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-          {value}
-        </span>
-      ),
-    },
-    {
-      title: "Phòng học / Lớp",
-      key: "room-class",
-      width: 160,
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
-            {typeof record.room === "string" ? record.room : record.room?.name}
-          </div>
-          <div style={{ color: "#64748B", fontSize: "14px" }}>
-            Lớp: {record.className}
-          </div>
-        </div>
-      ),
-    },
-    ...(isAdmin
-      ? [
-          {
-            title: "Giảng viên",
-            dataIndex: "lecturer",
-            key: "lecturer",
-            width: 180,
-            render: (lecturer: any) => (
-              <span style={{ color: "#334155", fontSize: "15px" }}>
-                {typeof lecturer === "string" ? lecturer : lecturer?.name}
-              </span>
-            ),
-          },
-        ]
-      : []),
-    {
-      title: "Thao tác",
-      key: "actions",
-      width: 200,
-      fixed: "right" as const,
-      render: (_: any, record: Timetable) => {
-        // Chỉ hiển thị nếu là Admin/Quản lý hoặc là lecturer của TKB
-        const isOwner =
-          user &&
-          (record.lecturer === user._id ||
-            (typeof record.lecturer === "object" &&
-              record.lecturer._id === user._id));
-
-        if (isAdmin || isOwner) {
-          return (
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              <Button
-                icon={<EditOutlined />}
-                onClick={() => handleEdit(record)}
-                style={{
-                  fontSize: "15px",
-                  height: "40px",
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
-                }}
-              >
-                Sửa
-              </Button>
-              <Popconfirm
-                title="Xóa lịch dạy"
-                description="Bạn chắc chắn muốn xóa lịch dạy này?"
-                onConfirm={() => handleDelete(record)}
-                okText="Xóa"
-                cancelText="Hủy"
-                okButtonProps={{ danger: true }}
-              >
-                <Button
-                  danger
-                  icon={<DeleteOutlined />}
-                  style={{
-                    fontSize: "15px",
-                    height: "40px",
-                    paddingLeft: "16px",
-                    paddingRight: "16px",
-                  }}
-                >
-                  Xóa
-                </Button>
-              </Popconfirm>
+      {
+        key: "period-time",
+        title: "Ca học / Giờ",
+        dataIndex: "period",
+        width: "12%",
+        render: (period: Period, record) => (
+          <div>
+            <div
+              style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}
+            >
+              Ca {period}
             </div>
-          );
-        }
-        return null;
+            <div style={{ color: "#64748B", fontSize: "14px" }}>
+              {record.time}
+            </div>
+          </div>
+        ),
       },
-    },
-  ];
+      {
+        key: "subject",
+        title: "Môn học",
+        dataIndex: "subject",
+        width: "15%",
+        mobile: true,
+        render: (value: string) => (
+          <span style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}>
+            {value}
+          </span>
+        ),
+      },
+      {
+        key: "room-class",
+        title: "Phòng học / Lớp",
+        dataIndex: "room",
+        width: "14%",
+        render: (room: any, record) => (
+          <div>
+            <div
+              style={{ fontWeight: 600, color: "#1E293B", fontSize: "15px" }}
+            >
+              {typeof room === "string" ? room : room?.name || "-"}
+            </div>
+            <div style={{ color: "#64748B", fontSize: "14px" }}>
+              Lớp: {record.className || "-"}
+            </div>
+          </div>
+        ),
+      },
+    ];
+
+    // Add lecturer column for admin
+    if (isAdmin) {
+      cols.push({
+        key: "lecturer",
+        title: "Giảng viên",
+        dataIndex: "lecturer",
+        width: "15%",
+        render: (lecturer: any) => (
+          <span style={{ color: "#334155", fontSize: "15px" }}>
+            {typeof lecturer === "string" ? lecturer : lecturer?.name || "-"}
+          </span>
+        ),
+      });
+    }
+
+    return cols;
+  }, [isAdmin]);
 
   return (
     <>
-      <Table
+      <SmartTable
+        data={tableData}
         columns={columns}
-        dataSource={tableData}
-        rowKey={(record) => record._id || ""}
         loading={false}
-        size="middle"
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng ${total} lịch dạy`,
-          pageSizeOptions: ["10", "20", "50"],
+        rowKey="_id"
+        emptyState={{
+          title: "Chưa có lịch dạy nào",
+          description: "Thêm lịch dạy mới để bắt đầu quản lý",
+          illustration: "search",
+          icon: <CalendarOutlined />,
         }}
-        rowClassName={(_, index) =>
-          index % 2 === 0 ? "bg-white" : "bg-slate-50"
-        }
-        locale={{
-          emptyText: (
-            <Empty
-              image={
-                <CalendarOutlined style={{ fontSize: 64, color: "#94A3B8" }} />
+        stickyHeader
+        zebraStriping
+        cardConfig={{
+          title: (record) => record.subject || "Môn học",
+          subtitle: (record) => {
+            const date = formatDate(record.date);
+            const room =
+              typeof record.room === "string"
+                ? record.room
+                : record.room?.name || "-";
+            return `${date} • Ca ${record.period} • ${room}`;
+          },
+          meta: (record) =>
+            `HK${record.semester} • ${record.schoolYear} • Lớp: ${
+              record.className || "-"
+            }`,
+          badge: isAdmin
+            ? (record) => {
+                const lecturer =
+                  typeof record.lecturer === "string"
+                    ? record.lecturer
+                    : record.lecturer?.name || "-";
+                return (
+                  <span style={{ fontSize: "13px", color: "#64748B" }}>
+                    {lecturer}
+                  </span>
+                );
               }
-              imageStyle={{ height: 80 }}
-              description={
-                <div style={{ color: "#64748B", fontSize: "16px" }}>
-                  <div style={{ fontWeight: 600, marginBottom: "4px" }}>
-                    Chưa có lịch dạy nào
-                  </div>
-                  <div style={{ fontSize: "14px" }}>
-                    Thêm lịch dạy mới để bắt đầu quản lý
-                  </div>
-                </div>
-              }
-            />
-          ),
+            : undefined,
         }}
-        scroll={{ x: 1200 }}
+        actions={[
+          {
+            key: "edit",
+            label: "Sửa",
+            icon: <EditOutlined />,
+            onClick: handleEdit,
+            tooltip: "Chỉnh sửa lịch dạy",
+            visible: canModify,
+          },
+          {
+            key: "delete",
+            label: "Xóa",
+            icon: <DeleteOutlined />,
+            onClick: (record) => {
+              // Wrap in Popconfirm for confirmation
+              // Note: SmartTable actions don't directly support Popconfirm,
+              // so we handle it via a custom render in the action onClick
+              if (window.confirm("Bạn chắc chắn muốn xóa lịch dạy này?")) {
+                handleDelete(record);
+              }
+            },
+            danger: true,
+            tooltip: "Xóa lịch dạy",
+            visible: canModify,
+          },
+        ]}
       />
       <TimetableModal
         visible={editVisible}

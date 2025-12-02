@@ -3,10 +3,15 @@
  * Export all table-related components
  */
 
-export { default as SmartTable } from "./SmartTable";
+export {
+  default as SmartTable,
+  renderStatusBadge,
+  STATUS_BADGE_MAP,
+} from "./SmartTable";
 export type {
   SmartTableProps,
   SmartTableColumn,
+  SmartTableAction,
   ViewMode,
   ResponsiveConfig,
 } from "./SmartTable";

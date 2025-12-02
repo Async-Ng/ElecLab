@@ -171,40 +171,15 @@ const UserModal: React.FC<UserModalProps> = ({
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Thông tin cá nhân */}
-          <div
-            style={{
-              backgroundColor: "#F8FAFC",
-              padding: "20px",
-              borderRadius: "12px",
-              border: "1px solid #E2E8F0",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginBottom: "16px",
-                color: "#1E293B",
-                fontWeight: 600,
-                fontSize: "16px",
-              }}
-            >
-              <UserOutlined style={{ fontSize: "20px", color: "#0090D9" }} />
+          <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+            <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
+              <UserOutlined className="text-xl text-primary-500" />
               <span>Thông tin cá nhân</span>
             </div>
 
             {/* Avatar Upload */}
-            <div style={{ marginBottom: "16px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "15px",
-                  fontWeight: 500,
-                  color: "#334155",
-                  marginBottom: "8px",
-                }}
-              >
+            <div className="mb-4">
+              <label className="block text-[15px] font-medium text-gray-700 mb-2">
                 Ảnh đại diện
               </label>
               <Upload
@@ -217,15 +192,15 @@ const UserModal: React.FC<UserModalProps> = ({
             </div>
 
             {/* Name */}
-            <div style={{ marginBottom: "16px" }}>
+            <div className="mb-4">
               <FormField label="Họ và tên" required error={errors.name}>
                 <Input
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="VD: Nguyễn Văn A"
-                  prefix={<UserOutlined style={{ color: "#94A3B8" }} />}
+                  prefix={<UserOutlined className="text-gray-400" />}
                   error={!!errors.name}
-                  style={{ fontSize: "16px", height: "44px" }}
+                  className="text-base h-11"
                 />
               </FormField>
             </div>
@@ -238,68 +213,49 @@ const UserModal: React.FC<UserModalProps> = ({
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   placeholder="VD: nguyenvana@hcmct.edu.vn"
-                  prefix={<MailOutlined style={{ color: "#94A3B8" }} />}
+                  prefix={<MailOutlined className="text-gray-400" />}
                   error={!!errors.email}
-                  style={{ fontSize: "16px", height: "44px" }}
+                  className="text-base h-11"
                 />
               </FormField>
             </div>
           </div>
 
           {/* Right Column: Thông tin công tác */}
-          <div
-            style={{
-              backgroundColor: "#F8FAFC",
-              padding: "20px",
-              borderRadius: "12px",
-              border: "1px solid #E2E8F0",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginBottom: "16px",
-                color: "#1E293B",
-                fontWeight: 600,
-                fontSize: "16px",
-              }}
-            >
-              <SafetyCertificateOutlined
-                style={{ fontSize: "20px", color: "#10B981" }}
-              />
+          <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+            <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
+              <SafetyCertificateOutlined className="text-xl text-green-600" />
               <span>Thông tin công tác</span>
             </div>
 
             {/* Staff ID */}
-            <div style={{ marginBottom: "16px" }}>
+            <div className="mb-4">
               <FormField label="Mã nhân viên" required error={errors.staff_id}>
                 <Input
                   value={formData.staff_id}
                   onChange={(e) => handleChange("staff_id", e.target.value)}
                   placeholder="VD: GV001"
-                  prefix={<BarcodeOutlined style={{ color: "#94A3B8" }} />}
+                  prefix={<BarcodeOutlined className="text-gray-400" />}
                   error={!!errors.staff_id}
-                  style={{ fontSize: "16px", height: "44px" }}
+                  className="text-base h-11"
                 />
               </FormField>
             </div>
 
             {/* Position */}
-            <div style={{ marginBottom: "16px" }}>
+            <div className="mb-4">
               <FormField label="Chức vụ" error={errors.position}>
                 <Input
                   value={formData.position}
                   onChange={(e) => handleChange("position", e.target.value)}
                   placeholder="VD: Giảng viên"
-                  style={{ fontSize: "16px", height: "44px" }}
+                  className="text-base h-11"
                 />
               </FormField>
             </div>
 
             {/* Roles */}
-            <div style={{ marginBottom: "16px" }}>
+            <div className="mb-4">
               <FormField label="Vai trò" required error={errors.roles}>
                 <Select
                   mode="multiple"
@@ -308,8 +264,8 @@ const UserModal: React.FC<UserModalProps> = ({
                   options={roles}
                   placeholder="Chọn vai trò hệ thống"
                   error={!!errors.roles}
-                  suffixIcon={<TeamOutlined style={{ color: "#94A3B8" }} />}
-                  style={{ fontSize: "16px" }}
+                  suffixIcon={<TeamOutlined className="text-gray-400" />}
+                  className="text-base"
                 />
               </FormField>
             </div>
@@ -328,8 +284,8 @@ const UserModal: React.FC<UserModalProps> = ({
                     value: room._id,
                   }))}
                   placeholder="Chọn phòng thực hành"
-                  suffixIcon={<HomeOutlined style={{ color: "#94A3B8" }} />}
-                  style={{ fontSize: "16px" }}
+                  suffixIcon={<HomeOutlined className="text-gray-400" />}
+                  className="text-base"
                 />
               </FormField>
             </div>
@@ -338,26 +294,17 @@ const UserModal: React.FC<UserModalProps> = ({
 
         {/* Password - Full Width for New Users */}
         {!editingUser && (
-          <div
-            style={{
-              backgroundColor: "#FEF3C7",
-              padding: "20px",
-              borderRadius: "12px",
-              border: "1px solid #FDE68A",
-            }}
-          >
+          <div className="bg-yellow-50 p-5 rounded-xl border border-yellow-200">
             <FormField label="Mật khẩu" required error={errors.password}>
               <Input
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleChange("password", e.target.value)}
-                placeholder="Nhập mật khẩu cho tài khoản mới"
+                placeholder="Nhập mật khẩu cho người dùng mới"
                 error={!!errors.password}
-                style={{ fontSize: "16px", height: "44px" }}
+                className="text-base h-11"
               />
-              <div
-                style={{ fontSize: "13px", color: "#92400E", marginTop: "6px" }}
-              >
+              <div className="text-[13px] text-yellow-800 mt-1.5">
                 💡 Mật khẩu nên có ít nhất 8 ký tự
               </div>
             </FormField>
@@ -365,26 +312,12 @@ const UserModal: React.FC<UserModalProps> = ({
         )}
 
         {/* Modal Footer Actions */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            paddingTop: "20px",
-            borderTop: "2px solid #E2E8F0",
-          }}
-        >
+        <div className="flex justify-end gap-3 pt-5 border-t-2 border-gray-200">
           <Button
             variant="outline"
             onClick={onCancel}
             disabled={loading}
-            style={{
-              fontSize: "16px",
-              height: "44px",
-              paddingLeft: "24px",
-              paddingRight: "24px",
-              fontWeight: 600,
-            }}
+            className="text-base h-11 px-6 font-semibold"
           >
             Hủy bỏ
           </Button>
@@ -392,13 +325,7 @@ const UserModal: React.FC<UserModalProps> = ({
             type="submit"
             variant="primary"
             loading={loading}
-            style={{
-              fontSize: "16px",
-              height: "44px",
-              paddingLeft: "24px",
-              paddingRight: "24px",
-              fontWeight: 600,
-            }}
+            className="text-base h-11 px-6 font-semibold"
           >
             {editingUser ? "Cập nhật thông tin" : "Tạo tài khoản"}
           </Button>
