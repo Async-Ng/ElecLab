@@ -27,6 +27,9 @@ import {
   FileImageOutlined,
   WarningOutlined,
   LoadingOutlined,
+  BookOutlined,
+  EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeachingLogsStore } from "@/stores/useTeachingLogsStore";
@@ -330,7 +333,27 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       <Modal
         open={open}
         onClose={onClose}
-        title={log ? "Chi tiết nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
+        title={
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              {log ? (
+                <BookOutlined className="text-blue-600 text-lg" />
+              ) : (
+                <PlusOutlined className="text-blue-600 text-lg" />
+              )}
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-gray-900">
+                {log ? "Chi tiết nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
+              </div>
+              <div className="text-xs text-gray-500">
+                {log
+                  ? "Xem và cập nhật thông tin nhật ký"
+                  : "Ghi lại thông tin buổi giảng dạy"}
+              </div>
+            </div>
+          </div>
+        }
         size="xl"
       >
         <div className="space-y-6">

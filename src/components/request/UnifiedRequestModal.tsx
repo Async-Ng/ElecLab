@@ -20,6 +20,11 @@ import {
   GENERAL_REQUEST_TYPES,
   MATERIAL_REQUEST_TYPES,
 } from "@/types/unifiedRequest";
+import {
+  EditOutlined,
+  PlusOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
 
 interface RequestModalProps {
   isOpen: boolean;
@@ -188,7 +193,27 @@ export default function RequestModal({
     <Modal
       open={isOpen}
       onClose={onClose}
-      title={isEdit ? "Chỉnh Sửa Yêu Cầu" : "Tạo Yêu Cầu Mới"}
+      title={
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+            {isEdit ? (
+              <EditOutlined className="text-orange-600 text-lg" />
+            ) : (
+              <PlusOutlined className="text-orange-600 text-lg" />
+            )}
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {isEdit ? "Chỉnh sửa yêu cầu" : "Tạo yêu cầu mới"}
+            </div>
+            <div className="text-xs text-gray-500">
+              {isEdit
+                ? "Cập nhật thông tin yêu cầu"
+                : "Gửi yêu cầu chung hoặc vật tư"}
+            </div>
+          </div>
+        </div>
+      }
       size="lg"
     >
       <div className="space-y-4">

@@ -6,6 +6,7 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import FormField from "@/components/common/FormField";
 import { useState, useEffect, useMemo, FormEvent } from "react";
+import { HomeOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 
 interface RoomModalProps {
   open: boolean;
@@ -104,8 +105,28 @@ export default function RoomModal({
     <Modal
       open={open}
       onClose={onCancel}
-      title={editing ? "Sửa phòng" : "Thêm phòng"}
-      size="medium"
+      title={
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+            {editing ? (
+              <EditOutlined className="text-green-600 text-lg" />
+            ) : (
+              <PlusOutlined className="text-green-600 text-lg" />
+            )}
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {editing ? "Chỉnh sửa phòng" : "Thêm phòng mới"}
+            </div>
+            <div className="text-xs text-gray-500">
+              {editing
+                ? "Cập nhật thông tin phòng"
+                : "Tạo phòng thí nghiệm mới"}
+            </div>
+          </div>
+        </div>
+      }
+      size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Room ID */}

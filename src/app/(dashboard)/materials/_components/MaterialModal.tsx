@@ -15,6 +15,8 @@ import {
   AppstoreOutlined,
   CheckCircleOutlined,
   EnvironmentOutlined,
+  EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 
 type Props = {
@@ -133,8 +135,28 @@ export default function MaterialModal(props: Props) {
     <Modal
       open={open}
       onClose={onCancel}
-      title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư mới"}
-      size="medium"
+      title={
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+            {editing ? (
+              <EditOutlined className="text-blue-600 text-lg" />
+            ) : (
+              <PlusOutlined className="text-blue-600 text-lg" />
+            )}
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {editing ? "Chỉnh sửa vật tư" : "Thêm vật tư mới"}
+            </div>
+            <div className="text-xs text-gray-500">
+              {editing
+                ? "Cập nhật thông tin vật tư"
+                : "Tạo vật tư thiết bị mới"}
+            </div>
+          </div>
+        </div>
+      }
+      size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Group 1: Thông tin chính */}

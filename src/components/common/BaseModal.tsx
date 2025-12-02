@@ -1,7 +1,10 @@
 import React from "react";
-import { Modal, Button, ModalProps } from "antd";
+import Modal, { ModalProps as CustomModalProps } from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 
-interface BaseModalProps extends Omit<ModalProps, "footer"> {
+interface BaseModalProps {
+  title?: React.ReactNode;
+  open: boolean;
   onOk?: () => void;
   onCancel?: () => void;
   okText?: string;
@@ -10,6 +13,12 @@ interface BaseModalProps extends Omit<ModalProps, "footer"> {
   showFooter?: boolean;
   customFooter?: React.ReactNode;
   children: React.ReactNode;
+  width?: string;
+  size?: "sm" | "md" | "lg" | "xl" | "full";
+  centered?: boolean;
+  closable?: boolean;
+  maskClosable?: boolean;
+  className?: string;
 }
 
 export default function BaseModal({
@@ -22,21 +31,23 @@ export default function BaseModal({
   loading = false,
   showFooter = true,
   customFooter,
-  width = 600,
-  destroyOnClose = true,
+  size = "md",
+  centered = true,
+  closable = true,
+  maskClosable = true,
+  className,
   children,
-  ...restProps
 }: BaseModalProps) {
-  const defaultFooter = showFooter
-    ? [
-        <Button key="cancel" onClick={onCancel}>
-          {cancelText}
-        </Button>,
-        <Button key="submit" type="primary" loading={loading} onClick={onOk}>
-          {okText}
-        </Button>,
-      ]
-    : null;
+  const defaultFooter = showFooter ? (
+    <>
+      <Button variant="outline" onClick={onCancel}>
+        {cancelText}
+      </Button>
+      <Button onClick={onOk} loading={loading}>
+        {okText}
+      </Button>
+    </>
+  ) : undefined;
 
   const footer = customFooter || defaultFooter;
 
@@ -44,11 +55,13 @@ export default function BaseModal({
     <Modal
       title={title}
       open={open}
-      onCancel={onCancel}
+      onClose={onCancel}
       footer={footer}
-      width={width}
-      destroyOnHidden={destroyOnClose}
-      {...restProps}
+      size={size}
+      centered={centered}
+      closable={closable}
+      maskClosable={maskClosable}
+      className={className}
     >
       {children}
     </Modal>

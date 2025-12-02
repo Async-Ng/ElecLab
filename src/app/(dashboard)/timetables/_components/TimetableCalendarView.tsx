@@ -470,251 +470,261 @@ export default function TimetableCalendarView({
       {contextHolder}
       <Card style={{ marginTop: 16 }}>
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={8}>
-          <Select
-            placeholder="Năm học"
-            value={schoolYear || undefined}
-            onChange={setSchoolYear}
-            allowClear
-            style={{ width: "100%" }}
-          >
-            {schoolYears.map((year) => (
-              <Select.Option key={year} value={year}>
-                {year}
-              </Select.Option>
-            ))}
-          </Select>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Select
-            placeholder="Học kỳ"
-            value={semester || undefined}
-            onChange={setSemester}
-            allowClear
-            style={{ width: "100%" }}
-          >
-            <Select.Option value={Semester.First}>Học kỳ 1</Select.Option>
-            <Select.Option value={Semester.Second}>Học kỳ 2</Select.Option>
-            <Select.Option value={Semester.Third}>Học kỳ 3</Select.Option>
-          </Select>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Select
-            placeholder="Lớp"
-            value={className || undefined}
-            onChange={setClassName}
-            allowClear
-            style={{ width: "100%" }}
-          >
-            {classes.map((cls) => (
-              <Select.Option key={cls} value={cls}>
-                {cls}
-              </Select.Option>
-            ))}
-          </Select>
-        </Col>
-      </Row>
+          <Col xs={24} sm={8}>
+            <Select
+              placeholder="Năm học"
+              value={schoolYear || undefined}
+              onChange={setSchoolYear}
+              allowClear
+              style={{ width: "100%" }}
+            >
+              {schoolYears.map((year) => (
+                <Select.Option key={year} value={year}>
+                  {year}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Select
+              placeholder="Học kỳ"
+              value={semester || undefined}
+              onChange={setSemester}
+              allowClear
+              style={{ width: "100%" }}
+            >
+              <Select.Option value={Semester.First}>Học kỳ 1</Select.Option>
+              <Select.Option value={Semester.Second}>Học kỳ 2</Select.Option>
+              <Select.Option value={Semester.Third}>Học kỳ 3</Select.Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Select
+              placeholder="Lớp"
+              value={className || undefined}
+              onChange={setClassName}
+              allowClear
+              style={{ width: "100%" }}
+            >
+              {classes.map((cls) => (
+                <Select.Option key={cls} value={cls}>
+                  {cls}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
 
-      {!loading && timetables.length === 0 ? (
-        <Empty description="Chưa có lịch giảng dạy" />
-      ) : (
-        <div>
-          {/* Week Navigation */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "16px",
-              padding: "12px 16px",
-              backgroundColor: "#fafafa",
-              borderRadius: "4px",
-            }}
-          >
-            <Button icon={<LeftOutlined />} onClick={goToPreviousWeek}>
-              Tuần trước
-            </Button>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <Button onClick={goToToday}>Hôm nay</Button>
-            </div>
-            <Button icon={<RightOutlined />} onClick={goToNextWeek}>
-              Tuần sau
-            </Button>
-          </div>
-
-          {/* Status Legend */}
-          <div
-            style={{
-              display: "flex",
-              gap: "16px",
-              flexWrap: "wrap",
-              marginBottom: "16px",
-              padding: "12px",
-              backgroundColor: "#fafafa",
-              borderRadius: "4px",
-              fontSize: "13px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  backgroundColor: "#e6fffb",
-                  border: "1px solid #13c2c2",
-                  borderRadius: "2px",
-                }}
-              />
-              <span>Có thể ghi log</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  backgroundColor: "#fff2e8",
-                  border: "2px solid #ff7a45",
-                  borderRadius: "2px",
-                }}
-              />
-              <span>⚠ Quá hạn</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  backgroundColor: "#f0f0f0",
-                  border: "1px solid #d9d9d9",
-                  borderRadius: "2px",
-                }}
-              />
-              <span>✓ Đã ghi log</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  backgroundColor: "#f0f8ff",
-                  border: "1px solid #91d5ff",
-                  borderRadius: "2px",
-                }}
-              />
-              <span>⏳ Tương lai</span>
-            </div>
-          </div>
-
-          {/* Calendar Grid */}
-          <div style={{ overflowX: "auto" }}>
-            <table
+        {!loading && timetables.length === 0 ? (
+          <Empty description="Chưa có lịch giảng dạy" />
+        ) : (
+          <div>
+            {/* Week Navigation */}
+            <div
               style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                minWidth: "800px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "16px",
+                padding: "12px 16px",
+                backgroundColor: "#fafafa",
+                borderRadius: "4px",
               }}
             >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      padding: "12px",
-                      backgroundColor: "#1890ff",
-                      color: "white",
-                      fontWeight: 600,
-                      border: "1px solid #0050b3",
-                      minWidth: "100px",
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 10,
-                    }}
-                  >
-                    Ca học
-                  </th>
-                  {weekDays.map((day) => (
+              <Button icon={<LeftOutlined />} onClick={goToPreviousWeek}>
+                Tuần trước
+              </Button>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <Button onClick={goToToday}>Hôm nay</Button>
+              </div>
+              <Button icon={<RightOutlined />} onClick={goToNextWeek}>
+                Tuần sau
+              </Button>
+            </div>
+
+            {/* Status Legend */}
+            <div
+              style={{
+                display: "flex",
+                gap: "16px",
+                flexWrap: "wrap",
+                marginBottom: "16px",
+                padding: "12px",
+                backgroundColor: "#fafafa",
+                borderRadius: "4px",
+                fontSize: "13px",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    backgroundColor: "#e6fffb",
+                    border: "1px solid #13c2c2",
+                    borderRadius: "2px",
+                  }}
+                />
+                <span>Có thể ghi log</span>
+              </div>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    backgroundColor: "#fff2e8",
+                    border: "2px solid #ff7a45",
+                    borderRadius: "2px",
+                  }}
+                />
+                <span>⚠ Quá hạn</span>
+              </div>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    backgroundColor: "#f0f0f0",
+                    border: "1px solid #d9d9d9",
+                    borderRadius: "2px",
+                  }}
+                />
+                <span>✓ Đã ghi log</span>
+              </div>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    backgroundColor: "#f0f8ff",
+                    border: "1px solid #91d5ff",
+                    borderRadius: "2px",
+                  }}
+                />
+                <span>⏳ Tương lai</span>
+              </div>
+            </div>
+
+            {/* Calendar Grid */}
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  minWidth: "800px",
+                }}
+              >
+                <thead>
+                  <tr>
                     <th
-                      key={day.format("YYYY-MM-DD")}
                       style={{
                         padding: "12px",
-                        backgroundColor: day.isSame(dayjs(), "day")
-                          ? "#52c41a"
-                          : "#1890ff",
+                        backgroundColor: "#1890ff",
                         color: "white",
                         fontWeight: 600,
                         border: "1px solid #0050b3",
-                        minWidth: "150px",
+                        minWidth: "100px",
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 10,
                       }}
                     >
-                      <div>{capitalize(day.format("dddd"))}</div>
-                      <div style={{ fontSize: "12px", fontWeight: 400 }}>
-                        {day.format("DD/MM/YYYY")}
-                      </div>
+                      Ca học
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  Period.Period1,
-                  Period.Period2,
-                  Period.Period3,
-                  Period.Period4,
-                ].map((period) => {
-                  const periodConfig = PERIOD_CONFIG[period];
-                  return (
-                    <tr key={period}>
-                      <td
+                    {weekDays.map((day) => (
+                      <th
+                        key={day.format("YYYY-MM-DD")}
                         style={{
                           padding: "12px",
-                          backgroundColor: "#fafafa",
+                          backgroundColor: day.isSame(dayjs(), "day")
+                            ? "#52c41a"
+                            : "#1890ff",
+                          color: "white",
                           fontWeight: 600,
-                          border: "1px solid #d9d9d9",
-                          verticalAlign: "top",
-                          position: "sticky",
-                          left: 0,
-                          zIndex: 5,
+                          border: "1px solid #0050b3",
+                          minWidth: "150px",
                         }}
                       >
-                        <div style={{ color: "#1890ff" }}>
-                          {periodConfig.label}
+                        <div>{capitalize(day.format("dddd"))}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 400 }}>
+                          {day.format("DD/MM/YYYY")}
                         </div>
-                        <div
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    Period.Period1,
+                    Period.Period2,
+                    Period.Period3,
+                    Period.Period4,
+                  ].map((period) => {
+                    const periodConfig = PERIOD_CONFIG[period];
+                    return (
+                      <tr key={period}>
+                        <td
                           style={{
-                            fontSize: "11px",
-                            color: "#8c8c8c",
-                            marginTop: "4px",
+                            padding: "12px",
+                            backgroundColor: "#fafafa",
+                            fontWeight: 600,
+                            border: "1px solid #d9d9d9",
+                            verticalAlign: "top",
+                            position: "sticky",
+                            left: 0,
+                            zIndex: 5,
                           }}
                         >
-                          {periodConfig.studyTime}
-                        </div>
-                      </td>
-                      {weekDays.map((day) => {
-                        const dateKey = day.format("YYYY-MM-DD");
-                        const tt = timetableGrid[dateKey]?.[period];
-                        return (
-                          <td
-                            key={dateKey}
+                          <div style={{ color: "#1890ff" }}>
+                            {periodConfig.label}
+                          </div>
+                          <div
                             style={{
-                              padding: "8px",
-                              border: "1px solid #d9d9d9",
-                              backgroundColor: day.isSame(dayjs(), "day")
-                                ? "#f6ffed"
-                                : "white",
-                              verticalAlign: "top",
+                              fontSize: "11px",
+                              color: "#8c8c8c",
+                              marginTop: "4px",
                             }}
                           >
-                            {renderTimetableCell(tt, day, period)}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                            {periodConfig.studyTime}
+                          </div>
+                        </td>
+                        {weekDays.map((day) => {
+                          const dateKey = day.format("YYYY-MM-DD");
+                          const tt = timetableGrid[dateKey]?.[period];
+                          return (
+                            <td
+                              key={dateKey}
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #d9d9d9",
+                                backgroundColor: day.isSame(dayjs(), "day")
+                                  ? "#f6ffed"
+                                  : "white",
+                                verticalAlign: "top",
+                              }}
+                            >
+                              {renderTimetableCell(tt, day, period)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </Card>
     </>
   );

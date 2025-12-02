@@ -14,6 +14,8 @@ import {
   SafetyCertificateOutlined,
   TeamOutlined,
   HomeOutlined,
+  EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 
 interface UserModalProps {
@@ -163,9 +165,27 @@ const UserModal: React.FC<UserModalProps> = ({
       open={open}
       onClose={onCancel}
       title={
-        editingUser ? "Chỉnh sửa thông tin người dùng" : "Thêm người dùng mới"
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+            {editingUser ? (
+              <EditOutlined className="text-purple-600 text-lg" />
+            ) : (
+              <PlusOutlined className="text-purple-600 text-lg" />
+            )}
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {editingUser ? "Chỉnh sửa người dùng" : "Thêm người dùng mới"}
+            </div>
+            <div className="text-xs text-gray-500">
+              {editingUser
+                ? "Cập nhật thông tin người dùng"
+                : "Tạo tài khoản người dùng mới"}
+            </div>
+          </div>
+        </div>
       }
-      size="large"
+      size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Two Column Layout */}

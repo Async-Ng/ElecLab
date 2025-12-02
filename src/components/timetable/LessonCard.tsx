@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { Modal, Descriptions, Button as AntButton, Tag, Tooltip } from "antd";
+import { Descriptions, Button as AntButton, Tag, Tooltip } from "antd";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 import {
   FileAddOutlined,
   CheckCircleOutlined,
@@ -113,89 +115,89 @@ export default function LessonCard({
         >
           {/* Card Header - Subject */}
           <div className="p-3 sm:p-4 border-b border-gray-200/50">
-          <div className="flex items-start gap-2 sm:gap-3">
-            <div
-              className={cn(
-                "flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg",
-                "flex items-center justify-center",
-                hasLog
-                  ? "bg-green-500/10"
-                  : isFuture
-                  ? "bg-gray-400/10"
-                  : statusInfo?.color === "red"
-                  ? "bg-red-500/10"
-                  : "bg-blue-500/10"
-              )}
-            >
-              <BookOutlined
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div
                 className={cn(
-                  "text-base sm:text-lg",
+                  "flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg",
+                  "flex items-center justify-center",
                   hasLog
-                    ? "text-green-600"
+                    ? "bg-green-500/10"
                     : isFuture
-                    ? "text-gray-500"
+                    ? "bg-gray-400/10"
                     : statusInfo?.color === "red"
-                    ? "text-red-600"
-                    : "text-blue-600"
+                    ? "bg-red-500/10"
+                    : "bg-blue-500/10"
                 )}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900 line-clamp-2 leading-tight">
-                {lesson.subject}
-              </h3>
-              {/* Mobile status badge */}
-              <Badge
-                variant={statusStyle.badgeVariant}
-                className="mt-1.5 sm:hidden text-[10px]"
               >
-                {statusStyle.statusIcon}
-                <span className="ml-1">{statusStyle.statusText}</span>
-              </Badge>
-            </div>
-          </div>
-        </div>
-
-        {/* Card Body - Info Tags */}
-        <div className="p-3 sm:p-4 space-y-2">
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            {/* Class Tag */}
-            <Tooltip title="Lớp học">
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-[10px] sm:text-xs font-medium">
-                <TeamOutlined className="text-[10px] sm:text-xs" />
-                <span>{lesson.className}</span>
+                <BookOutlined
+                  className={cn(
+                    "text-base sm:text-lg",
+                    hasLog
+                      ? "text-green-600"
+                      : isFuture
+                      ? "text-gray-500"
+                      : statusInfo?.color === "red"
+                      ? "text-red-600"
+                      : "text-blue-600"
+                  )}
+                />
               </div>
-            </Tooltip>
-
-            {/* Room Tag */}
-            <Tooltip title="Phòng học">
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-[10px] sm:text-xs font-medium">
-                <HomeOutlined className="text-[10px] sm:text-xs" />
-                <span>
-                  {typeof lesson.room === "string"
-                    ? lesson.room
-                    : lesson.room?.room_id || lesson.room?.name}
-                </span>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm sm:text-base text-gray-900 line-clamp-2 leading-tight">
+                  {lesson.subject}
+                </h3>
+                {/* Mobile status badge */}
+                <Badge
+                  variant={statusStyle.badgeVariant}
+                  className="mt-1.5 sm:hidden text-[10px]"
+                >
+                  {statusStyle.statusIcon}
+                  <span className="ml-1">{statusStyle.statusText}</span>
+                </Badge>
               </div>
-            </Tooltip>
-
-            {/* Period Tag */}
-            <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-[10px] sm:text-xs font-medium">
-              <CalendarOutlined className="text-[10px] sm:text-xs" />
-              <span>Ca {lesson.period}</span>
             </div>
           </div>
 
-          {/* Desktop status badge */}
-          <Badge
-            variant={statusStyle.badgeVariant}
-            className="hidden sm:inline-flex text-xs"
-          >
-            {statusStyle.statusIcon}
-            <span className="ml-1.5">{statusStyle.statusText}</span>
-          </Badge>
-        </div>
-      </Card>
+          {/* Card Body - Info Tags */}
+          <div className="p-3 sm:p-4 space-y-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {/* Class Tag */}
+              <Tooltip title="Lớp học">
+                <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-[10px] sm:text-xs font-medium">
+                  <TeamOutlined className="text-[10px] sm:text-xs" />
+                  <span>{lesson.className}</span>
+                </div>
+              </Tooltip>
+
+              {/* Room Tag */}
+              <Tooltip title="Phòng học">
+                <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-[10px] sm:text-xs font-medium">
+                  <HomeOutlined className="text-[10px] sm:text-xs" />
+                  <span>
+                    {typeof lesson.room === "string"
+                      ? lesson.room
+                      : lesson.room?.room_id || lesson.room?.name}
+                  </span>
+                </div>
+              </Tooltip>
+
+              {/* Period Tag */}
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-[10px] sm:text-xs font-medium">
+                <CalendarOutlined className="text-[10px] sm:text-xs" />
+                <span>Ca {lesson.period}</span>
+              </div>
+            </div>
+
+            {/* Desktop status badge */}
+            <Badge
+              variant={statusStyle.badgeVariant}
+              className="hidden sm:inline-flex text-xs"
+            >
+              {statusStyle.statusIcon}
+              <span className="ml-1.5">{statusStyle.statusText}</span>
+            </Badge>
+          </div>
+        </Card>
       </div>
 
       {/* Detail Modal */}
@@ -214,39 +216,36 @@ export default function LessonCard({
           </div>
         }
         open={detailModalOpen}
-        onCancel={() => setDetailModalOpen(false)}
-        width="98%"
-        style={{ maxWidth: "1200px" }}
-        styles={{ body: { padding: "24px" } }}
-        footer={[
-          <AntButton key="close" onClick={() => setDetailModalOpen(false)}>
-            Đóng
-          </AntButton>,
-          <AntButton
-            key="material"
-            type="dashed"
-            icon={<ShoppingOutlined />}
-            onClick={() => {
-              setDetailModalOpen(false);
-              setMaterialModalOpen(true);
-            }}
-          >
-            Yêu cầu vật tư
-          </AntButton>,
-          !isFuture && !hasLog && (
-            <AntButton
-              key="log"
-              type="primary"
-              icon={<FileAddOutlined />}
+        onClose={() => setDetailModalOpen(false)}
+        size="xl"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDetailModalOpen(false)}>
+              Đóng
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => {
                 setDetailModalOpen(false);
-                setLogModalOpen(true);
+                setMaterialModalOpen(true);
               }}
             >
-              Ghi nhật ký
-            </AntButton>
-          ),
-        ]}
+              <ShoppingOutlined className="mr-2" />
+              Yêu cầu vật tư
+            </Button>
+            {!isFuture && !hasLog && (
+              <Button
+                onClick={() => {
+                  setDetailModalOpen(false);
+                  setLogModalOpen(true);
+                }}
+              >
+                <FileAddOutlined className="mr-2" />
+                Ghi nhật ký
+              </Button>
+            )}
+          </>
+        }
       >
         <Descriptions
           column={{ xs: 1, sm: 2, md: 4 }}
