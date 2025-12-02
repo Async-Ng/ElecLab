@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { RoomModel } from "@/models/Room";
-import { User } from "@/models/User";
+import { User as UserModel } from "@/models/User"; // Import User model để register schema
 import { requireAuth, getAuthContext } from "@/lib/apiMiddleware";
 
 /**
@@ -24,6 +24,9 @@ export async function GET(request: Request) {
     }
 
     await connectToDatabase();
+
+    // Ensure User model is registered before populate
+    UserModel;
 
     // User có thể xem tất cả rooms (read-only) để biết phòng học trong TKB
     const rooms = await RoomModel.find({})

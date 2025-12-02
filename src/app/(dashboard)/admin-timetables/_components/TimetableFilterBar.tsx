@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import React from "react";
 import { Semester, Period, StudyTime, Timetable } from "@/types/timetable";
-import FilterBar from "@/components/common/FilterBar";
+import FilterBar from "@/components/table/FilterBar";
 import {
   SemesterSelect,
   PeriodSelect,

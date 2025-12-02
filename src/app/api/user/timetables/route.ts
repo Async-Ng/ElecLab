@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Timetable from "@/models/Timetable";
-import { User } from "@/models/User";
+import { User as UserModel } from "@/models/User";
+import { RoomModel } from "@/models/Room";
 import { requireAuth, getAuthContext } from "@/lib/apiMiddleware";
 
 /**
@@ -23,6 +24,10 @@ export async function GET(request: Request) {
     }
 
     await connectToDatabase();
+
+    // Ensure models are registered
+    UserModel;
+    RoomModel;
 
     // User chỉ xem timetables của mình
     const timetables = await Timetable.find({ lecturer: auth.userId })

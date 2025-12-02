@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
 import { brandColors } from "@/styles/theme";
-import Select from "@/components/ui/Select";
+import { Select } from "antd";
 import { FileTextOutlined, UnorderedListOutlined } from "@ant-design/icons";
 
 type Props = {
@@ -29,10 +29,8 @@ export default function Sidebar({ onClose }: Props) {
       localStorage.setItem("activeRole", user.roles[0]);
     }
   }, [user?.roles]);
-
   // Định nghĩa các menu item với quyền truy cập
-  // Grouped into "Personal Tools" and "Management Tools" for clarity
-  const personalMenuItems: Array<{
+  const allMenuItems: Array<{
     href: string;
     label: string;
     icon: React.ReactNode;
@@ -43,7 +41,7 @@ export default function Sidebar({ onClose }: Props) {
       label: "Thời khóa biểu",
       icon: (
         <svg
-          className="w-6 h-6" // Increased from w-5 h-5
+          className="w-5 h-5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -59,12 +57,35 @@ export default function Sidebar({ onClose }: Props) {
       ),
       roles: [UserRole.User],
     },
+
+    {
+      href: "/admin-timetables",
+      label: "Quản lý TKB",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 2v4M8 2v4M3 10h18"
+          />
+        </svg>
+      ),
+      roles: [UserRole.Admin],
+    },
+
     {
       href: "/teaching-logs",
       label: "Nhật ký ca dạy",
       icon: (
         <svg
-          className="w-6 h-6"
+          className="w-5 h-5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -81,53 +102,20 @@ export default function Sidebar({ onClose }: Props) {
       ),
       roles: [UserRole.User],
     },
+
     {
       href: "/requests",
       label: "Yêu cầu của tôi",
-      icon: <FileTextOutlined className="text-xl" />, // Increased size
+      icon: <FileTextOutlined className="w-5 h-5" />,
       roles: [UserRole.User],
     },
-  ];
 
-  const managementMenuItems: Array<{
-    href: string;
-    label: string;
-    icon: React.ReactNode;
-    roles: UserRole[];
-  }> = [
-    {
-      href: "/admin-timetables",
-      label: "Quản lý TKB",
-      icon: (
-        <svg
-          className="w-6 h-6"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M16 2v4M8 2v4M3 10h18"
-          />
-        </svg>
-      ),
-      roles: [UserRole.Admin],
-    },
-    {
-      href: "/admin/requests",
-      label: "Quản lý yêu cầu",
-      icon: <UnorderedListOutlined className="text-xl" />,
-      roles: [UserRole.Admin],
-    },
     {
       href: "/materials",
       label: "Vật tư",
       icon: (
         <svg
-          className="w-6 h-6"
+          className="w-5 h-5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -147,7 +135,7 @@ export default function Sidebar({ onClose }: Props) {
       label: "Giảng viên",
       icon: (
         <svg
-          className="w-6 h-6"
+          className="w-5 h-5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -167,7 +155,7 @@ export default function Sidebar({ onClose }: Props) {
       label: "Phòng thực hành",
       icon: (
         <svg
-          className="w-6 h-6"
+          className="w-5 h-5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -182,22 +170,35 @@ export default function Sidebar({ onClose }: Props) {
       ),
       roles: [UserRole.Admin],
     },
+
+    {
+      href: "/admin/requests",
+      label: "Quản lý yêu cầu",
+      icon: <UnorderedListOutlined className="w-5 h-5" />,
+      roles: [UserRole.Admin],
+    },
   ];
 
-  // Lọc menu theo role
+  // Lọc menu theo role (sau khi lấy user)
+
+  let menuItems: typeof allMenuItems = [];
+
+  // If user has selected a specific role, use that; otherwise use their primary role
   const currentRole = activeRole || user?.roles?.[0];
 
-  let displayPersonalItems: typeof personalMenuItems = [];
-  let displayManagementItems: typeof managementMenuItems = [];
-
   if (currentRole === UserRole.Admin) {
-    displayManagementItems = managementMenuItems.filter((item) =>
+    // Quản lý: chỉ thấy admin items (items that have Admin in their roles)
+    menuItems = allMenuItems.filter((item) =>
       item.roles.includes(UserRole.Admin)
     );
   } else if (currentRole === UserRole.User) {
-    displayPersonalItems = personalMenuItems.filter((item) =>
+    // Người dùng: chỉ thấy các mục cho phép User
+    menuItems = allMenuItems.filter((item) =>
       item.roles.includes(UserRole.User)
     );
+  } else {
+    // Nếu chưa đăng nhập hoặc không có roles hợp lệ, hiển thị toàn bộ (hoặc tuỳ chỉnh: có thể để [] nếu muốn ẩn hết)
+    menuItems = allMenuItems;
   }
 
   const pathname = usePathname();
@@ -213,16 +214,16 @@ export default function Sidebar({ onClose }: Props) {
       {/* Close button for mobile */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 rounded md:hidden hover:bg-white/20 transition-colors"
+        className="absolute top-4 right-4 p-2 rounded md:hidden"
         style={{ background: "rgba(255, 255, 255, 0.15)" }}
         aria-label="Đóng menu"
       >
         <svg
-          className="w-6 h-6 text-white" // Increased from w-5 h-5
+          className="w-5 h-5 text-white"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth={2.5}
+          strokeWidth={2}
         >
           <path
             strokeLinecap="round"
@@ -247,25 +248,14 @@ export default function Sidebar({ onClose }: Props) {
           />
         </div>
         <h1 className="text-xl font-bold tracking-wide mt-2">ElecLab</h1>
-        <div className="mt-4 mb-2 text-center px-4">
-          <p className="text-base font-semibold text-white mt-1">
-            {user?.name}
-          </p>
-          <p className="text-sm" style={{ color: "rgba(255, 255, 255, 0.85)" }}>
-            {user?.roles
-              .map((role) =>
-                role === UserRole.Admin ? "Quản lý" : "Người dùng"
-              )
-              .join(", ")}
-          </p>
-
+        <div className="mt-4 mb-2 text-center">
           {/* Role switcher for dual-role users */}
           {user?.roles && user.roles.length > 1 && (
             <div className="mt-3">
               <Select
                 value={activeRole}
                 onChange={(value) => {
-                  setActiveRole(value as UserRole);
+                  setActiveRole(value);
                   localStorage.setItem("activeRole", value);
                   // Navigate to appropriate page based on role
                   if (value === UserRole.Admin) {
@@ -278,94 +268,49 @@ export default function Sidebar({ onClose }: Props) {
                   label: role === UserRole.Admin ? "Quản lý" : "Người dùng",
                   value: role,
                 }))}
-                className="w-full"
+                style={{ width: "100%" }}
+                className="role-switcher"
               />
+              <style jsx>{`
+                :global(.role-switcher .ant-select-selector) {
+                  background: rgba(255, 255, 255, 0.2) !important;
+                  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+                  color: white !important;
+                }
+                :global(.role-switcher .ant-select-selector:hover) {
+                  background: rgba(255, 255, 255, 0.3) !important;
+                }
+                :global(.role-switcher .ant-select-arrow) {
+                  color: white !important;
+                }
+                :global(.role-switcher .ant-select-selection-item) {
+                  color: white !important;
+                }
+              `}</style>
             </div>
           )}
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-6 overflow-y-auto">
-        {/* Personal Tools Section */}
-        {displayPersonalItems.length > 0 && (
-          <div className="mb-6">
-            <h2
-              className="text-xs font-bold uppercase tracking-wider mb-3 px-3"
-              style={{ color: "rgba(255, 255, 255, 0.7)" }}
-            >
-              Công cụ cá nhân
-            </h2>
-            <ul className="space-y-2">
-              {displayPersonalItems.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`
-                      flex items-center gap-4 py-3 px-4 rounded-lg 
-                      transition-all font-semibold text-base
-                      relative
-                      ${
-                        isActive(item.href)
-                          ? "bg-white text-blue-600 shadow-lg"
-                          : "text-white hover:bg-white/15"
-                      }
-                    `}
-                    onClick={onClose}
-                    style={{
-                      // Add left indicator bar for active state
-                      borderLeft: isActive(item.href)
-                        ? "4px solid #0090D9"
-                        : "4px solid transparent",
-                    }}
-                  >
-                    <span className="flex-shrink-0">{item.icon}</span>
-                    <span className="flex-1">{item.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Management Tools Section */}
-        {displayManagementItems.length > 0 && (
-          <div>
-            <h2
-              className="text-xs font-bold uppercase tracking-wider mb-3 px-3"
-              style={{ color: "rgba(255, 255, 255, 0.7)" }}
-            >
-              Công cụ quản lý
-            </h2>
-            <ul className="space-y-2">
-              {displayManagementItems.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`
-                      flex items-center gap-4 py-3 px-4 rounded-lg 
-                      transition-all font-semibold text-base
-                      relative
-                      ${
-                        isActive(item.href)
-                          ? "bg-white text-blue-600 shadow-lg"
-                          : "text-white hover:bg-white/15"
-                      }
-                    `}
-                    onClick={onClose}
-                    style={{
-                      borderLeft: isActive(item.href)
-                        ? "4px solid #0090D9"
-                        : "4px solid transparent",
-                    }}
-                  >
-                    <span className="flex-shrink-0">{item.icon}</span>
-                    <span className="flex-1">{item.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      <nav className="flex-1 px-4 py-6">
+        <ul className="space-y-1">
+          {menuItems.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-all font-medium text-base ${
+                  isActive(item.href)
+                    ? "bg-white/20 text-white shadow-md"
+                    : "hover:bg-white/10 text-white/90"
+                }`}
+                onClick={onClose}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </nav>
 
       <div
@@ -377,10 +322,10 @@ export default function Sidebar({ onClose }: Props) {
       >
         <button
           onClick={logout}
-          className="w-full text-base rounded-lg px-4 py-3 transition-all font-semibold hover:shadow-md"
+          className="w-full text-sm rounded px-3 py-2 transition-all font-semibold"
           style={{
             background: "rgba(255, 255, 255, 0.15)",
-            border: "2px solid rgba(255, 255, 255, 0.4)", // Thicker border for affordance
+            border: "1px solid rgba(255, 255, 255, 0.3)",
             color: "white",
           }}
           onMouseEnter={(e) => {
@@ -390,7 +335,7 @@ export default function Sidebar({ onClose }: Props) {
             e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
           }}
         >
-          🚪 Đăng xuất
+          Đăng xuất
         </button>
       </div>
     </aside>

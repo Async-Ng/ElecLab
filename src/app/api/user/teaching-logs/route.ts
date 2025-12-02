@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import TeachingLog from "@/models/TeachingLog";
 import Timetable from "@/models/Timetable";
-import { User } from "@/models/User";
+import { User as UserModel } from "@/models/User";
+import { RoomModel } from "@/models/Room";
 import { requireAuth, getAuthContext } from "@/lib/apiMiddleware";
 import { uploadImagesToImgBB } from "@/lib/imgbb";
 
@@ -28,6 +29,10 @@ export async function GET(request: Request) {
     const lessonId = searchParams.get("lessonId");
 
     await connectToDatabase();
+
+    // Ensure models are registered
+    UserModel;
+    RoomModel;
 
     let query: any = {};
     if (lessonId) {

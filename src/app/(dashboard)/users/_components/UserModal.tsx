@@ -6,7 +6,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Upload from "@/components/ui/Upload";
 import Button from "@/components/ui/Button";
-import FormField from "@/components/form/FormField";
+import FormField from "@/components/common/FormField";
 import {
   UserOutlined,
   MailOutlined,

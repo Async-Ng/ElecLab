@@ -17,6 +17,9 @@ export async function GET(request: Request) {
   try {
     await connectToDatabase();
 
+    // Ensure User model is registered
+    User;
+
     const rooms = await RoomModel.find()
       .populate("users_manage", "name email staff_id")
       .lean()
