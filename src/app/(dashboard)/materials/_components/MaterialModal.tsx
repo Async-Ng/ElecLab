@@ -25,10 +25,11 @@ type Props = {
   onCancel: () => void;
   editing: Material | null;
   loading?: boolean;
+  onDelete?: (id?: string) => void;
 };
 
 export default function MaterialModal(props: Props) {
-  const { open, onSubmit, onCancel, editing, loading = false } = props;
+  const { open, onSubmit, onCancel, editing, loading = false, onDelete } = props;
   const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
   const [formData, setFormData] = useState({
     material_id: "",
@@ -247,23 +248,42 @@ export default function MaterialModal(props: Props) {
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="flex justify-end gap-3 pt-5 border-t-2 border-gray-200">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={loading}
-            className="text-base h-11 px-6 font-semibold"
-          >
-            Hủy bỏ
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            loading={loading}
-            className="text-base h-11 px-6 font-semibold"
-          >
-            {editing ? "Cập nhật thông tin" : "Lưu thông tin"}
-          </Button>
+        <div className="flex justify-between gap-3 pt-5 border-t-2 border-gray-200">
+          <div>
+            {editing && onDelete && (
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (window.confirm("Bạn chắc chắn muốn xóa vật tư này?")) {
+                    onDelete(editing._id);
+                    onCancel();
+                  }
+                }}
+                disabled={loading}
+                className="text-base h-11 px-6 font-semibold"
+              >
+                Xóa vật tư
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={loading}
+              className="text-base h-11 px-6 font-semibold"
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={loading}
+              className="text-base h-11 px-6 font-semibold"
+            >
+              {editing ? "Cập nhật thông tin" : "Lưu thông tin"}
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>

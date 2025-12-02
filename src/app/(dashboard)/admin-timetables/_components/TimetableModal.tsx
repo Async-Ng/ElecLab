@@ -24,6 +24,7 @@ interface TimetableModalProps {
   rooms: Array<{ _id: string; name: string; room_id: string }>;
   users: Array<{ _id: string; name: string; email: string }>;
   materials?: Array<{ _id: string; name: string; quantity: number }>;
+  onDelete?: (timetable: Timetable) => void;
 }
 
 export default function TimetableModal({
@@ -34,6 +35,7 @@ export default function TimetableModal({
   rooms = [],
   users = [],
   materials = [],
+  onDelete,
 }: TimetableModalProps) {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
@@ -128,15 +130,32 @@ export default function TimetableModal({
   }
 
   const footerContent = (
-    <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-      <Button onClick={onClose}>Hủy</Button>
-      <Button type="primary" onClick={handleOk} loading={loading}>
-        Lưu
-      </Button>
-      <Button onClick={() => setShowMaterialRequest(true)}>
-        Gửi yêu cầu vật tư
-      </Button>
-    </Space>
+    <div className="flex justify-between w-full">
+      <div>
+        {timetable && onDelete && (
+          <Button
+            danger
+            onClick={() => {
+              if (window.confirm("Bạn chắc chắn muốn xóa lịch dạy này?")) {
+                onDelete(timetable);
+                onClose();
+              }
+            }}
+          >
+            Xóa lịch dạy
+          </Button>
+        )}
+      </div>
+      <Space>
+        <Button onClick={onClose}>Hủy</Button>
+        <Button type="primary" onClick={handleOk} loading={loading}>
+          Lưu
+        </Button>
+        <Button onClick={() => setShowMaterialRequest(true)}>
+          Gửi yêu cầu vật tư
+        </Button>
+      </Space>
+    </div>
   );
 
   return (

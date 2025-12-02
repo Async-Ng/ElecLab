@@ -15,6 +15,7 @@ interface RoomModalProps {
   editing: Room | null;
   users: User[];
   loading?: boolean;
+  onDelete?: (id?: string) => void;
 }
 
 export default function RoomModal({
@@ -24,6 +25,7 @@ export default function RoomModal({
   editing,
   users,
   loading = false,
+  onDelete,
 }: RoomModalProps) {
   const [formData, setFormData] = useState({
     room_id: "",
@@ -173,13 +175,31 @@ export default function RoomModal({
         </FormField>
 
         {/* Modal Footer Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
-            Hủy
-          </Button>
-          <Button type="submit" variant="primary" loading={loading}>
-            {editing ? "Cập nhật" : "Thêm mới"}
-          </Button>
+        <div className="flex justify-between gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div>
+            {editing && onDelete && (
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (window.confirm("Bạn chắc chắn muốn xóa phòng này?")) {
+                    onDelete(editing._id);
+                    onCancel();
+                  }
+                }}
+                disabled={loading}
+              >
+                Xóa phòng
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onCancel} disabled={loading}>
+              Hủy
+            </Button>
+            <Button type="submit" variant="primary" loading={loading}>
+              {editing ? "Cập nhật" : "Thêm mới"}
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>

@@ -235,16 +235,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
               record.className || "-"
             }`,
         }}
-        actions={[
-          {
-            key: "edit",
-            label: "Chỉnh sửa",
-            icon: <EditOutlined />,
-            onClick: handleEdit,
-            tooltip: "Chỉnh sửa thời khóa biểu",
-            visible: canEdit, // Only show for owner or admin
-          },
-        ]}
+        onRowClick={canEdit ? handleEdit : undefined}
       />
       <TimetableModal
         visible={editVisible}

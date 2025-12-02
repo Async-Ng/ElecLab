@@ -26,6 +26,7 @@ interface UserModalProps {
   onSubmit: (formData: FormData) => void;
   roles: { value: string; label: string }[];
   rooms: Room[];
+  onDelete?: (id?: string) => void;
 }
 
 const UserModal: React.FC<UserModalProps> = ({
@@ -36,6 +37,7 @@ const UserModal: React.FC<UserModalProps> = ({
   onSubmit,
   roles,
   rooms,
+  onDelete,
 }) => {
   // Form state
   const [formData, setFormData] = useState({
@@ -332,23 +334,46 @@ const UserModal: React.FC<UserModalProps> = ({
         )}
 
         {/* Modal Footer Actions */}
-        <div className="flex justify-end gap-3 pt-5 border-t-2 border-gray-200">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={loading}
-            className="text-base h-11 px-6 font-semibold"
-          >
-            Hủy bỏ
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            loading={loading}
-            className="text-base h-11 px-6 font-semibold"
-          >
-            {editingUser ? "Cập nhật thông tin" : "Tạo tài khoản"}
-          </Button>
+        <div className="flex justify-between gap-3 pt-5 border-t-2 border-gray-200">
+          <div>
+            {editingUser && onDelete && (
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Bạn chắc chắn muốn xóa tài khoản này? Hành động này không thể hoàn tác."
+                    )
+                  ) {
+                    onDelete(editingUser._id);
+                    onCancel();
+                  }
+                }}
+                disabled={loading}
+                className="text-base h-11 px-6 font-semibold"
+              >
+                Xóa tài khoản
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={loading}
+              className="text-base h-11 px-6 font-semibold"
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={loading}
+              className="text-base h-11 px-6 font-semibold"
+            >
+              {editingUser ? "Cập nhật thông tin" : "Tạo tài khoản"}
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>

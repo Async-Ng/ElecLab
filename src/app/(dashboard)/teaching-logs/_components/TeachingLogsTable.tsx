@@ -265,18 +265,10 @@ const TeachingLogsTable: React.FC = () => {
             );
           },
         }}
-        actions={[
-          {
-            key: "view",
-            label: "Xem chi tiết",
-            icon: <EyeOutlined />,
-            onClick: (record) => {
-              setEditLog(record);
-              setModalOpen(true);
-            },
-            tooltip: "Xem và chỉnh sửa nhật ký",
-          },
-        ]}
+        onRowClick={(record) => {
+          setEditLog(record);
+          setModalOpen(true);
+        }}
       />
 
       <TeachingLogModal

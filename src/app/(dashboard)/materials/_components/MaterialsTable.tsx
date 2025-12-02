@@ -172,14 +172,14 @@ export default React.memo(function MaterialsTable({
       width: "16%",
       mobile: true,
       isStatus: true,
-      render: (status: MaterialStatus) => {
-        let variant: "success" | "info" | "danger" = "success";
+      render: (status) => {
+        let variant: "success" | "info" | "error" = "success";
         let text = "Có sẵn";
         if (status === MaterialStatus.IN_USE) {
           variant = "info";
           text = "Đang sử dụng";
         } else if (status === MaterialStatus.BROKEN) {
-          variant = "danger";
+          variant = "error";
           text = "Hư hỏng";
         }
         return (
@@ -237,56 +237,34 @@ export default React.memo(function MaterialsTable({
         data={filteredMaterials}
         loading={loading}
         rowKey="_id"
+        onRowClick={onEdit}
         emptyState={{
           title: "Chưa có vật tư nào",
           description: "Thêm vật tư mới để bắt đầu quản lý",
           illustration: "search",
-          icon: <InboxOutlined />,
         }}
         stickyHeader
         zebraStriping
         cardConfig={{
-          title: (record) => record.name,
-          subtitle: (record) => `Mã: ${record.material_id}`,
-          meta: (record) => getPlaceName(record.place_used),
-          badge: (record) => {
-            let variant: "success" | "info" | "danger" = "success";
+          title: (record: Material) => record.name,
+          subtitle: (record: Material) => `Mã: ${record.material_id}`,
+          badge: (record: Material) => {
+            let variant: "success" | "info" | "error" = "success";
             let text = "Có sẵn";
             if (record.status === MaterialStatus.IN_USE) {
               variant = "info";
               text = "Đang sử dụng";
             } else if (record.status === MaterialStatus.BROKEN) {
-              variant = "danger";
+              variant = "error";
               text = "Hư hỏng";
             }
             return (
-              <Badge variant={variant} size="sm">
+              <Badge variant={variant} size="md">
                 {text}
               </Badge>
             );
           },
         }}
-        actions={[
-          {
-            key: "edit",
-            label: "Sửa",
-            icon: <EditOutlined />,
-            onClick: onEdit,
-            tooltip: "Chỉnh sửa vật tư",
-          },
-          {
-            key: "delete",
-            label: "Xóa",
-            icon: <DeleteOutlined />,
-            onClick: (record) => {
-              if (window.confirm("Bạn chắc chắn muốn xóa vật tư này?")) {
-                onDelete(record._id);
-              }
-            },
-            danger: true,
-            tooltip: "Xóa vật tư",
-          },
-        ]}
       />
     </div>
   );

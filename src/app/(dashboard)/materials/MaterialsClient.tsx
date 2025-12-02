@@ -157,6 +157,7 @@ export default function MaterialsClient() {
             onCancel={() => setModalOpen(false)}
             onSubmit={handleSubmit}
             loading={submitting}
+            onDelete={handleDelete}
           />
         </Suspense>
       )}

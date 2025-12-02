@@ -325,32 +325,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
               }
             : undefined,
         }}
-        actions={[
-          {
-            key: "edit",
-            label: "Sửa",
-            icon: <EditOutlined />,
-            onClick: handleEdit,
-            tooltip: "Chỉnh sửa lịch dạy",
-            visible: canModify,
-          },
-          {
-            key: "delete",
-            label: "Xóa",
-            icon: <DeleteOutlined />,
-            onClick: (record) => {
-              // Wrap in Popconfirm for confirmation
-              // Note: SmartTable actions don't directly support Popconfirm,
-              // so we handle it via a custom render in the action onClick
-              if (window.confirm("Bạn chắc chắn muốn xóa lịch dạy này?")) {
-                handleDelete(record);
-              }
-            },
-            danger: true,
-            tooltip: "Xóa lịch dạy",
-            visible: canModify,
-          },
-        ]}
+        onRowClick={canModify ? handleEdit : undefined}
       />
       <TimetableModal
         visible={editVisible}
@@ -360,6 +335,7 @@ export default function TimetableTable({ data }: TimetableTableProps) {
         rooms={rooms}
         users={users}
         materials={materials}
+        onDelete={handleDelete}
       />
     </>
   );

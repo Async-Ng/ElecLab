@@ -166,6 +166,7 @@ export default function RoomsClient() {
             editing={editing}
             users={users}
             loading={submitting}
+            onDelete={handleDelete}
           />
         </Suspense>
       )}

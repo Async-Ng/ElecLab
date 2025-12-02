@@ -4,9 +4,7 @@ import Badge from "@/components/ui/Badge";
 import {
   SmartTable,
   SmartTableColumn,
-  SmartTableAction,
 } from "@/components/table";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Popconfirm } from "antd";
 
 interface RoomTableProps {
@@ -64,29 +62,11 @@ export default function RoomTable({
     },
   ];
 
-  const actions: SmartTableAction<Room>[] = [
-    {
-      key: "edit",
-      label: "Chỉnh sửa",
-      icon: <EditOutlined />,
-      onClick: onEdit,
-      tooltip: "Chỉnh sửa thông tin phòng",
-    },
-    {
-      key: "delete",
-      label: "Xóa",
-      icon: <DeleteOutlined />,
-      onClick: (record) => onDelete(record._id),
-      danger: true,
-      tooltip: "Xóa phòng này",
-    },
-  ];
-
   return (
     <SmartTable
       data={rooms}
       columns={columns}
-      actions={actions}
+      onRowClick={onEdit}
       loading={loading}
       rowKey="_id"
       emptyState={{

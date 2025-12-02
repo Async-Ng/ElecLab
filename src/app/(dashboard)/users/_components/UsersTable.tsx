@@ -267,31 +267,7 @@ export const UsersTable = ({
             );
           },
         }}
-        actions={[
-          {
-            key: "edit",
-            label: "Sửa",
-            icon: <EditOutlined />,
-            onClick: onEdit,
-            tooltip: "Chỉnh sửa thông tin người dùng",
-          },
-          {
-            key: "delete",
-            label: "Xóa",
-            icon: <DeleteOutlined />,
-            onClick: (record) => {
-              if (
-                window.confirm(
-                  "Bạn chắc chắn muốn xóa tài khoản này? Hành động này không thể hoàn tác."
-                )
-              ) {
-                record._id && onDelete(record._id);
-              }
-            },
-            danger: true,
-            tooltip: "Xóa người dùng",
-          },
-        ]}
+        onRowClick={onEdit}
       />
     </div>
   );

@@ -241,6 +241,7 @@ export default function UsersClient() {
             onCancel={() => setModalOpen(false)}
             roles={availableRoles}
             rooms={rooms}
+            onDelete={handleDelete}
           />
         </Suspense>
       )}
