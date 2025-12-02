@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { Input, Select, Button } from "antd";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { MaterialCategory, MaterialStatus } from "@/types/material";
-
-const { Option } = Select;
 
 type FilterState = { q: string; category: string; status: string };
 type Props = {
@@ -39,21 +38,19 @@ export default React.memo(function MaterialFilters({
 
   const categoryOptions = useMemo(
     () =>
-      Object.values(MaterialCategory).map((v) => (
-        <Option key={v} value={v}>
-          {v}
-        </Option>
-      )),
+      Object.values(MaterialCategory).map((v) => ({
+        value: v,
+        label: v,
+      })),
     []
   );
 
   const statusOptions = useMemo(
     () =>
-      Object.values(MaterialStatus).map((v) => (
-        <Option key={v} value={v}>
-          {v}
-        </Option>
-      )),
+      Object.values(MaterialStatus).map((v) => ({
+        value: v,
+        label: v,
+      })),
     []
   );
 
@@ -63,29 +60,24 @@ export default React.memo(function MaterialFilters({
         placeholder="Tìm theo mã hoặc tên"
         value={filters.q}
         onChange={handleSearchChange}
-        style={{ maxWidth: 360 }}
-        allowClear
+        className="max-w-[360px]"
       />
 
       <Select
         placeholder="Lọc theo danh mục"
-        value={filters.category || undefined}
+        value={filters.category || ""}
         onChange={handleCategoryChange}
-        allowClear
-        style={{ minWidth: 200 }}
-      >
-        {categoryOptions}
-      </Select>
+        options={[{ value: "", label: "Tất cả" }, ...categoryOptions]}
+        className="min-w-[200px]"
+      />
 
       <Select
         placeholder="Lọc theo tình trạng"
-        value={filters.status || undefined}
+        value={filters.status || ""}
         onChange={handleStatusChange}
-        allowClear
-        style={{ minWidth: 200 }}
-      >
-        {statusOptions}
-      </Select>
+        options={[{ value: "", label: "Tất cả" }, ...statusOptions]}
+        className="min-w-[200px]"
+      />
     </div>
   );
 });

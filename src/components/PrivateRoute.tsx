@@ -24,12 +24,7 @@ export default function PrivateRoute({
   }, []);
 
   // Array các route cho phép giảng viên truy cập
-  const allowedRoutes = [
-    "/timetables",
-    "/teaching-logs",
-    "/requests",
-    "/material-requests",
-  ];
+  const allowedRoutes = ["/timetables", "/teaching-logs", "/requests"];
 
   // Array các route chỉ Admin được truy cập
   const adminRoutes = ["/materials", "/users", "/rooms", "/admin"];

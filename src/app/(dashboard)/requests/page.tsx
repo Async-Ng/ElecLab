@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import { RequestModal } from "@/components/request/RequestModal";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { UnifiedRequestModal } from "@/components/request";
 import { MyRequestsList } from "@/components/request/MyRequestsList";
 
 export default function RequestsPage() {
@@ -15,24 +15,22 @@ export default function RequestsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Yêu Cầu Của Tôi</h1>
-        <Button
-          type="primary"
-          size="large"
-          icon={<PlusOutlined />}
-          onClick={() => setIsModalOpen(true)}
-        >
-          Gửi Yêu Cầu
+        <Button onClick={() => setIsModalOpen(true)} size="lg">
+          Tạo Yêu Cầu
         </Button>
       </div>
 
       <Card>
-        <MyRequestsList key={refreshTrigger} />
+        <MyRequestsList
+          key={refreshTrigger}
+          onRefresh={() => setRefreshTrigger((prev) => prev + 1)}
+        />
       </Card>
 
-      <RequestModal
+      <UnifiedRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleRequestSuccess}

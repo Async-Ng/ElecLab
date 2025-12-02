@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Button, Select, Modal, Row, Col } from "antd";
+import Button from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
+import Modal from "@/components/ui/Modal";
 import ExportPreviewModal from "./ExportPreviewModal";
-import { DownloadOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 
 interface ExportLogsButtonProps {
@@ -12,7 +13,7 @@ function mapLogsToExcelRows(logs: any[]) {
   return logs.map((log) => ({
     "Học kỳ": log.timetable?.semester || "",
     "Năm học": log.timetable?.schoolYear || "",
-    "Ngày": log.timetable?.date || "",
+    Ngày: log.timetable?.date || "",
     "Ca học": log.timetable?.period || "",
     "Phòng học": log.timetable?.room?.name || log.timetable?.room || "",
     "Giảng viên":
@@ -122,86 +123,71 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
   return (
     <>
       <Button
-        icon={<DownloadOutlined />}
+        variant="outline"
         onClick={() => setModalOpen(true)}
         disabled={!logs.length}
-        type="default"
-        style={{ marginBottom: 16 }}
       >
-        Export nhật ký ca dạy
+        📄 Export nhật ký ca dạy
       </Button>
-      <Modal
-        title="Lọc dữ liệu trước khi xuất"
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        onOk={handleExport}
-        okText="Xuất file Excel"
-        cancelText="Hủy"
-        width={600}
-        footer={[
-          <Button key="preview" onClick={() => setPreviewOpen(true)}>
-            Xem trước dữ liệu sẽ xuất
-          </Button>,
-          <Button
-            key="export"
-            type="primary"
-            onClick={handleExport}
-            disabled={!filteredLogs.length}
-          >
-            Xuất file Excel
-          </Button>,
-          <Button key="cancel" onClick={() => setModalOpen(false)}>
-            Hủy
-          </Button>,
-        ]}
-      >
-        <Row gutter={[16, 16]} style={{ marginBottom: 8 }}>
-          <Col span={12}>
-            <Select
-              allowClear
-              placeholder="Học kỳ"
-              style={{ width: "100%" }}
-              value={semester}
-              onChange={setSemester}
-              options={semesters}
-            />
-          </Col>
-          <Col span={12}>
-            <Select
-              allowClear
-              placeholder="Năm học"
-              style={{ width: "100%" }}
-              value={schoolYear}
-              onChange={setSchoolYear}
-              options={schoolYears.map((sy) => ({ value: sy, label: sy }))}
-            />
-          </Col>
-          <Col span={12}>
-            <Select
-              allowClear
-              placeholder="Phòng học"
-              style={{ width: "100%" }}
-              value={room}
-              onChange={setRoom}
-              options={rooms}
-            />
-          </Col>
-          <Col span={12}>
-            <Select
-              allowClear
-              placeholder="Giảng viên"
-              style={{ width: "100%" }}
-              value={lecturer}
-              onChange={setLecturer}
-              options={lecturers}
-            />
-          </Col>
-        </Row>
-        <div style={{ color: "#888", fontSize: 13 }}>
-          Chọn các trường để lọc dữ liệu trước khi xuất file Excel. Nếu không
-          chọn sẽ xuất toàn bộ.
-        </div>
-      </Modal>
+      {modalOpen && (
+        <Modal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title="Lọc dữ liệu trước khi xuất"
+          size="lg"
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                value={semester}
+                onChange={setSemester}
+                options={[{ value: "", label: "Học kỳ" }, ...semesters]}
+                placeholder="Học kỳ"
+              />
+              <Select
+                value={schoolYear}
+                onChange={setSchoolYear}
+                options={[
+                  { value: "", label: "Năm học" },
+                  ...schoolYears.map((sy) => ({ value: sy, label: sy })),
+                ]}
+                placeholder="Năm học"
+              />
+              <Select
+                value={room}
+                onChange={setRoom}
+                options={[{ value: "", label: "Phòng học" }, ...rooms]}
+                placeholder="Phòng học"
+              />
+              <Select
+                value={lecturer}
+                onChange={setLecturer}
+                options={[{ value: "", label: "Giảng viên" }, ...lecturers]}
+                placeholder="Giảng viên"
+              />
+            </div>
+            <div className="text-sm text-gray-600">
+              Chọn các trường để lọc dữ liệu trước khi xuất file Excel. Nếu
+              không chọn sẽ xuất toàn bộ.
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setModalOpen(false)}>
+                Hủy
+              </Button>
+              <Button variant="secondary" onClick={() => setPreviewOpen(true)}>
+                Xem trước dữ liệu sẽ xuất
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleExport}
+                disabled={!filteredLogs.length}
+              >
+                Xuất file Excel
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <ExportPreviewModal
         open={previewOpen}

@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Form, Upload, Button } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
-import { User, UserRole } from "@/types/user";
+import React, { useState, useEffect, FormEvent } from "react";
+import { User } from "@/types/user";
 import { Room } from "@/types/room";
-import Image from "next/image";
-import { FormModal, FormField } from "@/components/common";
+import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Upload from "@/components/ui/Upload";
+import Button from "@/components/ui/Button";
+import FormField from "@/components/form/FormField";
 
 interface UserModalProps {
   open: boolean;
@@ -25,244 +27,251 @@ const UserModal: React.FC<UserModalProps> = ({
   roles,
   rooms,
 }) => {
-  const [form] = Form.useForm();
-  const [fileList, setFileList] = useState<any[]>([]);
-  const [previewImage, setPreviewImage] = useState<string | undefined>();
-  const [previewVisible, setPreviewVisible] = useState(false);
+  // Form state
+  const [formData, setFormData] = useState({
+    staff_id: "",
+    name: "",
+    email: "",
+    position: "",
+    password: "",
+    roles: [] as string[],
+    rooms_manage: [] as string[],
+  });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Initialize form data when modal opens
   useEffect(() => {
     if (open) {
       if (editingUser) {
-        form.setFieldsValue({
+        setFormData({
           staff_id: editingUser.staff_id || "",
           name: editingUser.name || "",
           email: editingUser.email || "",
           position: editingUser.position || "",
+          password: "",
           roles: editingUser.roles || [],
           rooms_manage: editingUser.rooms_manage || [],
         });
-        // If avatar exists (URL or base64), set fileList for preview
-        if (editingUser.avatar && typeof editingUser.avatar === "string") {
-          setFileList([
-            {
-              uid: "1",
-              name: "avatar.png",
-              status: "done",
-              url: editingUser.avatar,
-            },
-          ]);
-        } else {
-          setFileList([]);
-        }
+        setAvatarPreview(editingUser.avatar || "");
+        setAvatarFile(null);
       } else {
-        // For new users, set default values
-        form.setFieldsValue({
+        setFormData({
           staff_id: "",
           name: "",
           email: "",
           position: "",
+          password: "",
           roles: [],
           rooms_manage: [],
         });
-        setFileList([]);
+        setAvatarPreview("");
+        setAvatarFile(null);
       }
+      setErrors({});
     }
-  }, [open, editingUser, form]);
+  }, [open, editingUser]);
 
-  const handleSubmit = async () => {
-    const values = await form.validateFields();
+  // Handle input changes
+  const handleChange = (name: string, value: string | string[]) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
 
-    console.log("Form values:", values);
-    console.log("Roles value:", values.roles, "Type:", typeof values.roles);
-    console.log(
-      "Rooms manage value:",
-      values.rooms_manage,
-      "Type:",
-      typeof values.rooms_manage
-    );
-
-    // Ensure roles and rooms_manage are arrays
-    const safeRoles = Array.isArray(values.roles) ? values.roles : [];
-    const safeRoomsManage = Array.isArray(values.rooms_manage)
-      ? values.rooms_manage
-      : [];
-
-    // If there's a file to upload, convert to base64
-    if (fileList.length && fileList[0].originFileObj) {
+  // Handle avatar upload
+  const handleAvatarChange = (file: File | null) => {
+    setAvatarFile(file);
+    if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const formData = new FormData();
-        formData.append("staff_id", values.staff_id);
-        formData.append("name", values.name);
-        formData.append("email", values.email);
-        formData.append("position", values.position || "");
-        if (values.password) formData.append("password", values.password);
-        formData.append("roles", JSON.stringify(safeRoles));
-        formData.append("rooms_manage", JSON.stringify(safeRoomsManage));
-        // Append base64 avatar
-        formData.append("avatar", reader.result as string);
-        console.log("FormData with avatar:", Object.fromEntries(formData));
-        onSubmit(formData);
+        setAvatarPreview(reader.result as string);
       };
-      reader.readAsDataURL(fileList[0].originFileObj);
+      reader.readAsDataURL(file);
     } else {
-      // No avatar file
-      const formData = new FormData();
-      formData.append("staff_id", values.staff_id);
-      formData.append("name", values.name);
-      formData.append("email", values.email);
-      formData.append("position", values.position || "");
-      if (values.password) formData.append("password", values.password);
-      formData.append("roles", JSON.stringify(safeRoles));
-      formData.append("rooms_manage", JSON.stringify(safeRoomsManage));
-      console.log("FormData without avatar:", Object.fromEntries(formData));
-      onSubmit(formData);
+      setAvatarPreview(editingUser?.avatar || "");
+    }
+  };
+
+  // Validate form
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.staff_id.trim()) {
+      newErrors.staff_id = "Vui lòng nhập mã nhân viên!";
+    }
+    if (!formData.name.trim()) {
+      newErrors.name = "Vui lòng nhập tên!";
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Vui lòng nhập email!";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Vui lòng nhập email hợp lệ!";
+    }
+    if (!editingUser && !formData.password) {
+      newErrors.password = "Vui lòng nhập mật khẩu!";
+    }
+    if (formData.roles.length === 0) {
+      newErrors.roles = "Vui lòng chọn ít nhất một vai trò!";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submit
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    const submitData = new FormData();
+    submitData.append("staff_id", formData.staff_id);
+    submitData.append("name", formData.name);
+    submitData.append("email", formData.email);
+    submitData.append("position", formData.position || "");
+    if (formData.password) submitData.append("password", formData.password);
+    submitData.append("roles", JSON.stringify(formData.roles));
+    submitData.append("rooms_manage", JSON.stringify(formData.rooms_manage));
+
+    // Convert avatar file to base64 if exists
+    if (avatarFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        submitData.append("avatar", reader.result as string);
+        onSubmit(submitData);
+      };
+      reader.readAsDataURL(avatarFile);
+    } else {
+      onSubmit(submitData);
     }
   };
 
   return (
-    <FormModal
+    <Modal
       open={open}
+      onClose={onCancel}
       title={editingUser ? "Chỉnh sửa người dùng" : "Thêm người dùng mới"}
-      form={form}
-      onSubmit={handleSubmit}
-      onCancel={onCancel}
-      loading={loading}
-      width={800}
-      twoColumns={true}
-      initialValues={editingUser || undefined}
+      size="large"
     >
-      {/* Avatar Upload - Full width custom field */}
-      <Form.Item label="Avatar" style={{ gridColumn: "1 / -1" }}>
-        <Upload
-          listType="picture-card"
-          fileList={fileList}
-          onChange={({ fileList }) => setFileList(fileList)}
-          beforeUpload={() => false}
-          maxCount={1}
-          showUploadList={{ showPreviewIcon: true }}
-          onPreview={async (file) => {
-            let src = file.url || file.thumbUrl;
-            if (!src && file.originFileObj) {
-              src = await new Promise<string>((resolve) => {
-                const reader = new FileReader();
-                if (file.originFileObj)
-                  reader.readAsDataURL(file.originFileObj);
-                reader.onload = () => resolve(reader.result as string);
-              });
-            }
-            setPreviewImage(src);
-            setPreviewVisible(true);
-          }}
-        >
-          <div>
-            <UploadOutlined /> Chọn ảnh
-          </div>
-        </Upload>
-        {/* Avatar preview modal */}
-        {previewVisible && previewImage && (
-          <div
-            onClick={() => setPreviewVisible(false)}
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(0,0,0,0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 10000,
-            }}
-          >
-            <Image
-              alt="preview"
-              style={{ width: "80%", maxWidth: "600px" }}
-              src={previewImage}
-              width={600}
-              height={600}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Avatar Upload */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Avatar
+          </label>
+          <Upload
+            value={avatarFile}
+            onChange={handleAvatarChange}
+            accept="image/*"
+            maxSize={5}
+            preview={avatarPreview}
+          />
+        </div>
+
+        {/* Two column grid for form fields */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Staff ID */}
+          <FormField label="Mã nhân viên" required error={errors.staff_id}>
+            <Input
+              value={formData.staff_id}
+              onChange={(e) => handleChange("staff_id", e.target.value)}
+              placeholder="Nhập mã nhân viên"
+              error={!!errors.staff_id}
             />
-          </div>
-        )}
-      </Form.Item>
+          </FormField>
 
-      {/* Staff ID */}
-      <FormField
-        name="staff_id"
-        label="Mã nhân viên"
-        type="text"
-        span={12}
-        rules={[{ required: true, message: "Vui lòng nhập mã nhân viên!" }]}
-      />
+          {/* Name */}
+          <FormField label="Họ và tên" required error={errors.name}>
+            <Input
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="Nhập họ và tên"
+              error={!!errors.name}
+            />
+          </FormField>
 
-      {/* Name */}
-      <FormField
-        name="name"
-        label="Họ và tên"
-        type="text"
-        span={12}
-        rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
-      />
+          {/* Email */}
+          <FormField label="Email" required error={errors.email}>
+            <Input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              placeholder="Nhập email"
+              error={!!errors.email}
+            />
+          </FormField>
 
-      {/* Email */}
-      <FormField
-        name="email"
-        label="Email"
-        type="email"
-        span={12}
-        rules={[
-          { required: true, message: "Vui lòng nhập email!" },
-          { type: "email", message: "Vui lòng nhập email hợp lệ!" },
-        ]}
-      />
+          {/* Position */}
+          <FormField label="Chức vụ" error={errors.position}>
+            <Input
+              value={formData.position}
+              onChange={(e) => handleChange("position", e.target.value)}
+              placeholder="Nhập chức vụ"
+            />
+          </FormField>
 
-      {/* Position */}
-      <FormField
-        name="position"
-        label="Chức vụ"
-        type="text"
-        placeholder="Nhập chức vụ"
-        span={12}
-      />
+          {/* Password - only for new users */}
+          {!editingUser && (
+            <FormField
+              label="Mật khẩu"
+              required
+              error={errors.password}
+              className="md:col-span-2"
+            >
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                placeholder="Nhập mật khẩu"
+                error={!!errors.password}
+              />
+            </FormField>
+          )}
 
-      {/* Password - only for new users */}
-      {!editingUser && (
-        <FormField
-          name="password"
-          label="Mật khẩu"
-          type="password"
-          span={24}
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-        />
-      )}
+          {/* Roles */}
+          <FormField label="Vai trò" required error={errors.roles}>
+            <Select
+              mode="multiple"
+              value={formData.roles}
+              onChange={(value) => handleChange("roles", value as string[])}
+              options={roles}
+              placeholder="Chọn vai trò"
+              error={!!errors.roles}
+            />
+          </FormField>
 
-      {/* Roles */}
-      <FormField
-        name="roles"
-        label="Vai trò"
-        type="multiselect"
-        placeholder="Chọn vai trò"
-        options={roles}
-        span={12}
-        rules={[
-          { required: true, message: "Vui lòng chọn ít nhất một vai trò!" },
-        ]}
-      />
+          {/* Rooms Manage */}
+          <FormField label="Quản lý phòng" error={errors.rooms_manage}>
+            <Select
+              mode="multiple"
+              value={formData.rooms_manage}
+              onChange={(value) =>
+                handleChange("rooms_manage", value as string[])
+              }
+              options={rooms.map((room) => ({
+                label: room.name,
+                value: room._id,
+              }))}
+              placeholder="Chọn phòng"
+            />
+          </FormField>
+        </div>
 
-      {/* Rooms Manage */}
-      <FormField
-        name="rooms_manage"
-        label="Quản lý phòng"
-        type="multiselect"
-        placeholder="Chọn phòng"
-        options={rooms.map((room) => ({
-          label: room.name,
-          value: room._id,
-        }))}
-        span={24}
-      />
-    </FormModal>
+        {/* Modal Footer Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
+            Hủy
+          </Button>
+          <Button type="submit" variant="primary" loading={loading}>
+            {editingUser ? "Cập nhật" : "Thêm mới"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

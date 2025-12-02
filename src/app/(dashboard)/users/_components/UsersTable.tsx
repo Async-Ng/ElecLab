@@ -1,13 +1,21 @@
 "use client";
 
-import { Tag } from "antd";
-import { UserOutlined } from "@ant-design/icons";
-import { Avatar as AntdAvatar } from "antd";
+import { UserOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import Image from "next/image";
-import type { ColumnsType } from "antd/es/table";
+import Button from "@/components/ui/Button";
 import { User, UserRole, UserRoleLabels } from "@/types/user";
 import { Room } from "@/types/room";
-import { DataTable } from "@/components/common";
+import {
+  SmartTable,
+  SmartTableColumn,
+  FilterBar,
+  FilterConfig,
+  FilterValues,
+  ExportButton,
+  ExportColumn,
+} from "@/components/table";
+import { Avatar, Badge } from "@/components/ui";
+import { useState, useMemo } from "react";
 
 export interface UsersTableProps {
   users: User[];
@@ -24,132 +32,305 @@ export const UsersTable = ({
   onDelete,
   rooms,
 }: UsersTableProps) => {
-  const columns: ColumnsType<User> = [
+  const [filters, setFilters] = useState<FilterValues>({
+    search: "",
+    role: undefined,
+    room: undefined,
+  });
+
+  // Filter configurations
+  const filterConfigs: FilterConfig[] = [
     {
+      key: "search",
+      label: "Tìm kiếm",
+      type: "search",
+      placeholder: "Tìm theo tên, email, mã NV...",
+    },
+    {
+      key: "role",
+      label: "Vai trò",
+      type: "select",
+      options: [
+        { label: "Quản lý", value: UserRole.Admin },
+        { label: "Người dùng", value: UserRole.User },
+      ],
+    },
+    {
+      key: "room",
+      label: "Phòng quản lý",
+      type: "select",
+      options: rooms.map((room) => ({
+        label: room.name,
+        value: room._id!,
+      })),
+    },
+  ];
+
+  // Apply filters
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      // Search filter
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const matchesSearch =
+          user.name.toLowerCase().includes(searchLower) ||
+          user.email.toLowerCase().includes(searchLower) ||
+          user.staff_id?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Role filter
+      if (filters.role && !user.roles.includes(filters.role)) {
+        return false;
+      }
+
+      // Room filter
+      if (filters.room && !user.rooms_manage?.includes(filters.room)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [users, filters]);
+
+  // Table columns
+  const columns: SmartTableColumn<User>[] = [
+    {
+      key: "avatar",
       title: "Avatar",
       dataIndex: "avatar",
-      key: "avatar",
-      width: "12%",
-      render: (avatar: string | undefined) => {
-        if (!avatar || typeof avatar !== "string") {
-          return (
-            <AntdAvatar
-              shape="square"
-              size={120}
-              icon={<UserOutlined style={{ fontSize: 72 }} />}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#f0f0f0",
-              }}
-            />
-          );
-        }
-        // Check if avatar is URL (from ImgBB) or base64
-        const isUrl =
-          avatar.startsWith("http://") || avatar.startsWith("https://");
-        const src = isUrl
-          ? avatar
-          : avatar.startsWith("data:image")
-          ? avatar
-          : `data:image/png;base64,${avatar}`;
-        return (
-          <div
-            style={{
-              position: "relative",
-              width: 120,
-              height: 120,
-              borderRadius: "8px",
-              overflow: "hidden",
-              background: "#f0f0f0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Image
-              src={src}
-              alt="avatar"
-              width={120}
-              height={120}
-              style={{
-                objectFit: "cover",
-                borderRadius: "8px",
-              }}
-              unoptimized
-            />
-          </div>
-        );
-      },
+      width: 80,
+      mobile: false,
+      render: (avatar: string | undefined, record: User) => (
+        <Avatar
+          src={
+            avatar?.startsWith("http")
+              ? avatar
+              : avatar?.startsWith("data:image")
+              ? avatar
+              : avatar
+              ? `data:image/png;base64,${avatar}`
+              : undefined
+          }
+          name={record.name}
+          size="lg"
+          shape="square"
+        />
+      ),
+      renderCard: (avatar: string | undefined, record: User) => (
+        <Avatar
+          src={
+            avatar?.startsWith("http")
+              ? avatar
+              : avatar?.startsWith("data:image")
+              ? avatar
+              : avatar
+              ? `data:image/png;base64,${avatar}`
+              : undefined
+          }
+          name={record.name}
+          size="xl"
+          shape="square"
+        />
+      ),
     },
     {
-      title: "Mã nhân viên",
-      dataIndex: "staff_id",
       key: "staff_id",
-      width: "10%",
-      align: "center",
+      title: "Mã NV",
+      dataIndex: "staff_id",
+      width: 100,
+      mobile: true,
     },
     {
+      key: "name",
       title: "Họ và tên",
       dataIndex: "name",
-      key: "name",
-      width: "15%",
+      width: 180,
+      mobile: true,
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
+      key: "email",
       title: "Email",
       dataIndex: "email",
-      key: "email",
-      width: "15%",
+      width: 200,
+      mobile: true,
     },
     {
+      key: "position",
       title: "Chức vụ",
       dataIndex: "position",
-      key: "position",
-      width: "10%",
+      width: 150,
+      mobile: true,
       render: (position: string | undefined) => position || "-",
     },
     {
+      key: "roles",
       title: "Vai trò",
       dataIndex: "roles",
-      key: "roles",
+      width: 150,
+      mobile: true,
       render: (roles: string[]) => (
-        <>
+        <div className="flex flex-wrap gap-1">
           {roles.map((role) => (
-            <Tag color={role === UserRole.Admin ? "red" : "blue"} key={role}>
+            <Badge
+              key={role}
+              variant={role === UserRole.Admin ? "error" : "primary"}
+            >
               {UserRoleLabels[role as UserRole]}
-            </Tag>
+            </Badge>
           ))}
-        </>
+        </div>
       ),
-      width: "15%",
     },
     {
+      key: "rooms_manage",
       title: "Quản lý phòng",
       dataIndex: "rooms_manage",
-      key: "rooms_manage",
+      mobile: true,
       render: (roomIds: string[]) => (
-        <>
-          {roomIds.map((roomId) => {
+        <div className="flex flex-wrap gap-1">
+          {roomIds?.map((roomId) => {
             const room = rooms.find((r) => r._id === roomId);
             return (
-              <Tag color="green" key={roomId}>
-                {room ? room.name : roomId}
-              </Tag>
+              <Badge key={roomId} variant="success">
+                {room?.name || roomId}
+              </Badge>
             );
           })}
-        </>
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Thao tác",
+      width: 150,
+      fixed: "right",
+      render: (_: any, record: User) => (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEdit(record)}
+          >
+            <EditOutlined /> Sửa
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => record._id && onDelete(record._id)}
+          >
+            <DeleteOutlined /> Xóa
+          </Button>
+        </div>
       ),
     },
   ];
 
+  // Export columns configuration
+  const exportColumns: ExportColumn[] = [
+    { key: "staff_id", header: "Mã nhân viên", accessor: "staff_id" },
+    { key: "name", header: "Họ và tên", accessor: "name" },
+    { key: "email", header: "Email", accessor: "email" },
+    { key: "position", header: "Chức vụ", accessor: "position" },
+    {
+      key: "roles",
+      header: "Vai trò",
+      accessor: (row: User) =>
+        row.roles.map((r) => UserRoleLabels[r as UserRole]).join(", "),
+    },
+    {
+      key: "rooms",
+      header: "Quản lý phòng",
+      accessor: (row: User) =>
+        row.rooms_manage
+          ?.map((roomId) => {
+            const room = rooms.find((r) => r._id === roomId);
+            return room?.name || roomId;
+          })
+          .join(", ") || "",
+    },
+  ];
+
   return (
-    <DataTable
-      data={users}
-      columns={columns}
-      onEdit={onEdit}
-      onDelete={(record) => record._id && onDelete(record._id)}
-      loading={loading}
-    />
+    <div className="space-y-4">
+      {/* Filters */}
+      <FilterBar
+        filters={filterConfigs}
+        values={filters}
+        onChange={setFilters}
+        extra={
+          <ExportButton
+            data={filteredUsers}
+            columns={exportColumns}
+            filename="giang-vien"
+          />
+        }
+      />
+
+      {/* Table */}
+      <SmartTable
+        data={filteredUsers}
+        columns={columns}
+        loading={loading}
+        responsive={{
+          mobile: "card",
+          tablet: "table",
+          desktop: "table",
+        }}
+        enableColumnManager
+        cardConfig={{
+          title: (record) => record.name,
+          subtitle: (record) => record.email,
+          avatar: (record) => (
+            <Avatar
+              src={
+                record.avatar?.startsWith("http")
+                  ? record.avatar
+                  : record.avatar?.startsWith("data:image")
+                  ? record.avatar
+                  : record.avatar
+                  ? `data:image/png;base64,${record.avatar}`
+                  : undefined
+              }
+              name={record.name}
+              size="xl"
+              shape="square"
+            />
+          ),
+          badge: (record) => {
+            const isAdmin = record.roles.includes(UserRole.Admin);
+            return (
+              <Badge variant={isAdmin ? "error" : "primary"}>
+                {isAdmin ? "Quản lý" : "Người dùng"}
+              </Badge>
+            );
+          },
+          actions: (record) => (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(record)}
+              >
+                <EditOutlined /> Sửa
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => record._id && onDelete(record._id)}
+              >
+                <DeleteOutlined /> Xóa
+              </Button>
+            </div>
+          ),
+        }}
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Tổng ${total} giảng viên`,
+        }}
+      />
+    </div>
   );
 };

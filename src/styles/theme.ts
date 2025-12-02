@@ -1,44 +1,45 @@
 import type { ThemeConfig } from "antd";
+import { colors } from "@/design-system/tokens";
 
-// Màu sắc từ logo Trường Cao đẳng Giao thông Vận tải TP.HCM
+// Enhanced brand colors using design tokens
 export const brandColors = {
   // Màu xanh dương chính (từ vòng tròn logo)
-  primary: "#0090D9",
-  primaryHover: "#0077B6",
-  primaryActive: "#005A8D",
-  primaryLight: "#E6F7FF",
+  primary: colors.primary[500],
+  primaryHover: colors.primary[600],
+  primaryActive: colors.primary[700],
+  primaryLight: colors.primary[50],
 
   // Màu xanh navy (từ biểu tượng trung tâm)
-  secondary: "#1E3A8A",
-  secondaryHover: "#1E40AF",
-  secondaryActive: "#1E3A8A",
+  secondary: colors.secondary[500],
+  secondaryHover: colors.secondary[600],
+  secondaryActive: colors.secondary[700],
 
   // Màu đỏ (từ chữ logo)
-  accent: "#DC2626",
-  accentHover: "#B91C1C",
-  accentLight: "#FEE2E2",
+  accent: colors.accent[500],
+  accentHover: colors.accent[600],
+  accentLight: colors.accent[50],
 
   // Màu vàng cam (từ bánh răng)
-  warning: "#F59E0B",
-  warningLight: "#FEF3C7",
+  warning: colors.warning[500],
+  warningLight: colors.warning[100],
 
   // Màu bổ sung
-  success: "#10B981",
-  error: "#EF4444",
-  info: "#0090D9",
+  success: colors.success[500],
+  error: colors.error[500],
+  info: colors.info[500],
 
   // Màu nền
-  background: "#F8FAFC",
-  backgroundSecondary: "#F1F5F9",
+  background: colors.gray[50],
+  backgroundSecondary: colors.gray[100],
 
   // Màu text
-  textPrimary: "#1E293B",
-  textSecondary: "#64748B",
-  textDisabled: "#94A3B8",
+  textPrimary: colors.gray[800],
+  textSecondary: colors.gray[600],
+  textDisabled: colors.gray[400],
 
   // Màu border
-  border: "#E2E8F0",
-  borderLight: "#F1F5F9",
+  border: colors.gray[200],
+  borderLight: colors.gray[100],
 };
 
 // Ant Design Theme Configuration

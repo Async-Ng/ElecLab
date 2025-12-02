@@ -1,33 +1,20 @@
 "use client";
 
-import { Card } from "antd";
-import { MaterialRequestsManagementList } from "@/components/materialRequest/MaterialRequestsManagementList";
-import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Spin, Empty } from "antd";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
+/**
+ * DEPRECATED: Material requests have been consolidated into the unified requests system.
+ * Redirecting to /admin/requests instead.
+ * This page will be removed in a future version.
+ */
 export default function AdminMaterialRequestsPage() {
-  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || !user.roles?.includes("Admin"))) {
-      router.push("/");
-    }
-  }, [user, loading, router]);
+    router.replace("/admin/requests");
+  }, [router]);
 
-  if (loading) {
-    return <Spin />;
-  }
-
-  if (!user || !user.roles?.includes("Admin")) {
-    return <Empty description="Không được phép truy cập" />;
-  }
-
-  return (
-    <Card>
-      <MaterialRequestsManagementList />
-    </Card>
-  );
+  return <LoadingSpinner tip="Đang chuyển hướng..." />;
 }

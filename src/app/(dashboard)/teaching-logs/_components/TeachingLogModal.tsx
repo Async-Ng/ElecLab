@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { Form, Input, Upload, Modal as AntModal, Button, Space } from "antd";
-import { message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Alert from "@/components/ui/Alert";
+import Upload from "@/components/ui/Upload";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { Timetable } from "../../../../types/timetable";
 import TeachingLogDetail from "./TeachingLogDetail";
-import { BaseModal, FormField } from "@/components/common";
 import { CreateMaterialRequestFromTimetable } from "@/components/materialRequest/CreateMaterialRequestFromTimetable";
 
 interface TeachingLogModalProps {
@@ -32,12 +34,29 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   materials = [],
   rooms = [],
 }) => {
-  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState<any[]>([]);
   const [previewImage, setPreviewImage] = useState<string | undefined>();
   const [previewVisible, setPreviewVisible] = useState(false);
   const [showMaterialRequest, setShowMaterialRequest] = useState(false);
+  const [formData, setFormData] = useState({
+    note: "",
+    status: TeachingLogStatus.NORMAL,
+  });
+  const [alertMessage, setAlertMessage] = useState<{
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+  } | null>(null);
+
+  // Initialize form data from log
+  useEffect(() => {
+    if (log) {
+      setFormData({
+        note: log.note || "",
+        status: log.status || TeachingLogStatus.NORMAL,
+      });
+    }
+  }, [log]);
 
   // Lấy user hiện tại
   let currentUser: any = null;
@@ -47,7 +66,15 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
 
   const handleOk = async () => {
     try {
-      const values = await form.validateFields();
+      // Validate
+      if (!formData.status) {
+        setAlertMessage({
+          type: "error",
+          message: "Vui lòng chọn trạng thái",
+        });
+        return;
+      }
+
       setLoading(true);
 
       // Kiểm tra quyền: chỉ chủ sở hữu mới được edit
@@ -57,18 +84,21 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         lecturerId = typeof lec === "object" ? lec._id || "" : lec || "";
       }
       if (log && lecturerId && currentUser?._id !== lecturerId) {
-        message.error("Bạn không có quyền chỉnh sửa nhật ký này!");
+        setAlertMessage({
+          type: "error",
+          message: "Bạn không có quyền chỉnh sửa nhật ký này!",
+        });
         setLoading(false);
         return;
       }
 
-      const formData = new FormData();
-      formData.append("timetable", timetableId);
-      formData.append("note", values.note || "");
-      formData.append("status", values.status);
+      const formDataObj = new FormData();
+      formDataObj.append("timetable", timetableId);
+      formDataObj.append("note", formData.note || "");
+      formDataObj.append("status", formData.status);
       fileList.forEach((file: any) => {
         if (file.originFileObj) {
-          formData.append("images", file.originFileObj);
+          formDataObj.append("images", file.originFileObj);
         }
       });
 
@@ -80,7 +110,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         : "/api/teaching-logs";
       const response = await fetch(url, {
         method,
-        body: formData,
+        body: formDataObj,
       });
 
       if (!response.ok) {
@@ -88,15 +118,23 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         throw new Error(errorData.error || "Lưu thất bại");
       }
 
-      message.success(
-        log ? "Cập nhật nhật ký thành công!" : "Tạo nhật ký mới thành công!"
-      );
+      setAlertMessage({
+        type: "success",
+        message: log
+          ? "Cập nhật nhật ký thành công!"
+          : "Tạo nhật ký mới thành công!",
+      });
 
-      setLoading(false);
-      onSuccess?.();
-      onClose();
+      setTimeout(() => {
+        setLoading(false);
+        onSuccess?.();
+        onClose();
+      }, 1500);
     } catch (err: any) {
-      message.error(err?.message || "Có lỗi xảy ra khi lưu nhật ký");
+      setAlertMessage({
+        type: "error",
+        message: err?.message || "Có lỗi xảy ra khi lưu nhật ký",
+      });
       setLoading(false);
     }
   };
@@ -115,96 +153,110 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       ? log.timetable
       : undefined;
 
-  // Custom footer with material request button
-  const footerContent = (
-    <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-      <Button onClick={onClose}>Hủy</Button>
-      {isOwner && (
-        <>
-          <Button type="primary" onClick={handleOk} loading={loading}>
-            Lưu
-          </Button>
-          {timetable && (
-            <Button onClick={() => setShowMaterialRequest(true)}>
-              Gửi yêu cầu vật tư
-            </Button>
-          )}
-        </>
-      )}
-    </Space>
-  );
-
   return (
     <>
-      <BaseModal
+      <Modal
         open={open}
+        onClose={onClose}
         title={log ? "Chi tiết nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
-        onCancel={onClose}
-        customFooter={footerContent}
-        width={900}
+        size="xl"
       >
-        {log && <TeachingLogDetail log={log} />}
-
-        {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
-        {isOwner && (
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={{
-              note: log?.note || "",
-              status: log?.status || TeachingLogStatus.NORMAL,
-            }}
-          >
-            <FormField
-              name="status"
-              label="Trạng thái"
-              type="select"
-              options={statusOptions}
-              rules={[{ required: true }]}
+        <div className="space-y-4">
+          {alertMessage && (
+            <Alert
+              type={alertMessage.type}
+              message={alertMessage.message}
+              onClose={() => setAlertMessage(null)}
             />
+          )}
 
-            <Form.Item label="Ghi chú" name="note">
-              <Input.TextArea rows={3} />
-            </Form.Item>
+          {log && <TeachingLogDetail log={log} />}
 
-            <Form.Item label="Ảnh minh họa">
-              <Upload
-                listType="picture-card"
-                fileList={fileList}
-                onChange={({ fileList }) => setFileList(fileList)}
-                beforeUpload={() => false}
-                multiple
-                showUploadList={{ showPreviewIcon: true }}
-                onPreview={async (file) => {
-                  let src = file.url || file.thumbUrl;
-                  if (!src && file.originFileObj) {
-                    src = await new Promise<string>((resolve) => {
-                      const reader = new FileReader();
-                      if (file.originFileObj)
-                        reader.readAsDataURL(file.originFileObj);
-                      reader.onload = () => resolve(reader.result as string);
-                    });
+          {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
+          {isOwner && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Trạng thái <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={formData.status}
+                  onChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      status: value as TeachingLogStatus,
+                    })
                   }
-                  setPreviewImage(src);
-                  setPreviewVisible(true);
-                }}
-              >
-                <div>
-                  <UploadOutlined /> Tải ảnh lên
-                </div>
-              </Upload>
-            </Form.Item>
+                  options={statusOptions.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                  }))}
+                />
+              </div>
 
-            <AntModal
-              open={previewVisible}
-              footer={null}
-              onCancel={() => setPreviewVisible(false)}
-            >
-              <img alt="preview" style={{ width: "100%" }} src={previewImage} />
-            </AntModal>
-          </Form>
-        )}
-      </BaseModal>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ghi chú
+                </label>
+                <textarea
+                  value={formData.note}
+                  onChange={(e) =>
+                    setFormData({ ...formData, note: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ảnh minh họa
+                </label>
+                <Upload
+                  fileList={fileList}
+                  onChange={setFileList}
+                  accept="image/*"
+                  multiple
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Footer buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={onClose}>
+              Hủy
+            </Button>
+            {isOwner && (
+              <>
+                <Button variant="primary" onClick={handleOk} loading={loading}>
+                  Lưu
+                </Button>
+                {timetable && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowMaterialRequest(true)}
+                  >
+                    Gửi yêu cầu vật tư
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Preview Modal */}
+      {previewVisible && (
+        <Modal
+          open={previewVisible}
+          onClose={() => setPreviewVisible(false)}
+          title="Xem trước ảnh"
+          size="lg"
+        >
+          <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+        </Modal>
+      )}
 
       {timetable && (
         <CreateMaterialRequestFromTimetable

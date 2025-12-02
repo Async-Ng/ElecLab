@@ -1,6 +1,6 @@
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
-import { Tag } from "antd";
+import Badge from "@/components/ui/Badge";
 import type { ColumnsType } from "antd/es/table";
 import { DataTable } from "@/components/common";
 
@@ -46,13 +46,13 @@ export default function RoomTable({
       key: "users_manage",
       width: "40%",
       render: (users_manage: User[] = []) => (
-        <>
+        <div className="flex flex-wrap gap-1">
           {users_manage.map((user) => (
-            <Tag key={user._id} color="green">
+            <Badge key={user._id} variant="success">
               {user.name}
-            </Tag>
+            </Badge>
           ))}
-        </>
+        </div>
       ),
     },
   ];

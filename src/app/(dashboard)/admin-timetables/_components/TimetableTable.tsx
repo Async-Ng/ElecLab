@@ -6,7 +6,7 @@ import { UserRole } from "@/types/user";
 import type { ColumnsType } from "antd/es/table";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { DataTable } from "@/components/common";
-import { Button } from "antd";
+import Button from "@/components/ui/Button";
 import { useTimetables } from "@/hooks/stores";
 import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 

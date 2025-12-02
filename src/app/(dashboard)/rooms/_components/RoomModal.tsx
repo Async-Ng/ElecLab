@@ -1,94 +1,166 @@
 import { Room } from "@/types/room";
-import { FormInstance } from "antd";
 import { User } from "@/types/user";
-import { FormModal, FormField } from "@/components/common";
-import { useMemo } from "react";
+import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Button from "@/components/ui/Button";
+import FormField from "@/components/form/FormField";
+import { useState, useEffect, useMemo, FormEvent } from "react";
 
 interface RoomModalProps {
   open: boolean;
-  onOk: () => void;
+  onSubmit: (formData: Room) => void;
   onCancel: () => void;
   editing: Room | null;
-  form: FormInstance<Room>;
   users: User[];
   loading?: boolean;
 }
 
 export default function RoomModal({
   open,
-  onOk,
+  onSubmit,
   onCancel,
   editing,
-  form,
   users,
   loading = false,
 }: RoomModalProps) {
+  const [formData, setFormData] = useState({
+    room_id: "",
+    name: "",
+    location: "",
+    users_manage: [] as string[],
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Initialize form data when modal opens
+  useEffect(() => {
+    if (open) {
+      if (editing) {
+        setFormData({
+          room_id: editing.room_id || "",
+          name: editing.name || "",
+          location: editing.location || "",
+          users_manage: Array.isArray(editing.users_manage)
+            ? editing.users_manage.map((user: any) =>
+                typeof user === "object" && user !== null ? user._id : user
+              )
+            : [],
+        });
+      } else {
+        setFormData({
+          room_id: "",
+          name: "",
+          location: "",
+          users_manage: [],
+        });
+      }
+      setErrors({});
+    }
+  }, [open, editing]);
+
+  // Handle input change
+  const handleChange = (name: string, value: string | string[]) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  // Validate form
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.room_id.trim()) {
+      newErrors.room_id = "Vui lòng nhập mã phòng";
+    }
+    if (!formData.name.trim()) {
+      newErrors.name = "Vui lòng nhập tên phòng";
+    }
+    if (!formData.location.trim()) {
+      newErrors.location = "Vui lòng nhập vị trí";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submit
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    onSubmit(formData as Room);
+  };
   const userOptions = useMemo(() => {
     return users
-      .filter((user) => user._id) // Filter out users without _id
+      .filter((user) => user._id)
       .map((user) => ({
         label: user.name,
         value: user._id,
       }));
   }, [users]);
 
-  // Transform editing data: convert users_manage from objects to IDs
-  const formInitialValues = useMemo(() => {
-    if (!editing) return undefined;
-
-    return {
-      ...editing,
-      users_manage: Array.isArray(editing.users_manage)
-        ? editing.users_manage.map((user: any) =>
-            typeof user === "object" && user !== null ? user._id : user
-          )
-        : editing.users_manage,
-    };
-  }, [editing]);
-
   return (
-    <FormModal
+    <Modal
       open={open}
+      onClose={onCancel}
       title={editing ? "Sửa phòng" : "Thêm phòng"}
-      form={form}
-      onSubmit={onOk}
-      onCancel={onCancel}
-      width={600}
-      twoColumns={false}
-      initialValues={formInitialValues}
-      loading={loading}
+      size="medium"
     >
-      <FormField
-        name="room_id"
-        label="Mã phòng"
-        type="text"
-        placeholder="Nhập mã phòng"
-        rules={[{ required: true, message: "Vui lòng nhập mã phòng" }]}
-      />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Room ID */}
+        <FormField label="Mã phòng" required error={errors.room_id}>
+          <Input
+            value={formData.room_id}
+            onChange={(e) => handleChange("room_id", e.target.value)}
+            placeholder="Nhập mã phòng"
+            error={!!errors.room_id}
+          />
+        </FormField>
 
-      <FormField
-        name="name"
-        label="Tên phòng"
-        type="text"
-        placeholder="Nhập tên phòng"
-        rules={[{ required: true, message: "Vui lòng nhập tên phòng" }]}
-      />
+        {/* Name */}
+        <FormField label="Tên phòng" required error={errors.name}>
+          <Input
+            value={formData.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+            placeholder="Nhập tên phòng"
+            error={!!errors.name}
+          />
+        </FormField>
 
-      <FormField
-        name="location"
-        label="Vị trí"
-        type="text"
-        placeholder="Nhập vị trí phòng"
-        rules={[{ required: true, message: "Vui lòng nhập vị trí" }]}
-      />
+        {/* Location */}
+        <FormField label="Vị trí" required error={errors.location}>
+          <Input
+            value={formData.location}
+            onChange={(e) => handleChange("location", e.target.value)}
+            placeholder="Nhập vị trí phòng"
+            error={!!errors.location}
+          />
+        </FormField>
 
-      <FormField
-        name="users_manage"
-        label="Người quản lý phòng"
-        type="multiselect"
-        placeholder="Chọn người quản lý"
-        options={userOptions}
-      />
-    </FormModal>
+        {/* Users Manage */}
+        <FormField label="Người quản lý phòng" error={errors.users_manage}>
+          <Select
+            mode="multiple"
+            value={formData.users_manage}
+            onChange={(value) =>
+              handleChange("users_manage", value as string[])
+            }
+            options={userOptions}
+            placeholder="Chọn người quản lý"
+          />
+        </FormField>
+
+        {/* Modal Footer Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
+            Hủy
+          </Button>
+          <Button type="submit" variant="primary" loading={loading}>
+            {editing ? "Cập nhật" : "Thêm mới"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

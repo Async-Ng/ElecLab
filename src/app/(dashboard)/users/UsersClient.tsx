@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, lazy, Suspense } from "react";
-import { message } from "antd";
 import { User, UserFormData, UserRole, UserRoleLabels } from "@/types/user";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { PageHeader, ActionButtons } from "@/components/common";
+import PageHeader from "@/components/common/PageHeader";
+import Button from "@/components/ui/Button";
+import Alert from "@/components/ui/Alert";
 import { useUsers, useRooms } from "@/hooks/stores";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
@@ -26,6 +27,10 @@ export default function UsersClient() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const [submitting, setSubmitting] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<{
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+  } | null>(null);
 
   const { user } = useAuth();
 
@@ -69,10 +74,18 @@ export default function UsersClient() {
         throw new Error(errorMessage);
       }
 
-      message.success("Xóa giảng viên thành công!");
+      setAlertMessage({
+        type: "success",
+        message: "Xóa giảng viên thành công!",
+      });
       removeUser(id);
+      setTimeout(() => setAlertMessage(null), 3000);
     } catch (error: any) {
-      message.error(error?.message || "Có lỗi xảy ra khi xóa giảng viên");
+      setAlertMessage({
+        type: "error",
+        message: error?.message || "Có lỗi xảy ra khi xóa giảng viên",
+      });
+      setTimeout(() => setAlertMessage(null), 5000);
     }
   };
 
@@ -111,29 +124,50 @@ export default function UsersClient() {
         responseData = null;
       }
 
-      message.success(
-        editingUser
+      setAlertMessage({
+        type: "success",
+        message: editingUser
           ? "Cập nhật giảng viên thành công!"
-          : "Thêm giảng viên mới thành công!"
-      );
+          : "Thêm giảng viên mới thành công!",
+      });
+      setTimeout(() => setAlertMessage(null), 3000);
 
       setModalOpen(false);
 
       // Refetch users to get latest data (force bypass cache)
       await fetchUsers(user._id!, user.roles, true);
     } catch (error: any) {
-      message.error(error.message || "Có lỗi xảy ra khi lưu giảng viên");
+      setAlertMessage({
+        type: "error",
+        message: error.message || "Có lỗi xảy ra khi lưu giảng viên",
+      });
+      setTimeout(() => setAlertMessage(null), 5000);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div className="p-6 space-y-6">
+      {/* Alert Messages */}
+      {alertMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <Alert
+            type={alertMessage.type}
+            message={alertMessage.message}
+            onClose={() => setAlertMessage(null)}
+          />
+        </div>
+      )}
+
       <PageHeader
         title="Giảng viên"
         description="Quản lý danh sách giảng viên trong hệ thống"
-        extra={<ActionButtons onAdd={handleCreate} addText="Thêm giảng viên" />}
+        extra={
+          <Button variant="primary" onClick={handleCreate} size="md">
+            Thêm giảng viên
+          </Button>
+        }
       />
 
       <Suspense

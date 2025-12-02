@@ -1,4 +1,4 @@
-import { Select, DatePicker, Button, Col } from "antd";
+import { Select, Col } from "antd";
 import dayjs from "dayjs";
 import React from "react";
 import { Semester, Period, StudyTime, Timetable } from "@/types/timetable";
@@ -151,13 +151,15 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
       </Col>
 
       <Col xs={24} sm={12} lg={6} className="mb-2">
-        <DatePicker
-          format="DD/MM/YYYY"
-          style={{ width: "100%" }}
-          value={date ? dayjs(date, "DD/MM/YYYY") : null}
-          onChange={(d) => setDate(d ? d.format("DD/MM/YYYY") : "")}
+        <input
+          type="date"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          value={date ? dayjs(date, "DD/MM/YYYY").format("YYYY-MM-DD") : ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            setDate(val ? dayjs(val).format("DD/MM/YYYY") : "");
+          }}
           placeholder="Ngày"
-          allowClear
         />
       </Col>
 

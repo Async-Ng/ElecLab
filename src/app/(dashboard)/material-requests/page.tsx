@@ -1,14 +1,20 @@
-import { Card } from "antd";
-import { MyMaterialRequestsList } from "@/components/materialRequest/MyMaterialRequestsList";
+"use client";
 
-export const metadata = {
-  title: "Yêu Cầu Vật Tư Của Tôi",
-};
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
+/**
+ * DEPRECATED: Material requests have been consolidated into the unified requests system.
+ * Redirecting to /requests instead.
+ * This page will be removed in a future version.
+ */
 export default function MaterialRequestsPage() {
-  return (
-    <Card>
-      <MyMaterialRequestsList />
-    </Card>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/requests");
+  }, [router]);
+
+  return <LoadingSpinner />;
 }

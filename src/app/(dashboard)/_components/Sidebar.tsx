@@ -7,7 +7,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
 import { brandColors } from "@/styles/theme";
-import { Select } from "antd";
+import Select from "@/components/ui/Select";
+import { FileTextOutlined, UnorderedListOutlined } from "@ant-design/icons";
 
 type Props = {
   onClose?: () => void;
@@ -105,41 +106,7 @@ export default function Sidebar({ onClose }: Props) {
     {
       href: "/requests",
       label: "Yêu cầu của tôi",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M9 12h6m-6 4h6m2-13H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2z"
-          />
-        </svg>
-      ),
-      roles: [UserRole.User],
-    },
-
-    {
-      href: "/material-requests",
-      label: "Yêu cầu vật tư",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <rect x="3" y="3" width="7" height="7" />
-          <rect x="14" y="3" width="7" height="7" />
-          <rect x="14" y="14" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" />
-        </svg>
-      ),
+      icon: <FileTextOutlined className="w-5 h-5" />,
       roles: [UserRole.User],
     },
 
@@ -207,41 +174,7 @@ export default function Sidebar({ onClose }: Props) {
     {
       href: "/admin/requests",
       label: "Quản lý yêu cầu",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M9 12h6m-6 4h6m2-13H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2z"
-          />
-        </svg>
-      ),
-      roles: [UserRole.Admin],
-    },
-
-    {
-      href: "/admin/material-requests",
-      label: "Quản lý yêu cầu vật tư",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <rect x="3" y="3" width="7" height="7" />
-          <rect x="14" y="3" width="7" height="7" />
-          <rect x="14" y="14" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" />
-        </svg>
-      ),
+      icon: <UnorderedListOutlined className="w-5 h-5" />,
       roles: [UserRole.Admin],
     },
   ];
@@ -333,7 +266,7 @@ export default function Sidebar({ onClose }: Props) {
               <Select
                 value={activeRole}
                 onChange={(value) => {
-                  setActiveRole(value);
+                  setActiveRole(value as UserRole);
                   localStorage.setItem("activeRole", value);
                   // Navigate to appropriate page based on role
                   if (value === UserRole.Admin) {
@@ -346,25 +279,8 @@ export default function Sidebar({ onClose }: Props) {
                   label: role === UserRole.Admin ? "Quản lý" : "Người dùng",
                   value: role,
                 }))}
-                style={{ width: "100%" }}
-                className="role-switcher"
+                className="w-full"
               />
-              <style jsx>{`
-                :global(.role-switcher .ant-select-selector) {
-                  background: rgba(255, 255, 255, 0.2) !important;
-                  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-                  color: white !important;
-                }
-                :global(.role-switcher .ant-select-selector:hover) {
-                  background: rgba(255, 255, 255, 0.3) !important;
-                }
-                :global(.role-switcher .ant-select-arrow) {
-                  color: white !important;
-                }
-                :global(.role-switcher .ant-select-selection-item) {
-                  color: white !important;
-                }
-              `}</style>
             </div>
           )}
         </div>

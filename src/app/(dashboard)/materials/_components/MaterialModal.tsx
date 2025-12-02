@@ -1,63 +1,110 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { FormInstance } from "antd";
+import React, { useEffect, useState, FormEvent } from "react";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
-import { FormModal, FormField } from "@/components/common";
+import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Button from "@/components/ui/Button";
+import FormField from "@/components/form/FormField";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 type Props = {
   open: boolean;
-  onOk: () => Promise<void> | void;
+  onSubmit: (formData: Material) => Promise<void> | void;
   onCancel: () => void;
   editing: Material | null;
-  form: FormInstance;
   loading?: boolean;
 };
 
 export default function MaterialModal(props: Props) {
-  const { open, onOk, onCancel, editing, form, loading = false } = props;
+  const { open, onSubmit, onCancel, editing, loading = false } = props;
   const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
+  const [formData, setFormData] = useState({
+    material_id: "",
+    name: "",
+    category: "" as MaterialCategory,
+    status: "" as MaterialStatus,
+    place_used: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
 
+  // Initialize form data when modal opens
   useEffect(() => {
-    if (!form || !user) return;
-
-    // Tối ưu: Gộp logic xử lý form và fetch rooms trong 1 useEffect
-    if (open) {
-      // Xử lý form values
+    if (open && user) {
       if (editing) {
-        // Nếu editing.place_used là object, lấy _id
-        const values = {
-          ...editing,
+        setFormData({
+          material_id: editing.material_id || "",
+          name: editing.name || "",
+          category: editing.category || ("" as MaterialCategory),
+          status: editing.status || ("" as MaterialStatus),
           place_used:
             typeof editing.place_used === "object" && editing.place_used?._id
               ? editing.place_used._id
-              : editing.place_used,
-        };
-        form.setFieldsValue(values as any);
+              : (editing.place_used as string) || "",
+        });
       } else {
-        form.resetFields();
+        setFormData({
+          material_id: "",
+          name: "",
+          category: "" as MaterialCategory,
+          status: "" as MaterialStatus,
+          place_used: "",
+        });
       }
+      setErrors({});
 
-      // Fetch rooms nếu chưa có dữ liệu
-      if (rooms.length === 0) {
-        const fetchRooms = async () => {
-          try {
-            const endpoint = getApiEndpoint("rooms", user.roles);
-            const res = await authFetch(endpoint, user._id!, user.roles);
-            const data = await res.json();
-            setRooms(data.rooms || []);
-          } catch (error) {
-            console.error("Error fetching rooms:", error);
-            setRooms([]);
-          }
-        };
-        fetchRooms();
-      }
+      // Fetch rooms
+      const fetchRooms = async () => {
+        try {
+          const endpoint = getApiEndpoint("rooms", user.roles);
+          const res = await authFetch(endpoint, user._id!, user.roles);
+          const data = await res.json();
+          setRooms(data.rooms || []);
+        } catch (error) {
+          console.error("Error fetching rooms:", error);
+          setRooms([]);
+        }
+      };
+      fetchRooms();
     }
-  }, [open, editing, form, rooms.length, user]);
+  }, [open, editing, user]);
+
+  // Handle input change
+  const handleChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  // Validate form
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.material_id.trim()) {
+      newErrors.material_id = "Vui lòng nhập mã vật tư";
+    }
+    if (!formData.name.trim()) {
+      newErrors.name = "Vui lòng nhập tên";
+    }
+    if (!formData.category) {
+      newErrors.category = "Vui lòng chọn danh mục";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submit
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    onSubmit(formData as Material);
+  };
 
   const categoryOptions = Object.values(MaterialCategory).map((v) => ({
     label: v,
@@ -75,52 +122,74 @@ export default function MaterialModal(props: Props) {
   }));
 
   return (
-    <FormModal
+    <Modal
       open={open}
+      onClose={onCancel}
       title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư"}
-      form={form}
-      onSubmit={onOk}
-      onCancel={onCancel}
-      width={600}
-      loading={loading}
+      size="medium"
     >
-      <FormField
-        name="material_id"
-        label="Mã vật tư"
-        type="text"
-        placeholder="Ví dụ: MAT-001"
-        rules={[{ required: true, message: "Vui lòng nhập mã vật tư" }]}
-      />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Material ID */}
+        <FormField label="Mã vật tư" required error={errors.material_id}>
+          <Input
+            value={formData.material_id}
+            onChange={(e) => handleChange("material_id", e.target.value)}
+            placeholder="Ví dụ: MAT-001"
+            error={!!errors.material_id}
+          />
+        </FormField>
 
-      <FormField
-        name="name"
-        label="Tên"
-        type="text"
-        rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-      />
+        {/* Name */}
+        <FormField label="Tên" required error={errors.name}>
+          <Input
+            value={formData.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+            placeholder="Nhập tên vật tư"
+            error={!!errors.name}
+          />
+        </FormField>
 
-      <FormField
-        name="category"
-        label="Danh mục"
-        type="select"
-        options={categoryOptions}
-        rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
-      />
+        {/* Category */}
+        <FormField label="Danh mục" required error={errors.category}>
+          <Select
+            value={formData.category}
+            onChange={(value) => handleChange("category", value as string)}
+            options={categoryOptions}
+            placeholder="Chọn danh mục"
+            error={!!errors.category}
+          />
+        </FormField>
 
-      <FormField
-        name="status"
-        label="Tình trạng"
-        type="select"
-        options={statusOptions}
-      />
+        {/* Status */}
+        <FormField label="Tình trạng" error={errors.status}>
+          <Select
+            value={formData.status}
+            onChange={(value) => handleChange("status", value as string)}
+            options={statusOptions}
+            placeholder="Chọn tình trạng"
+          />
+        </FormField>
 
-      <FormField
-        name="place_used"
-        label="Vị trí sử dụng"
-        type="select"
-        placeholder="Chọn phòng"
-        options={roomOptions}
-      />
-    </FormModal>
+        {/* Place Used */}
+        <FormField label="Vị trí sử dụng" error={errors.place_used}>
+          <Select
+            value={formData.place_used}
+            onChange={(value) => handleChange("place_used", value as string)}
+            options={roomOptions}
+            placeholder="Chọn phòng"
+          />
+        </FormField>
+
+        {/* Modal Footer Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
+            Hủy
+          </Button>
+          <Button type="submit" variant="primary" loading={loading}>
+            {editing ? "Cập nhật" : "Thêm mới"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState, useCallback } from "react";
-import { Row, Col, Select } from "antd";
+import Select from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
@@ -114,48 +114,32 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
     );
 
     return (
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Học kỳ"
-            style={{ width: "100%" }}
-            value={filters.semester}
-            onChange={handleChange("semester")}
-            options={semesters}
-          />
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Năm học"
-            style={{ width: "100%" }}
-            value={filters.schoolYear}
-            onChange={handleChange("schoolYear")}
-            options={schoolYearOptions}
-          />
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Phòng học"
-            style={{ width: "100%" }}
-            value={filters.room}
-            onChange={handleChange("room")}
-            options={rooms}
-          />
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Giảng viên"
-            style={{ width: "100%" }}
-            value={filters.lecturer}
-            onChange={handleChange("lecturer")}
-            options={lecturers}
-          />
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <Select
+          value={filters.semester}
+          onChange={handleChange("semester")}
+          options={[{ value: "", label: "Học kỳ" }, ...semesters]}
+          placeholder="Học kỳ"
+        />
+        <Select
+          value={filters.schoolYear}
+          onChange={handleChange("schoolYear")}
+          options={[{ value: "", label: "Năm học" }, ...schoolYearOptions]}
+          placeholder="Năm học"
+        />
+        <Select
+          value={filters.room}
+          onChange={handleChange("room")}
+          options={[{ value: "", label: "Phòng học" }, ...rooms]}
+          placeholder="Phòng học"
+        />
+        <Select
+          value={filters.lecturer}
+          onChange={handleChange("lecturer")}
+          options={[{ value: "", label: "Giảng viên" }, ...lecturers]}
+          placeholder="Giảng viên"
+        />
+      </div>
     );
   }
 );

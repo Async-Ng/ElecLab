@@ -5,6 +5,7 @@ import { Semester } from "@/types/timetable";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/common";
+import Button from "@/components/ui/Button";
 import {
   useTimetables,
   useRooms,
@@ -12,8 +13,6 @@ import {
   useTeachingLogs,
   useMaterials,
 } from "@/hooks/stores";
-import { Segmented, message } from "antd";
-import { CalendarOutlined, TableOutlined } from "@ant-design/icons";
 
 // Lazy load components
 const TimetableCalendarView = lazy(
@@ -47,6 +46,9 @@ export default function UserTimetablesClient() {
   // Teaching Log Modal states
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [selectedTimetableId, setSelectedTimetableId] = useState<string>("");
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMsg, setAlertMsg] = useState("");
+  const [alertType, setAlertType] = useState<"info" | "warning">("info");
 
   // Fetch user's own timetables (force user endpoint)
   const {
@@ -218,19 +220,28 @@ export default function UserTimetablesClient() {
     if (timetable._id) {
       // Nếu TKB đã có log rồi thì không cho phép ghi log nữa
       if (timetable.hasLog) {
-        message.info("Tiết học này đã có nhật ký giảng dạy rồi!");
+        setAlertMsg("Tiết học này đã có nhật ký giảng dạy rồi!");
+        setAlertType("info");
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 3000);
         return;
       }
 
       // Nếu TKB trong tương lai thì không cho ghi log
       if (timetable.isFuture) {
-        message.warning("Không thể ghi log cho tiết học trong tương lai!");
+        setAlertMsg("Không thể ghi log cho tiết học trong tương lai!");
+        setAlertType("warning");
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 3000);
         return;
       }
 
       // Kiểm tra điều kiện có thể ghi log
       if (!timetable.canLog) {
-        message.warning("Không thể ghi log cho tiết học này!");
+        setAlertMsg("Không thể ghi log cho tiết học này!");
+        setAlertType("warning");
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 3000);
         return;
       }
 
@@ -269,6 +280,15 @@ export default function UserTimetablesClient() {
 
   return (
     <div style={{ padding: "24px" }}>
+      {showAlert && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg text-white ${
+            alertType === "info" ? "bg-blue-500" : "bg-yellow-500"
+          }`}
+        >
+          {alertMsg}
+        </div>
+      )}
       <PageHeader
         title="Thời khóa biểu của tôi"
         description="Xem và quản lý thời khóa biểu giảng dạy của bạn"
@@ -277,18 +297,28 @@ export default function UserTimetablesClient() {
             <Suspense fallback={null}>
               <ImportButtons />
             </Suspense>
-            <Segmented
-              value={viewMode}
-              onChange={(value) => setViewMode(value as ViewMode)}
-              options={[
-                {
-                  label: "Lịch",
-                  value: "calendar",
-                  icon: <CalendarOutlined />,
-                },
-                { label: "Bảng", value: "table", icon: <TableOutlined /> },
-              ]}
-            />
+            <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-white">
+              <button
+                onClick={() => setViewMode("calendar")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === "calendar"
+                    ? "bg-blue-500 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                📅 Lịch
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === "table"
+                    ? "bg-blue-500 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                📋 Bảng
+              </button>
+            </div>
           </div>
         }
       />

@@ -18,6 +18,7 @@ import {
   CalendarOutlined,
   UserOutlined,
   FormOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
 import { Timetable } from "@/types/timetable";
 import TeachingLogModal from "@/app/(dashboard)/teaching-logs/_components/TeachingLogModal";
@@ -241,12 +242,13 @@ export default function LessonCard({
           <Button
             key="material"
             type="dashed"
+            icon={<ShoppingOutlined />}
             onClick={() => {
               setDetailModalOpen(false);
               setMaterialModalOpen(true);
             }}
           >
-            📦 Gửi yêu cầu vật tư
+            Gửi yêu cầu vật tư
           </Button>,
           !isFuture && !hasLog && (
             <Button

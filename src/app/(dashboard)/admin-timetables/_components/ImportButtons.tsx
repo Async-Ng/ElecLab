@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { message } from "antd";
 import ImportPreviewModal from "./ImportPreviewModal";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { Room } from "@/types/room";
@@ -79,6 +78,9 @@ export default function ImportButtons() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRows, setPreviewRows] = useState<Timetable[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [alertMsg, setAlertMsg] = useState("");
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -171,7 +173,9 @@ export default function ImportButtons() {
       setPreviewRows(preview);
       setPreviewOpen(true);
     } catch (err) {
-      message.error("Import thất bại");
+      setAlertMsg("Import thất bại");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 5000);
     }
   }
 
@@ -353,9 +357,13 @@ export default function ImportButtons() {
       a.remove();
       URL.revokeObjectURL(url);
 
-      message.success("Đã tải template thành công");
+      setAlertMsg("Đã tải template thành công");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
-      message.error("Không thể tạo file mẫu");
+      setAlertMsg("Không thể tạo file mẫu");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 5000);
     }
   }
 
@@ -382,7 +390,9 @@ export default function ImportButtons() {
     });
     try {
       if (!user) {
-        message.error("Vui lòng đăng nhập để thực hiện import");
+        setAlertMsg("Vui lòng đăng nhập để thực hiện import");
+        setShowError(true);
+        setTimeout(() => setShowError(false), 5000);
         return;
       }
 
@@ -393,7 +403,9 @@ export default function ImportButtons() {
       });
 
       if (res.ok) {
-        message.success("Đã import thời khóa biểu");
+        setAlertMsg("Đã import thời khóa biểu");
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
 
         // Refresh both timetables and teaching logs data sau khi import thành công
         if (user._id && user.roles) {
@@ -404,16 +416,29 @@ export default function ImportButtons() {
         }
       } else {
         const errorData = await res.json();
-
-        message.error(`Import thất bại: ${errorData.error || "Unknown error"}`);
+        setAlertMsg(`Import thất bại: ${errorData.error || "Unknown error"}`);
+        setShowError(true);
+        setTimeout(() => setShowError(false), 5000);
       }
     } catch (err) {
-      message.error("Import thất bại");
+      setAlertMsg("Import thất bại");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 5000);
     }
   }
 
   return (
     <>
+      {showSuccess && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg">
+          {alertMsg}
+        </div>
+      )}
+      {showError && (
+        <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg">
+          {alertMsg}
+        </div>
+      )}
       <ImportPreviewModal
         visible={previewOpen}
         onClose={() => setPreviewOpen(false)}

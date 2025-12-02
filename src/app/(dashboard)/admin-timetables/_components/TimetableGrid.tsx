@@ -1,4 +1,5 @@
-import { Card, Typography, Badge } from "antd";
+import Card from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
 import LessonCard from "./LessonCard";
 import { Timetable } from "@/types/timetable";
 import { Dayjs } from "dayjs";
@@ -17,8 +18,6 @@ interface TimetableGridProps {
   materials?: Array<{ _id: string; name: string; quantity: number }>;
   rooms?: Array<{ _id: string; room_id: string; name: string }>;
 }
-
-const { Text } = Typography;
 
 const PERIOD_LABELS = ["Ca 1", "Ca 2", "Ca 3", "Ca 4"];
 const DAY_NAMES = [
@@ -95,40 +94,27 @@ export default function TimetableGrid({
               styles={{ body: { padding: "8px 4px" } }}
               className="sm:body-style-[padding:12px_8px]"
             >
-              <Text
-                strong
+              <span
+                className="block text-[11px] sm:text-xs mb-1"
                 style={{
-                  display: "block",
-                  fontSize: "11px",
+                  fontWeight: 600,
                   color: isCurrentDay ? "white" : brandColors.textSecondary,
-                  marginBottom: 4,
                 }}
-                className="sm:text-xs"
               >
                 {DAY_NAMES[index]}
-              </Text>
-              <Text
+              </span>
+              <span
+                className="block text-sm sm:text-base font-semibold"
                 style={{
-                  display: "block",
-                  fontSize: "14px",
-                  fontWeight: 600,
                   color: isCurrentDay ? "white" : brandColors.textPrimary,
                 }}
-                className="sm:text-base"
               >
                 {day.format("DD/MM")}
-              </Text>
+              </span>
               {isCurrentDay && (
-                <Badge
-                  status="processing"
-                  text={
-                    <Text style={{ color: "white", fontSize: "10px" }}>
-                      Hôm nay
-                    </Text>
-                  }
-                  style={{ marginTop: 4 }}
-                  className="hidden sm:inline-flex"
-                />
+                <Badge variant="info" className="mt-1 hidden sm:inline-flex">
+                  Hôm nay
+                </Badge>
               )}
             </Card>
           );
@@ -219,13 +205,7 @@ export default function TimetableGrid({
                       opacity: 0.3,
                     }}
                   >
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: 20 }}
-                      className="sm:text-2xl"
-                    >
-                      —
-                    </Text>
+                    <span className="text-xl sm:text-2xl text-gray-400">—</span>
                   </div>
                 ) : (
                   lessons.map((lesson) => (

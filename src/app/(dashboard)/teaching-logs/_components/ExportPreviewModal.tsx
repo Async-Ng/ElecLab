@@ -1,5 +1,6 @@
 import React from "react";
-import { Modal, Table } from "antd";
+import Modal from "@/components/ui/Modal";
+import { DataTable } from "@/components/common";
 import dayjs from "dayjs";
 
 interface ExportPreviewModalProps {
@@ -65,19 +66,16 @@ const ExportPreviewModal: React.FC<ExportPreviewModalProps> = ({
 }) => {
   return (
     <Modal
-      title="Xem trước dữ liệu sẽ xuất"
       open={open}
-      onCancel={onClose}
-      footer={null}
-      width={1200}
+      onClose={onClose}
+      title="Xem trước dữ liệu sẽ xuất"
+      size="xl"
     >
-      <Table
+      <DataTable
+        data={logs}
         columns={columns}
-        dataSource={logs}
-        rowKey={(record) => record._id}
-        pagination={{ pageSize: 10 }}
-        size="small"
-        scroll={{ x: true }}
+        loading={false}
+        showActions={false}
       />
     </Modal>
   );

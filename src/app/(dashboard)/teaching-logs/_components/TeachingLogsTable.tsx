@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
-import { Tag } from "antd";
+import Badge from "@/components/ui/Badge";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { useAuth } from "../../../../hooks/useAuth";
 import { UserRole } from "../../../../types/user";
@@ -80,9 +80,11 @@ function getColumns(isHead: boolean) {
       dataIndex: ["status"],
       key: "status",
       render: (status: TeachingLogStatus) => (
-        <Tag color={status === TeachingLogStatus.NORMAL ? "green" : "red"}>
+        <Badge
+          variant={status === TeachingLogStatus.NORMAL ? "success" : "danger"}
+        >
           {status}
-        </Tag>
+        </Badge>
       ),
     }
   );

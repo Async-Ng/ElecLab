@@ -1,68 +1,68 @@
 "use client";
 
-import React from "react";
-import Sidebar from "./Sidebar";
-import { Button } from "antd";
-import { MenuOutlined } from "@ant-design/icons";
-import { brandColors } from "@/styles/theme";
+import React, { useState, useEffect } from "react";
+import ModernSidebar from "@/components/layout/ModernSidebar";
+import Header from "@/components/layout/Header";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import { cn } from "@/design-system/utilities";
 
 export default function ClientShell({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [open, setOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  React.useEffect(() => {
+  // Close sidebar on Escape key
+  useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setSidebarOpen(false);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Load collapsed state from localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    if (savedState !== null) {
+      setSidebarCollapsed(savedState === "true");
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Mobile backdrop */}
-      {open && (
+      {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
           aria-hidden
         />
       )}
 
-      {/* Sidebar wrapper: full-screen overlay on mobile, static on md+ */}
+      {/* Sidebar: Mobile overlay, Desktop static */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-full md:w-64 md:static transform transition-transform duration-200 ease-in-out ${
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 md:z-auto md:static transform transition-transform duration-300 ease-in-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
       >
-        <Sidebar onClose={() => setOpen(false)} />
+        <ModernSidebar onClose={() => setSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 flex flex-col">
-        {/* Mobile header with menu button */}
-        <header
-          className="md:hidden sticky top-0 z-20 bg-white shadow-sm px-4 py-3 flex items-center justify-between"
-          style={{ borderBottom: `2px solid ${brandColors.primary}` }}
-        >
-          <h1
-            className="text-lg font-bold"
-            style={{ color: brandColors.primary }}
-          >
-            ElecLab
-          </h1>
-          <Button
-            type="primary"
-            icon={<MenuOutlined />}
-            onClick={() => setOpen(true)}
-            size="large"
-          >
-            Menu
-          </Button>
-        </header>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <Header onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        {/* Page Content */}
+        <main className="flex-1 overflow-x-hidden">
+          <div className="p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">{children}</div>
+        </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

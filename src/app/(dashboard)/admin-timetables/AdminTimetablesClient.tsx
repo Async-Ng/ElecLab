@@ -8,8 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/user";
 import { PageHeader } from "@/components/common";
 import { useTimetables } from "@/hooks/stores";
-import { Segmented } from "antd";
-import { CalendarOutlined, TableOutlined } from "@ant-design/icons";
+import Button from "@/components/ui/Button";
 import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 // Lazy load components
@@ -172,14 +171,12 @@ export default function TimetablesClient() {
   // View mode toggle options
   const viewModeOptions = [
     {
-      label: "Xem theo tuần",
+      label: "📅 Xem theo tuần",
       value: "week" as ViewMode,
-      icon: <CalendarOutlined />,
     },
     {
-      label: "Xem dạng bảng",
+      label: "📋 Xem dạng bảng",
       value: "table" as ViewMode,
-      icon: <TableOutlined />,
     },
   ];
 
@@ -242,13 +239,21 @@ export default function TimetablesClient() {
               <div
                 style={{ display: "flex", gap: "12px", marginBottom: "12px" }}
               >
-                <Segmented
-                  value={viewMode}
-                  onChange={(value) => setViewMode(value as ViewMode)}
-                  options={viewModeOptions}
-                  size="small"
-                  className="sm:size-middle"
-                />
+                <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-white">
+                  {viewModeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setViewMode(option.value)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        viewMode === option.value
+                          ? "bg-blue-500 text-white"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <TimetableTable data={data} />
@@ -341,13 +346,21 @@ export default function TimetablesClient() {
         title="Thời khóa biểu cá nhân"
         description="Xem và quản lý lịch giảng dạy của bạn"
         extra={
-          <Segmented
-            value={viewMode}
-            onChange={(value) => setViewMode(value as ViewMode)}
-            options={viewModeOptions}
-            size="small"
-            className="sm:size-middle"
-          />
+          <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-white">
+            {viewModeOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setViewMode(option.value)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === option.value
+                    ? "bg-blue-500 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         }
       />
 

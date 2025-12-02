@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Modal, Image as AntImage } from "antd";
+import Modal from "@/components/ui/Modal";
 import Image from "next/image";
-import { EyeOutlined } from "@ant-design/icons";
 
 const ImagePreviewGroup: React.FC<{ images: string[] }> = ({ images }) => {
   const [preview, setPreview] = useState<string | null>(null);
@@ -94,7 +93,7 @@ const ImagePreviewGroup: React.FC<{ images: string[] }> = ({ images }) => {
                   if (icon) icon.style.opacity = "0";
                 }}
               >
-                <EyeOutlined
+                <div
                   className="preview-icon"
                   style={{
                     fontSize: 24,
@@ -102,7 +101,9 @@ const ImagePreviewGroup: React.FC<{ images: string[] }> = ({ images }) => {
                     opacity: 0,
                     transition: "opacity 0.3s ease",
                   }}
-                />
+                >
+                  👁️
+                </div>
               </div>
               <div
                 style={{
@@ -124,29 +125,14 @@ const ImagePreviewGroup: React.FC<{ images: string[] }> = ({ images }) => {
         })}
       </div>
 
-      <Modal
-        open={!!preview}
-        footer={null}
-        onCancel={() => setPreview(null)}
-        width="90%"
-        style={{ maxWidth: 1200, top: 20 }}
-        styles={{
-          body: {
-            padding: 0,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: 400,
-          },
-        }}
-        title={
-          <div style={{ fontSize: 16, fontWeight: 500 }}>
-            Ảnh {previewIndex + 1} / {images.length}
-          </div>
-        }
-      >
-        {preview && (
-          <div style={{ width: "100%", textAlign: "center", padding: 20 }}>
+      {preview && (
+        <Modal
+          open={!!preview}
+          onClose={() => setPreview(null)}
+          title={`Ảnh ${previewIndex + 1} / ${images.length}`}
+          size="xl"
+        >
+          <div style={{ width: "100%", textAlign: "center" }}>
             <Image
               src={preview}
               alt={`Ảnh ${previewIndex + 1}`}
@@ -161,8 +147,8 @@ const ImagePreviewGroup: React.FC<{ images: string[] }> = ({ images }) => {
               }}
             />
           </div>
-        )}
-      </Modal>
+        </Modal>
+      )}
     </>
   );
 };

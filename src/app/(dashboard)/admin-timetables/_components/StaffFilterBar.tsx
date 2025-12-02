@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button, Space } from "antd";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import Button from "@/components/ui/Button";
 
 interface StaffFilterBarProps {
   onPrevWeek: () => void;
@@ -25,14 +24,14 @@ export default function StaffFilterBar({
       }}
     >
       <div style={{ flex: 1 }} />
-      <Space>
-        <Button icon={<LeftOutlined />} onClick={onPrevWeek}>
-          Tuần trước
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={onPrevWeek}>
+          ← Tuần trước
         </Button>
-        <Button icon={<RightOutlined />} onClick={onNextWeek}>
-          Tuần sau
+        <Button variant="outline" onClick={onNextWeek}>
+          Tuần sau →
         </Button>
-      </Space>
+      </div>
     </div>
   );
 }

@@ -17,13 +17,16 @@ import {
   PlusOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
-import { useMaterialRequestStore } from "@/stores/useMaterialRequestStore";
+import { useUnifiedRequestsStore } from "@/stores/useUnifiedRequestsStore";
 import {
-  MaterialRequestType,
-  MaterialRequestPriority,
-} from "@/types/materialRequest";
+  UnifiedRequestType,
+  UnifiedRequestPriority,
+  MATERIAL_REQUEST_TYPES,
+} from "@/types/unifiedRequest";
 import { Timetable } from "@/types/timetable";
 import { brandColors } from "@/styles/theme";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch } from "@/lib/apiClient";
 
 interface Material {
   _id: string;
@@ -62,10 +65,11 @@ export function CreateMaterialRequestFromTimetable({
 }: CreateMaterialRequestFromTimetableProps) {
   const [form] = Form.useForm();
   const [materialForm] = Form.useForm();
-  const { createRequest, loading } = useMaterialRequestStore();
+  const { user } = useAuth();
+  const { fetchRequests } = useUnifiedRequestsStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [requestType, setRequestType] = useState<string>(
-    MaterialRequestType.Allocation
+  const [requestType, setRequestType] = useState<UnifiedRequestType>(
+    "Cấp phát vật tư" as UnifiedRequestType
   );
   const [selectedMaterials, setSelectedMaterials] = useState<
     SelectedMaterial[]
@@ -77,7 +81,7 @@ export function CreateMaterialRequestFromTimetable({
       visible &&
       timetable &&
       timetable.room &&
-      requestType === MaterialRequestType.Repair
+      requestType === "Sửa chữa vật tư"
     ) {
       const roomId =
         typeof timetable.room === "object"
@@ -133,21 +137,47 @@ export function CreateMaterialRequestFromTimetable({
       setIsSubmitting(true);
 
       const payload = {
-        requestType: requestType as MaterialRequestType,
+        type: requestType,
+        title: `${
+          requestType === "Cấp phát vật tư"
+            ? "Yêu cầu cấp phát"
+            : "Yêu cầu sửa chữa"
+        } - ${timetable?.subject}`,
         description: values.description,
-        room:
-          requestType === MaterialRequestType.Repair ? values.room : undefined,
+        room: requestType === "Sửa chữa vật tư" ? values.room : undefined,
         materials: selectedMaterials.map((m) => ({
           materialId: m.materialId,
           quantity: m.quantity,
           reason: m.reason,
         })),
-        priority: values.priority || MaterialRequestPriority.Medium,
+        priority: values.priority || "Trung bình",
+        status: "Chờ duyệt",
+        requester: user?._id,
         timetable: timetable?._id,
       };
 
-      await createRequest(payload);
+      const response = await authFetch(
+        "/api/unified-requests",
+        user?._id!,
+        user?.roles || [],
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Không thể gửi yêu cầu");
+      }
+
       message.success("Yêu cầu vật tư đã được gửi thành công");
+
+      // Refresh the store
+      if (user?._id) {
+        fetchRequests(user._id, user.roles || []);
+      }
+
       onClose();
       setSelectedMaterials([]);
       form.resetFields();
@@ -216,7 +246,7 @@ export function CreateMaterialRequestFromTimetable({
       open={visible}
       onCancel={onClose}
       onOk={handleSubmit}
-      confirmLoading={isSubmitting || loading}
+      confirmLoading={isSubmitting}
       width="98%"
       style={{ maxWidth: "1200px" }}
       okText="Gửi yêu cầu"
@@ -234,40 +264,35 @@ export function CreateMaterialRequestFromTimetable({
           <Form.Item
             label="Loại Yêu Cầu"
             name="requestType"
-            initialValue={MaterialRequestType.Allocation}
+            initialValue="Cấp phát vật tư"
             rules={[{ required: true, message: "Vui lòng chọn loại yêu cầu" }]}
             style={{ marginBottom: 0 }}
           >
-            <Select onChange={(value) => setRequestType(value)}>
-              <Select.Option value={MaterialRequestType.Allocation}>
-                Cấp phát vật tư
-              </Select.Option>
-              <Select.Option value={MaterialRequestType.Repair}>
-                Sửa chữa/Hư hỏng
-              </Select.Option>
+            <Select
+              onChange={(value) => setRequestType(value as UnifiedRequestType)}
+            >
+              {MATERIAL_REQUEST_TYPES.map((type) => (
+                <Select.Option key={type} value={type}>
+                  {type}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
 
           <Form.Item
             label="Mức Ưu Tiên"
             name="priority"
-            initialValue={MaterialRequestPriority.Medium}
+            initialValue="Trung bình"
             style={{ marginBottom: 0 }}
           >
             <Select>
-              <Select.Option value={MaterialRequestPriority.Low}>
-                Thấp
-              </Select.Option>
-              <Select.Option value={MaterialRequestPriority.Medium}>
-                Trung bình
-              </Select.Option>
-              <Select.Option value={MaterialRequestPriority.High}>
-                Cao
-              </Select.Option>
+              <Select.Option value="Thấp">Thấp</Select.Option>
+              <Select.Option value="Trung bình">Trung bình</Select.Option>
+              <Select.Option value="Cao">Cao</Select.Option>
             </Select>
           </Form.Item>
 
-          {requestType === MaterialRequestType.Repair && (
+          {requestType === "Sửa chữa vật tư" && (
             <Form.Item
               label="Phòng Thực Hành"
               name="room"
