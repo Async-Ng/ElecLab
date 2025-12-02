@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Space } from "antd";
 import Button from "@/components/ui/Button";
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import { MaterialCategory, MaterialStatus } from "@/types/material";
