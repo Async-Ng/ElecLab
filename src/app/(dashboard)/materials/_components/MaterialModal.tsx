@@ -29,7 +29,14 @@ type Props = {
 };
 
 export default function MaterialModal(props: Props) {
-  const { open, onSubmit, onCancel, editing, loading = false, onDelete } = props;
+  const {
+    open,
+    onSubmit,
+    onCancel,
+    editing,
+    loading = false,
+    onDelete,
+  } = props;
   const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
   const [formData, setFormData] = useState({
     material_id: "",

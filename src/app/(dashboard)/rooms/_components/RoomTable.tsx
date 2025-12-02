@@ -1,10 +1,7 @@
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
 import Badge from "@/components/ui/Badge";
-import {
-  SmartTable,
-  SmartTableColumn,
-} from "@/components/table";
+import { SmartTable, SmartTableColumn } from "@/components/table";
 import { Popconfirm } from "antd";
 
 interface RoomTableProps {
