@@ -178,11 +178,7 @@ export default React.memo(function MaterialsTable({
       fixed: "right",
       render: (_: any, record: Material) => (
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(record)}
-          >
+          <Button variant="outline" size="sm" onClick={() => onEdit(record)}>
             <EditOutlined /> Sửa
           </Button>
           <Button
