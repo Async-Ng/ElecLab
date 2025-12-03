@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import dayjs from "dayjs";
 import {
   DatePicker,
   Alert,
-  Modal,
   Table,
   Input,
   Select,
@@ -12,10 +11,19 @@ import {
   Tag,
   Space,
   Popconfirm,
+  Switch,
 } from "antd";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  InfoCircleOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { UserRole } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
+import BaseModal from "@/components/common/BaseModal";
+import Card from "@/components/ui/Card";
 import {
   isWeekValidForSemester,
   getWeekValidationError,
@@ -73,6 +81,8 @@ export default function ImportPreviewModal({
   const [rows, setRows] = useState<(Timetable & { key: string | number })[]>(
     []
   );
+  const [showErrorsOnly, setShowErrorsOnly] = useState(false);
+
   useEffect(() => {
     if (visible) {
       setRows((data || []).map((r, idx) => ({ ...r, key: idx })));
@@ -85,6 +95,7 @@ export default function ImportPreviewModal({
   function removeRow(key: string | number) {
     setRows((d) => d.filter((r) => r.key !== key));
   }
+
   const isValid = (r: Timetable) =>
     !!(
       r.schoolYear &&
@@ -98,6 +109,41 @@ export default function ImportPreviewModal({
       r.className &&
       r.lecturer
     );
+
+  const getRowError = (record: Timetable): string | null => {
+    const dateVal = normalizeDate(record.date);
+
+    if (!isValid(record)) return "Thiếu trường bắt buộc";
+    if (!/^\d{4}-\d{4}$/.test(record.schoolYear))
+      return "Năm học sai định dạng";
+    if (
+      !/^\d{2}\/\d{2}\/\d{4}$/.test(dateVal) ||
+      !dayjs(dateVal, "DD/MM/YYYY", true).isValid()
+    ) {
+      return "Ngày sai định dạng";
+    }
+    if (record.week && record.semester) {
+      if (!isWeekValidForSemester(record.semester, record.week)) {
+        return getWeekValidationError(record.semester, record.week);
+      }
+    }
+    if (
+      rooms.length > 0 &&
+      record.room &&
+      !rooms.some((room) => room.room_id === record.room)
+    ) {
+      return "Mã phòng không hợp lệ";
+    }
+    if (
+      users.length > 0 &&
+      record.lecturer &&
+      !users.some((u) => u.email === record.lecturer)
+    ) {
+      return "Giảng viên không hợp lệ";
+    }
+    return null;
+  };
+
   const invalidRoomRows = rows.filter(
     (r) =>
       r.room &&
@@ -110,6 +156,37 @@ export default function ImportPreviewModal({
       users.length > 0 &&
       !users.some((u) => u.email === r.lecturer)
   );
+
+  // Stats calculation
+  const stats = useMemo(() => {
+    const totalCount = rows.length;
+    const validCount = rows.filter((r) => !getRowError(r)).length;
+    const errorCount = totalCount - validCount;
+    const invalidSchoolYearCount = rows.filter(
+      (r) => !/^\d{4}-\d{4}$/.test(r.schoolYear)
+    ).length;
+    const invalidDateCount = rows.filter((r) => {
+      const dateVal = normalizeDate(r.date);
+      return (
+        !/^\d{2}\/\d{2}\/\d{4}$/.test(dateVal) ||
+        !dayjs(dateVal, "DD/MM/YYYY", true).isValid()
+      );
+    }).length;
+
+    return {
+      totalCount,
+      validCount,
+      errorCount,
+      invalidSchoolYearCount,
+      invalidDateCount,
+    };
+  }, [rows, rooms, users]);
+
+  // Filter rows based on error toggle
+  const displayRows = useMemo(() => {
+    if (!showErrorsOnly) return rows;
+    return rows.filter((r) => getRowError(r) !== null);
+  }, [rows, showErrorsOnly]);
   const columns = [
     {
       title: "Năm học",
@@ -321,138 +398,161 @@ export default function ImportPreviewModal({
       title: "Trạng thái",
       key: "valid",
       render: (_: any, record: Timetable) => {
-        // Chuẩn hóa ngày
-        const dateVal = normalizeDate(record.date);
-        if (!isValid(record)) return <Tag color="red">Thiếu trường</Tag>;
-        if (!/^\d{4}-\d{4}$/.test(record.schoolYear)) {
-          return <Tag color="orange">Năm học sai định dạng</Tag>;
+        const error = getRowError(record);
+        if (error) {
+          return (
+            <Tag color="red" icon={<CloseCircleOutlined />}>
+              {error}
+            </Tag>
+          );
         }
-        if (
-          !/^\d{2}\/\d{2}\/\d{4}$/.test(dateVal) ||
-          !dayjs(dateVal, "DD/MM/YYYY", true).isValid()
-        ) {
-          return <Tag color="orange">Ngày sai định dạng</Tag>;
-        }
-        // Kiểm tra tuần có phù hợp với học kỳ
-        if (record.week && record.semester) {
-          if (!isWeekValidForSemester(record.semester, record.week)) {
-            const error = getWeekValidationError(record.semester, record.week);
-            return <Tag color="orange">{error}</Tag>;
-          }
-        }
-        if (
-          rooms.length > 0 &&
-          record.room &&
-          !rooms.some((room) => room.room_id === record.room)
-        ) {
-          return <Tag color="orange">Mã phòng không hợp lệ</Tag>;
-        }
-        if (
-          users.length > 0 &&
-          record.lecturer &&
-          !users.some((u) => u.email === record.lecturer)
-        ) {
-          return <Tag color="orange">Giảng viên không hợp lệ</Tag>;
-        }
-        return <Tag color="green">Hợp lệ</Tag>;
+        return (
+          <Tag color="green" icon={<CheckCircleOutlined />}>
+            Hợp lệ
+          </Tag>
+        );
       },
     },
   ];
-  const validCount = rows.filter(isValid).length;
-  const invalidSchoolYearRows = rows.filter(
-    (r) => !/^\d{4}-\d{4}$/.test(r.schoolYear)
-  );
-  const invalidDateRows = rows.filter((r) => {
-    const dateVal = normalizeDate(r.date);
-    return (
-      !/^\d{2}\/\d{2}\/\d{4}$/.test(dateVal) ||
-      !dayjs(dateVal, "DD/MM/YYYY", true).isValid()
-    );
-  });
 
   return (
-    <Modal
-      title="Xem trước dữ liệu import"
+    <BaseModal
       open={visible}
       onCancel={onClose}
-      footer={
-        <Space>
-          <Button onClick={onClose}>Hủy</Button>
-          <Button
-            type="primary"
-            onClick={() => onImport(rows.filter(isValid))}
-            disabled={validCount === 0}
-          >
-            Import {validCount} bản ghi
-          </Button>
-        </Space>
-      }
-      width="95%"
-      style={{ maxWidth: "1400px" }}
-      destroyOnHidden
+      title="Kiểm tra dữ liệu Import"
+      size="full"
+      showFooter={false}
     >
-      <div style={{ marginBottom: 12 }}>
-        <span>
-          Hợp lệ: <b>{validCount}</b> &nbsp;|&nbsp; Tổng: <b>{rows.length}</b>
-        </span>
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <Card className="border-l-4 border-l-blue-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Tổng số dòng</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {stats.totalCount}
+              </p>
+            </div>
+            <InfoCircleOutlined className="text-4xl text-blue-500 opacity-50" />
+          </div>
+        </Card>
+
+        <Card className="border-l-4 border-l-green-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Hợp lệ</p>
+              <p className="text-2xl font-bold text-green-600">
+                {stats.validCount}
+              </p>
+            </div>
+            <CheckCircleOutlined className="text-4xl text-green-500 opacity-50" />
+          </div>
+        </Card>
+
+        <Card className="border-l-4 border-l-red-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Lỗi/Cảnh báo</p>
+              <p className="text-2xl font-bold text-red-600">
+                {stats.errorCount}
+              </p>
+            </div>
+            <ExclamationCircleOutlined className="text-4xl text-red-500 opacity-50" />
+          </div>
+        </Card>
       </div>
-      {invalidSchoolYearRows.length > 0 && (
+
+      {/* Error Alerts */}
+      {stats.invalidSchoolYearCount > 0 && (
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 12 }}
-          message={`Có ${invalidSchoolYearRows.length} bản ghi có năm học không đúng định dạng (YYYY-YYYY). Vui lòng chọn lại năm học.`}
+          className="mb-3"
+          message={`Có ${stats.invalidSchoolYearCount} bản ghi có năm học không đúng định dạng (YYYY-YYYY). Vui lòng chọn lại năm học.`}
         />
       )}
-      {invalidDateRows.length > 0 && (
-        <>
-          <Alert
-            type="warning"
-            showIcon
-            style={{ marginBottom: 12 }}
-            message={`Có ${invalidDateRows.length} bản ghi có ngày không đúng định dạng (DD/MM/YYYY). Vui lòng chọn lại ngày theo chuẩn ngày/tháng/năm.`}
-          />
-          <Alert
-            type="error"
-            showIcon
-            style={{ marginBottom: 12 }}
-            message={
-              <div>
-                <b>Chi tiết bản ghi sai:</b>
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {invalidDateRows.map((row, idx) => (
-                    <li key={row.key || idx}>
-                      Dòng {idx + 1}: <b>{row.date}</b>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            }
-          />
-        </>
+      {stats.invalidDateCount > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          className="mb-3"
+          message={`Có ${stats.invalidDateCount} bản ghi có ngày không đúng định dạng (DD/MM/YYYY). Vui lòng chọn lại ngày.`}
+        />
       )}
       {invalidRoomRows.length > 0 && (
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 12 }}
-          message={`Có ${invalidRoomRows.length} bản ghi có mã phòng không hợp lệ (không tìm thấy trong hệ thống). Các bản ghi này sẽ không được liên kết phòng.`}
+          className="mb-3"
+          message={`Có ${invalidRoomRows.length} bản ghi có mã phòng không hợp lệ. Các bản ghi này sẽ không được liên kết phòng.`}
         />
       )}
       {invalidLecturerRows.length > 0 && (
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 12 }}
-          message={`Có ${invalidLecturerRows.length} bản ghi có email giảng viên không hợp lệ (không tìm thấy trong hệ thống). Các bản ghi này sẽ không được liên kết giảng viên.`}
+          className="mb-3"
+          message={`Có ${invalidLecturerRows.length} bản ghi có email giảng viên không hợp lệ. Các bản ghi này sẽ không được liên kết giảng viên.`}
         />
       )}
+
+      {/* Filter Controls */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={showErrorsOnly}
+            onChange={setShowErrorsOnly}
+            checkedChildren="Chỉ hiện lỗi"
+            unCheckedChildren="Hiện tất cả"
+          />
+          <span className="text-sm text-gray-600">
+            {showErrorsOnly
+              ? `Đang hiển thị ${displayRows.length} dòng lỗi`
+              : `Đang hiển thị ${displayRows.length} dòng`}
+          </span>
+        </div>
+      </div>
+
+      {/* Data Table with Sticky Header */}
       <Table
         rowKey={(r) => r.key}
-        dataSource={rows}
+        dataSource={displayRows}
         columns={columns}
-        pagination={{ pageSize: 8 }}
+        scroll={{ x: "max-content", y: 500 }}
+        pagination={{ pageSize: 10 }}
+        rowClassName={(record) =>
+          getRowError(record) ? "bg-red-50 hover:bg-red-100" : ""
+        }
+        sticky
       />
-    </Modal>
+
+      {/* Action Footer */}
+      <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+        <Button onClick={onClose} size="large">
+          Hủy
+        </Button>
+        <Popconfirm
+          title="Xác nhận Import"
+          description={
+            stats.errorCount > 0
+              ? `Có ${stats.errorCount} dòng lỗi sẽ bị bỏ qua. Tiếp tục import ${stats.validCount} bản ghi hợp lệ?`
+              : `Import ${stats.validCount} bản ghi?`
+          }
+          onConfirm={() => onImport(rows.filter((r) => !getRowError(r)))}
+          okText="Import"
+          cancelText="Hủy"
+          disabled={stats.validCount === 0}
+        >
+          <Button
+            type="primary"
+            size="large"
+            disabled={stats.validCount === 0}
+            icon={<CheckCircleOutlined />}
+          >
+            Import {stats.validCount} bản ghi
+          </Button>
+        </Popconfirm>
+      </div>
+    </BaseModal>
   );
 }

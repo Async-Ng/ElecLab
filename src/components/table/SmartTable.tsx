@@ -184,7 +184,6 @@ export default function SmartTable<
   zebraStriping = true,
   pagination = {
     pageSize: 10,
-    showSizeChanger: true,
     showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} bản ghi`,
     position: ["bottomRight"],
     size: "default",
