@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { DatePicker, message, Button, Space } from "antd";
+import { DatePicker, message, Button, Space, Select as AntSelect } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import viVN from "antd/es/date-picker/locale/vi_VN";
 import { Timetable, StudyTime } from "@/types/timetable";
@@ -146,19 +146,17 @@ export default function TimetableModal({
 
   if (!timetable || rooms.length === 0 || users.length === 0) {
     return (
-      <FormModal
+      <BaseModal
         open={visible}
         title="Chỉnh sửa thời khóa biểu"
         onCancel={onClose}
-        onSubmit={() => {}}
-        form={form}
         size="lg"
-        twoColumns
+        showFooter={false}
       >
-        <div style={{ padding: 32, textAlign: "center" }}>
+        <div className="p-8 text-center">
           <b>Đang tải dữ liệu...</b>
         </div>
-      </FormModal>
+      </BaseModal>
     );
   }
 
@@ -193,144 +191,138 @@ export default function TimetableModal({
 
   return (
     <>
-      <FormModal
+      <BaseModal
         open={visible}
         title="Chỉnh sửa thời khóa biểu"
         onCancel={onClose}
-        onSubmit={handleOk}
-        loading={loading}
-        form={form}
         size="lg"
-        twoColumns
-        initialValues={initialValues}
-        footer={footerContent}
+        customFooter={footerContent}
       >
-        <Col span={12}>
-          <Form.Item
-            name="schoolYear"
-            label="Năm học"
-            rules={[{ required: true, message: "Vui lòng nhập năm học" }]}
-          >
-            <Input placeholder="VD: 2024-2025" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="semester"
-            label="Học kỳ"
-            rules={[{ required: true, message: "Vui lòng chọn học kỳ" }]}
-          >
-            <Select placeholder="Chọn học kỳ">
-              <Select.Option value={1}>HK1</Select.Option>
-              <Select.Option value={2}>HK2</Select.Option>
-              <Select.Option value={3}>HK3</Select.Option>
-            </Select>
-          </Form.Item>
-        </Col>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="Năm học" required error={errors.schoolYear}>
+            <Input
+              placeholder="VD: 2024-2025"
+              value={formData.schoolYear}
+              onChange={(e) => handleChange("schoolYear", e.target.value)}
+            />
+          </FormField>
 
-        <Col span={12}>
-          <Form.Item
-            name="date"
-            label="Ngày"
-            rules={[{ required: true, message: "Vui lòng chọn ngày" }]}
-          >
+          <FormField label="Học kỳ" required error={errors.semester}>
+            <Select
+              placeholder="Chọn học kỳ"
+              value={formData.semester?.toString()}
+              onChange={(value) => handleChange("semester", Number(value))}
+              options={[
+                { value: "1", label: "HK1" },
+                { value: "2", label: "HK2" },
+                { value: "3", label: "HK3" },
+              ]}
+              fullWidth
+            />
+          </FormField>
+
+          <FormField label="Ngày" required error={errors.date}>
             <DatePicker
               format="DD/MM/YYYY"
               locale={viVN}
               style={{ width: "100%" }}
               placeholder="Chọn ngày"
+              value={formData.date}
+              onChange={(date) => handleChange("date", date)}
             />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="period"
-            label="Ca học"
-            rules={[{ required: true, message: "Vui lòng chọn ca học" }]}
-          >
-            <Select placeholder="Chọn ca học">
-              <Select.Option value={1}>Ca 1</Select.Option>
-              <Select.Option value={2}>Ca 2</Select.Option>
-              <Select.Option value={3}>Ca 3</Select.Option>
-              <Select.Option value={4}>Ca 4</Select.Option>
-            </Select>
-          </Form.Item>
-        </Col>
+          </FormField>
 
-        <Col span={12}>
-          <Form.Item
-            name="time"
-            label="Giờ học"
-            rules={[{ required: true, message: "Vui lòng chọn giờ học" }]}
-          >
-            <Select placeholder="Chọn giờ học">
-              {Object.values(StudyTime).map((t) => (
-                <Select.Option key={t} value={t}>
-                  {t}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="subject"
-            label="Môn học"
-            rules={[{ required: true, message: "Vui lòng nhập môn học" }]}
-          >
-            <Input placeholder="VD: TN Máy điện" />
-          </Form.Item>
-        </Col>
-
-        <Col span={12}>
-          <Form.Item
-            name="room"
-            label="Phòng học"
-            rules={[{ required: true, message: "Vui lòng chọn phòng học" }]}
-          >
+          <FormField label="Ca học" required error={errors.period}>
             <Select
+              placeholder="Chọn ca học"
+              value={formData.period?.toString()}
+              onChange={(value) => handleChange("period", Number(value))}
+              options={[
+                { value: "1", label: "Ca 1" },
+                { value: "2", label: "Ca 2" },
+                { value: "3", label: "Ca 3" },
+                { value: "4", label: "Ca 4" },
+              ]}
+              fullWidth
+            />
+          </FormField>
+
+          <FormField label="Giờ học" required error={errors.time}>
+            <Select
+              placeholder="Chọn giờ học"
+              value={formData.time}
+              onChange={(value) => handleChange("time", value as StudyTime)}
+              options={Object.values(StudyTime).map((t) => ({
+                value: t,
+                label: t,
+              }))}
+              fullWidth
+            />
+          </FormField>
+
+          <FormField label="Môn học" required error={errors.subject}>
+            <Input
+              placeholder="VD: TN Máy điện"
+              value={formData.subject}
+              onChange={(e) => handleChange("subject", e.target.value)}
+            />
+          </FormField>
+
+          <FormField label="Phòng học" required error={errors.room}>
+            <AntSelect
               showSearch
               placeholder="Chọn phòng học"
               optionFilterProp="children"
+              value={formData.room}
+              onChange={(value) => handleChange("room", value)}
+              style={{ width: "100%" }}
+              filterOption={(input, option) =>
+                String(option?.children ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
             >
               {rooms.map((r) => (
-                <Select.Option key={r._id} value={r._id}>
+                <AntSelect.Option key={r._id} value={r._id}>
                   {r.room_id} - {r.name}
-                </Select.Option>
+                </AntSelect.Option>
               ))}
-            </Select>
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="className"
-            label="Lớp"
-            rules={[{ required: true, message: "Vui lòng nhập lớp" }]}
-          >
-            <Input placeholder="VD: C23A.ĐL2" />
-          </Form.Item>
-        </Col>
+            </AntSelect>
+          </FormField>
 
-        <Col span={24}>
-          <Form.Item
-            name="lecturer"
-            label="Giảng viên"
-            rules={[{ required: true, message: "Vui lòng chọn giảng viên" }]}
-          >
-            <Select
-              showSearch
-              placeholder="Chọn giảng viên"
-              optionFilterProp="children"
-            >
-              {users.map((u) => (
-                <Select.Option key={u._id} value={u._id}>
-                  {u.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Col>
-      </FormModal>
+          <FormField label="Lớp" required error={errors.className}>
+            <Input
+              placeholder="VD: C23A.ĐL2"
+              value={formData.className}
+              onChange={(e) => handleChange("className", e.target.value)}
+            />
+          </FormField>
+
+          <div className="col-span-2">
+            <FormField label="Giảng viên" required error={errors.lecturer}>
+              <AntSelect
+                showSearch
+                placeholder="Chọn giảng viên"
+                optionFilterProp="children"
+                value={formData.lecturer}
+                onChange={(value) => handleChange("lecturer", value)}
+                style={{ width: "100%" }}
+                filterOption={(input, option) =>
+                  String(option?.children ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+              >
+                {users.map((u) => (
+                  <AntSelect.Option key={u._id} value={u._id}>
+                    {u.name}
+                  </AntSelect.Option>
+                ))}
+              </AntSelect>
+            </FormField>
+          </div>
+        </div>
+      </BaseModal>
 
       <CreateMaterialRequestFromTimetable
         visible={showMaterialRequest}
