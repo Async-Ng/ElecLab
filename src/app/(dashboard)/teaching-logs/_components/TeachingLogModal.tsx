@@ -338,7 +338,7 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         open={open}
         onCancel={onClose}
         title={log ? "Chi tiết nhật ký ca dạy" : "Tạo nhật ký ca dạy"}
-        size="xl"
+        size="lg"
         showFooter={false}
       >
         <div className="space-y-6">

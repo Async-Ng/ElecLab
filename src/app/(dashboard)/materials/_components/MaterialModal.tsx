@@ -188,7 +188,7 @@ export default function MaterialModal(props: Props) {
       open={open}
       title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư mới"}
       onCancel={onCancel}
-      size="lg"
+      size="md"
       showFooter={false}
     >
       {/* Group 1: Thông tin chính */}

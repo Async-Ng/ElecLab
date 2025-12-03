@@ -234,7 +234,8 @@ export default function ImportPreviewModal(props: Props) {
           </Button>
         </Space>
       }
-      width="90vw"
+      width="95%"
+      style={{ maxWidth: "1400px" }}
       destroyOnHidden
     >
       <div className="mb-3">

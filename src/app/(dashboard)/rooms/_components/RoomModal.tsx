@@ -3,8 +3,7 @@ import { User } from "@/types/user";
 import { Form, Input, Select, message } from "antd";
 import FormModal from "@/components/common/FormModal";
 import Button from "@/components/ui/Button";
-import { useState, useEffect, useMemo } from "react";
-import { HomeOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { useEffect, useMemo } from "react";
 
 interface RoomModalProps {
   open: boolean;
@@ -102,7 +101,7 @@ export default function RoomModal({
       onSubmit={handleSubmit}
       loading={loading}
       form={form}
-      width={600}
+      size="md"
       footer={customFooter}
       layout="vertical"
     >

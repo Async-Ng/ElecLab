@@ -117,7 +117,7 @@ export default function TimetableModal({
         onCancel={onClose}
         onSubmit={() => {}}
         form={form}
-        width={800}
+        size="lg"
         twoColumns
       >
         <div className="p-8 text-center">
@@ -148,7 +148,7 @@ export default function TimetableModal({
         onSubmit={handleOk}
         loading={loading}
         form={form}
-        width={800}
+        size="lg"
         twoColumns
         initialValues={initialValues}
         footer={footerContent}

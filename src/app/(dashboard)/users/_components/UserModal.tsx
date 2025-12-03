@@ -187,7 +187,7 @@ const UserModal: React.FC<UserModalProps> = ({
       onSubmit={handleSubmit}
       loading={loading}
       form={form}
-      width={900}
+      size="lg"
       footer={customFooter}
       layout="vertical"
     >

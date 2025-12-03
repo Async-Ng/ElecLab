@@ -1,19 +1,13 @@
 "use client";
-import React, { useState } from "react";
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  message,
-  Col,
-  Button,
-  Space,
-} from "antd";
-import dayjs from "dayjs";
+import React, { useState, useEffect } from "react";
+import { DatePicker, message, Button, Space } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 import viVN from "antd/es/date-picker/locale/vi_VN";
 import { Timetable, StudyTime } from "@/types/timetable";
-import FormModal from "@/components/common/FormModal";
+import BaseModal from "@/components/common/BaseModal";
+import FormField from "@/components/form/FormField";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { CreateMaterialRequestFromTimetable } from "@/components/materialRequest/CreateMaterialRequestFromTimetable";
 
 interface TimetableModalProps {
@@ -38,39 +32,79 @@ export default function TimetableModal({
   onDelete,
 }: TimetableModalProps) {
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
   const [showMaterialRequest, setShowMaterialRequest] = useState(false);
+  const [formData, setFormData] = useState({
+    schoolYear: "",
+    semester: undefined as number | undefined,
+    date: null as Dayjs | null,
+    period: undefined as number | undefined,
+    time: undefined as StudyTime | undefined,
+    subject: "",
+    room: "",
+    className: "",
+    lecturer: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Prepare initial values for form
-  const initialValues = React.useMemo(() => {
-    if (!timetable) return null;
+  // Initialize form data when modal opens
+  useEffect(() => {
+    if (visible && timetable) {
+      let d = timetable.date;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
+        const [dd, mm, yyyy] = d.split("/");
+        d = `${yyyy}-${mm}-${dd}`;
+      }
 
-    let d = timetable.date;
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
-      const [dd, mm, yyyy] = d.split("/");
-      d = `${yyyy}-${mm}-${dd}`;
+      setFormData({
+        schoolYear: timetable.schoolYear || "",
+        semester: Number(timetable.semester) || undefined,
+        date: d ? dayjs(d, "YYYY-MM-DD") : null,
+        period: Number(timetable.period) || undefined,
+        time: timetable.time || undefined,
+        subject: timetable.subject || "",
+        room:
+          typeof timetable.room === "object"
+            ? timetable.room._id || ""
+            : timetable.room || "",
+        className: timetable.className || "",
+        lecturer:
+          typeof timetable.lecturer === "object"
+            ? timetable.lecturer._id || ""
+            : timetable.lecturer || "",
+      });
+      setErrors({});
     }
+  }, [visible, timetable]);
 
-    return {
-      schoolYear: timetable.schoolYear || "",
-      semester: Number(timetable.semester) || undefined,
-      date: d ? dayjs(d, "YYYY-MM-DD") : null,
-      period: Number(timetable.period) || undefined,
-      time: timetable.time || undefined,
-      subject: timetable.subject || "",
-      room:
-        typeof timetable.room === "object"
-          ? timetable.room._id
-          : timetable.room,
-      className: timetable.className || "",
-      lecturer:
-        typeof timetable.lecturer === "object"
-          ? timetable.lecturer._id
-          : timetable.lecturer,
-    };
-  }, [timetable, rooms, users]);
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.schoolYear.trim())
+      newErrors.schoolYear = "Vui lòng nhập năm học";
+    if (!formData.semester) newErrors.semester = "Vui lòng chọn học kỳ";
+    if (!formData.date) newErrors.date = "Vui lòng chọn ngày";
+    if (!formData.period) newErrors.period = "Vui lòng chọn ca học";
+    if (!formData.time) newErrors.time = "Vui lòng chọn thời gian";
+    if (!formData.subject.trim()) newErrors.subject = "Vui lòng nhập môn học";
+    if (!formData.room) newErrors.room = "Vui lòng chọn phòng";
+    if (!formData.className.trim()) newErrors.className = "Vui lòng nhập lớp";
+    if (!formData.lecturer) newErrors.lecturer = "Vui lòng chọn giảng viên";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleOk = async () => {
+    if (!validate()) {
+      message.error("Vui lòng kiểm tra lại thông tin nhập vào");
+      return;
+    }
+
     setLoading(true);
     let user = null;
     try {
@@ -79,11 +113,10 @@ export default function TimetableModal({
       user = null;
     }
     try {
-      const values = await form.validateFields();
       const payload = {
-        ...values,
+        ...formData,
         _id: timetable?._id,
-        date: values.date.format("YYYY-MM-DD"),
+        date: formData.date?.format("YYYY-MM-DD"),
         userId: user && user._id,
         userRole: user && user.roles ? user.roles : [],
       };
@@ -119,7 +152,7 @@ export default function TimetableModal({
         onCancel={onClose}
         onSubmit={() => {}}
         form={form}
-        width={800}
+        size="lg"
         twoColumns
       >
         <div style={{ padding: 32, textAlign: "center" }}>
@@ -167,7 +200,7 @@ export default function TimetableModal({
         onSubmit={handleOk}
         loading={loading}
         form={form}
-        width={800}
+        size="lg"
         twoColumns
         initialValues={initialValues}
         footer={footerContent}

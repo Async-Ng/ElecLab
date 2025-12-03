@@ -10,6 +10,9 @@ interface FormModalProps {
   loading?: boolean;
   form: FormInstance;
   children: React.ReactNode;
+  /** Size preset - overridden by width if provided */
+  size?: "sm" | "md" | "lg" | "xl" | "full";
+  /** Custom width - overrides size preset */
   width?: number;
   okText?: string;
   cancelText?: string;
@@ -38,7 +41,8 @@ export default function FormModal({
   loading = false,
   form,
   children,
-  width = 600,
+  size = "md",
+  width,
   okText = "Lưu",
   cancelText = "Hủy",
   layout = "vertical",
@@ -79,6 +83,7 @@ export default function FormModal({
       okText={okText}
       cancelText={cancelText}
       loading={loading}
+      size={size}
       width={width}
       customFooter={footer}
     >

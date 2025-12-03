@@ -373,7 +373,8 @@ export default function ImportPreviewModal({
           </Button>
         </Space>
       }
-      width="90vw"
+      width="95%"
+      style={{ maxWidth: "1400px" }}
       destroyOnHidden
     >
       <div style={{ marginBottom: 12 }}>

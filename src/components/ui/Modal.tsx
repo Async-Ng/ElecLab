@@ -116,13 +116,13 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!open) return null;
 
-  // Size styles
+  // Size presets with exact pixel values
   const sizeStyles = {
-    sm: "max-w-md",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
-    full: "max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)]",
+    sm: "max-w-[400px]", // Small - Simple forms (1-2 fields)
+    md: "max-w-[600px]", // Medium - Standard forms (default)
+    lg: "max-w-[800px]", // Large - Two-column forms
+    xl: "max-w-[1000px]", // Extra Large - Tables, preview
+    full: "max-w-[calc(100vw-40px)]", // Full - Calendar, charts
   };
 
   const modalContent = (
@@ -132,10 +132,11 @@ const Modal: React.FC<ModalProps> = ({
         centered ? "items-center" : "items-start pt-20"
       )}
     >
-      {/* Backdrop */}
+      {/* Glassmorphism Backdrop */}
       <div
         className={cn(
-          "absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300",
+          "absolute inset-0 bg-black/40 backdrop-blur-sm",
+          "transition-all duration-300 ease-out",
           "animate-in fade-in",
           backdropClassName
         )}
@@ -143,23 +144,25 @@ const Modal: React.FC<ModalProps> = ({
         aria-hidden="true"
       />
 
-      {/* Modal */}
+      {/* Modal Container - Enhanced Visual */}
       <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
         className={cn(
-          "relative bg-white rounded-lg shadow-xl",
+          "relative bg-white rounded-2xl shadow-2xl",
           "w-full overflow-hidden",
-          "animate-in zoom-in-95 fade-in duration-300",
+          "border border-gray-100",
+          "animate-in zoom-in-95 fade-in slide-in-from-bottom-4",
+          "duration-300 ease-out",
           sizeStyles[size],
           className
         )}
       >
-        {/* Header */}
+        {/* Header - Enhanced Styling */}
         {(title || closable) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             {title && (
               <h2
                 id="modal-title"
@@ -201,9 +204,9 @@ const Modal: React.FC<ModalProps> = ({
           {children}
         </div>
 
-        {/* Footer */}
+        {/* Footer - Subtle Background */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-neutral-200 bg-neutral-50">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-50 bg-gray-50/50">
             {footer}
           </div>
         )}
