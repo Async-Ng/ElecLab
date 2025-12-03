@@ -1,13 +1,8 @@
-/**
- * Unified Request Modal
- * Modal để tạo/edit request (general hoặc material)
- * Auto-detect type và render form tương ứng
- */
-
 "use client";
 
 import { useState, useEffect } from "react";
-import Modal from "@/components/ui/Modal";
+import { message } from "antd";
+import BaseModal from "@/components/common/BaseModal";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import Tabs from "@/components/ui/Tabs";
@@ -190,31 +185,12 @@ export default function RequestModal({
   };
 
   return (
-    <Modal
+    <BaseModal
       open={isOpen}
-      onClose={onClose}
-      title={
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-            {isEdit ? (
-              <EditOutlined className="text-orange-600 text-lg" />
-            ) : (
-              <PlusOutlined className="text-orange-600 text-lg" />
-            )}
-          </div>
-          <div>
-            <div className="text-lg font-semibold text-gray-900">
-              {isEdit ? "Chỉnh sửa yêu cầu" : "Tạo yêu cầu mới"}
-            </div>
-            <div className="text-xs text-gray-500">
-              {isEdit
-                ? "Cập nhật thông tin yêu cầu"
-                : "Gửi yêu cầu chung hoặc vật tư"}
-            </div>
-          </div>
-        </div>
-      }
+      onCancel={onClose}
+      title={isEdit ? "Chỉnh sửa yêu cầu" : "Tạo yêu cầu mới"}
       size="lg"
+      showFooter={false}
     >
       <div className="space-y-4">
         {alertMessage && (
@@ -266,6 +242,6 @@ export default function RequestModal({
           </Button>
         </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 }

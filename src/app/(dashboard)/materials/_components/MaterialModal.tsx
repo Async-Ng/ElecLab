@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, FormEvent } from "react";
+import React, { useEffect, useState } from "react";
 import { Material, MaterialCategory, MaterialStatus } from "@/types/material";
-import Modal from "@/components/ui/Modal";
-import Input from "@/components/ui/Input";
-import Select from "@/components/ui/Select";
+import { Form, Input, Select, Radio, message } from "antd";
+import FormModal from "@/components/common/FormModal";
 import Button from "@/components/ui/Button";
-import FormField from "@/components/common/FormField";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 import {
@@ -37,41 +35,27 @@ export default function MaterialModal(props: Props) {
     loading = false,
     onDelete,
   } = props;
+  const [form] = Form.useForm();
   const [rooms, setRooms] = useState<{ _id: string; name: string }[]>([]);
-  const [formData, setFormData] = useState({
-    material_id: "",
-    name: "",
-    category: "" as MaterialCategory,
-    status: "" as MaterialStatus,
-    place_used: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
 
   // Initialize form data when modal opens
   useEffect(() => {
     if (open && user) {
       if (editing) {
-        setFormData({
+        form.setFieldsValue({
           material_id: editing.material_id || "",
           name: editing.name || "",
-          category: editing.category || ("" as MaterialCategory),
-          status: editing.status || ("" as MaterialStatus),
+          category: editing.category,
+          status: editing.status || MaterialStatus.AVAILABLE,
           place_used:
             typeof editing.place_used === "object" && editing.place_used?._id
               ? editing.place_used._id
               : (editing.place_used as string) || "",
         });
       } else {
-        setFormData({
-          material_id: "",
-          name: "",
-          category: "" as MaterialCategory,
-          status: "" as MaterialStatus,
-          place_used: "",
-        });
+        form.resetFields();
       }
-      setErrors({});
 
       // Fetch rooms
       const fetchRooms = async () => {
@@ -87,40 +71,16 @@ export default function MaterialModal(props: Props) {
       };
       fetchRooms();
     }
-  }, [open, editing, user]);
-
-  // Handle input change
-  const handleChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  // Validate form
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.material_id.trim()) {
-      newErrors.material_id = "Vui lòng nhập mã vật tư";
-    }
-    if (!formData.name.trim()) {
-      newErrors.name = "Vui lòng nhập tên";
-    }
-    if (!formData.category) {
-      newErrors.category = "Vui lòng chọn danh mục";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }, [open, editing, user, form]);
 
   // Handle form submit
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    onSubmit(formData as Material);
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      onSubmit(values as Material);
+    } catch (error) {
+      message.error("Vui lòng kiểm tra lại thông tin nhập vào");
+    }
   };
 
   const categoryOptions = [
@@ -128,171 +88,156 @@ export default function MaterialModal(props: Props) {
     { label: "Vật tư tiêu hao", value: MaterialCategory.CONSUMABLE },
   ];
 
-  const statusOptions = [
-    { label: "Có sẵn", value: MaterialStatus.AVAILABLE },
-    { label: "Đang sử dụng", value: MaterialStatus.IN_USE },
-    { label: "Hư hỏng", value: MaterialStatus.BROKEN },
-  ];
-
   const roomOptions = rooms.map((room) => ({
     label: room.name,
     value: room._id,
   }));
 
+  const customFooter = (
+    <div className="flex justify-between gap-3 pt-5 border-t-2 border-gray-200 w-full">
+      <div>
+        {editing && onDelete && (
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (window.confirm("Bạn chắc chắn muốn xóa vật tư này?")) {
+                onDelete(editing._id);
+                onCancel();
+              }
+            }}
+            disabled={loading}
+            className="text-base h-11 px-6 font-semibold"
+          >
+            Xóa vật tư
+          </Button>
+        )}
+      </div>
+      <div className="flex gap-3">
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          disabled={loading}
+          className="text-base h-11 px-6 font-semibold"
+        >
+          Hủy bỏ
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="primary"
+          loading={loading}
+          className="text-base h-11 px-6 font-semibold"
+        >
+          {editing ? "Cập nhật thông tin" : "Lưu thông tin"}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
-    <Modal
+    <FormModal
       open={open}
-      onClose={onCancel}
-      title={
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-            {editing ? (
-              <EditOutlined className="text-blue-600 text-lg" />
-            ) : (
-              <PlusOutlined className="text-blue-600 text-lg" />
-            )}
-          </div>
-          <div>
-            <div className="text-lg font-semibold text-gray-900">
-              {editing ? "Chỉnh sửa vật tư" : "Thêm vật tư mới"}
-            </div>
-            <div className="text-xs text-gray-500">
-              {editing
-                ? "Cập nhật thông tin vật tư"
-                : "Tạo vật tư thiết bị mới"}
-            </div>
-          </div>
-        </div>
-      }
-      size="md"
+      title={editing ? "Chỉnh sửa vật tư" : "Thêm vật tư mới"}
+      onCancel={onCancel}
+      onSubmit={handleSubmit}
+      loading={loading}
+      form={form}
+      width={650}
+      footer={customFooter}
+      layout="vertical"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Group 1: Thông tin chính */}
-        <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-          <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
-            <TagOutlined className="text-xl text-primary-500" />
-            <span>Thông tin chính</span>
-          </div>
-
-          {/* Material ID */}
-          <div className="mb-4">
-            <FormField label="Mã vật tư" required error={errors.material_id}>
-              <Input
-                value={formData.material_id}
-                onChange={(e) => handleChange("material_id", e.target.value)}
-                placeholder="VD: MAT-001"
-                prefix={<BarcodeOutlined className="text-gray-400" />}
-                error={!!errors.material_id}
-                className="text-base h-11"
-              />
-            </FormField>
-          </div>
-
-          {/* Name */}
-          <div className="mb-4">
-            <FormField label="Tên vật tư" required error={errors.name}>
-              <Input
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="VD: Máy hàn HAKKO"
-                error={!!errors.name}
-                className="text-base h-11"
-              />
-            </FormField>
-          </div>
-
-          {/* Category */}
-          <div>
-            <FormField label="Danh mục" required error={errors.category}>
-              <Select
-                value={formData.category}
-                onChange={(value) => handleChange("category", value as string)}
-                options={categoryOptions}
-                placeholder="Chọn danh mục vật tư"
-                error={!!errors.category}
-                suffixIcon={<AppstoreOutlined className="text-gray-400" />}
-                className="text-base"
-              />
-            </FormField>
-          </div>
+      {/* Group 1: Thông tin chính */}
+      <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+        <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
+          <TagOutlined className="text-xl text-primary-500" />
+          <span>Thông tin chính</span>
         </div>
 
-        {/* Group 2: Trạng thái & Vị trí */}
-        <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-          <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
-            <CheckCircleOutlined className="text-xl text-green-600" />
-            <span>Trạng thái & Vị trí</span>
-          </div>
+        {/* Material ID */}
+        <Form.Item
+          name="material_id"
+          label="Mã vật tư"
+          rules={[{ required: true, message: "Vui lòng nhập mã vật tư!" }]}
+        >
+          <Input placeholder="Nhập mã vật tư (VD: MAT-001)..." size="large" />
+        </Form.Item>
 
-          {/* Status */}
-          <div className="mb-4">
-            <FormField label="Tình trạng" error={errors.status}>
-              <Select
-                value={formData.status}
-                onChange={(value) => handleChange("status", value as string)}
-                options={statusOptions}
-                placeholder="Chọn tình trạng hiện tại"
-                className="text-base"
-              />
-            </FormField>
-          </div>
+        {/* Name */}
+        <Form.Item
+          name="name"
+          label="Tên vật tư"
+          rules={[{ required: true, message: "Vui lòng nhập tên vật tư!" }]}
+        >
+          <Input
+            placeholder="Nhập tên vật tư (VD: Máy hàn HAKKO)..."
+            size="large"
+          />
+        </Form.Item>
 
-          {/* Place Used */}
-          <div>
-            <FormField label="Vị trí sử dụng" error={errors.place_used}>
-              <Select
-                value={formData.place_used}
-                onChange={(value) =>
-                  handleChange("place_used", value as string)
-                }
-                options={roomOptions}
-                placeholder="Chọn phòng thực hành"
-                suffixIcon={<EnvironmentOutlined className="text-gray-400" />}
-                className="text-base"
-              />
-            </FormField>
-          </div>
+        {/* Category */}
+        <Form.Item
+          name="category"
+          label="Danh mục"
+          rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
+        >
+          <Select
+            placeholder="Chọn danh mục vật tư..."
+            options={categoryOptions}
+            size="large"
+          />
+        </Form.Item>
+      </div>
+
+      {/* Group 2: Trạng thái & Vị trí */}
+      <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 mt-6">
+        <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-base">
+          <CheckCircleOutlined className="text-xl text-green-600" />
+          <span>Trạng thái & Vị trí</span>
         </div>
 
-        {/* Modal Footer Actions */}
-        <div className="flex justify-between gap-3 pt-5 border-t-2 border-gray-200">
-          <div>
-            {editing && onDelete && (
-              <Button
-                variant="danger"
-                onClick={() => {
-                  if (window.confirm("Bạn chắc chắn muốn xóa vật tư này?")) {
-                    onDelete(editing._id);
-                    onCancel();
-                  }
-                }}
-                disabled={loading}
-                className="text-base h-11 px-6 font-semibold"
+        {/* Status - Using Radio.Group for better UX (only 3 options) */}
+        <Form.Item
+          name="status"
+          label="Tình trạng"
+          initialValue={MaterialStatus.AVAILABLE}
+        >
+          <Radio.Group className="w-full" size="large">
+            <div className="grid grid-cols-3 gap-3">
+              <Radio.Button
+                value={MaterialStatus.AVAILABLE}
+                className="text-center"
               >
-                Xóa vật tư
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-              disabled={loading}
-              className="text-base h-11 px-6 font-semibold"
-            >
-              Hủy bỏ
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              loading={loading}
-              className="text-base h-11 px-6 font-semibold"
-            >
-              {editing ? "Cập nhật thông tin" : "Lưu thông tin"}
-            </Button>
-          </div>
-        </div>
-      </form>
-    </Modal>
+                ✅ Có sẵn
+              </Radio.Button>
+              <Radio.Button
+                value={MaterialStatus.IN_USE}
+                className="text-center"
+              >
+                🔧 Đang sử dụng
+              </Radio.Button>
+              <Radio.Button
+                value={MaterialStatus.BROKEN}
+                className="text-center"
+              >
+                ⚠️ Hư hỏng
+              </Radio.Button>
+            </div>
+          </Radio.Group>
+        </Form.Item>
+
+        {/* Place Used */}
+        <Form.Item name="place_used" label="Vị trí sử dụng">
+          <Select
+            placeholder="Chọn phòng thực hành..."
+            options={roomOptions}
+            size="large"
+            showSearch
+            allowClear
+            filterOption={(input: string, option: any) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+          />
+        </Form.Item>
+      </div>
+    </FormModal>
   );
 }

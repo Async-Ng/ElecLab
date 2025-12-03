@@ -120,7 +120,7 @@ export default function TimetableModal({
         width={800}
         twoColumns
       >
-        <div style={{ padding: 32, textAlign: "center" }}>
+        <div className="p-8 text-center">
           <b>Đang tải dữ liệu...</b>
         </div>
       </FormModal>
@@ -159,7 +159,7 @@ export default function TimetableModal({
             label="Năm học"
             rules={[{ required: true, message: "Vui lòng nhập năm học" }]}
           >
-            <Input placeholder="VD: 2024-2025" />
+            <Input placeholder="Nhập năm học (VD: 2024-2025)..." size="large" />
           </Form.Item>
         </Col>
         <Col span={12}>
@@ -168,7 +168,7 @@ export default function TimetableModal({
             label="Học kỳ"
             rules={[{ required: true, message: "Vui lòng chọn học kỳ" }]}
           >
-            <Select placeholder="Chọn học kỳ">
+            <Select placeholder="Chọn học kỳ..." size="large">
               <Select.Option value={1}>HK1</Select.Option>
               <Select.Option value={2}>HK2</Select.Option>
               <Select.Option value={3}>HK3</Select.Option>
@@ -186,7 +186,8 @@ export default function TimetableModal({
               format="DD/MM/YYYY"
               locale={viVN}
               style={{ width: "100%" }}
-              placeholder="Chọn ngày"
+              placeholder="Chọn ngày học..."
+              size="large"
             />
           </Form.Item>
         </Col>
@@ -196,7 +197,7 @@ export default function TimetableModal({
             label="Ca học"
             rules={[{ required: true, message: "Vui lòng chọn ca học" }]}
           >
-            <Select placeholder="Chọn ca học">
+            <Select placeholder="Chọn ca học..." size="large">
               <Select.Option value={1}>Ca 1</Select.Option>
               <Select.Option value={2}>Ca 2</Select.Option>
               <Select.Option value={3}>Ca 3</Select.Option>
@@ -211,7 +212,7 @@ export default function TimetableModal({
             label="Giờ học"
             rules={[{ required: true, message: "Vui lòng chọn giờ học" }]}
           >
-            <Select placeholder="Chọn giờ học">
+            <Select placeholder="Chọn giờ học..." size="large">
               {Object.values(StudyTime).map((t) => (
                 <Select.Option key={t} value={t}>
                   {t}
@@ -226,7 +227,10 @@ export default function TimetableModal({
             label="Môn học"
             rules={[{ required: true, message: "Vui lòng nhập môn học" }]}
           >
-            <Input placeholder="VD: TN Máy điện" />
+            <Input
+              placeholder="Nhập tên môn học (VD: TN Máy điện)..."
+              size="large"
+            />
           </Form.Item>
         </Col>
 
@@ -238,8 +242,9 @@ export default function TimetableModal({
           >
             <Select
               showSearch
-              placeholder="Chọn phòng học"
+              placeholder="Chọn phòng thí nghiệm..."
               optionFilterProp="children"
+              size="large"
             >
               {rooms.map((r) => (
                 <Select.Option key={r._id} value={r._id}>
@@ -255,7 +260,7 @@ export default function TimetableModal({
             label="Lớp"
             rules={[{ required: true, message: "Vui lòng nhập lớp" }]}
           >
-            <Input placeholder="VD: C23A.ĐL2" />
+            <Input placeholder="Nhập tên lớp (VD: C23A.ĐL2)..." size="large" />
           </Form.Item>
         </Col>
 
@@ -267,8 +272,9 @@ export default function TimetableModal({
           >
             <Select
               showSearch
-              placeholder="Chọn giảng viên"
+              placeholder="Chọn giảng viên phụ trách..."
               optionFilterProp="children"
+              size="large"
             >
               {users.map((u) => (
                 <Select.Option key={u._id} value={u._id}>

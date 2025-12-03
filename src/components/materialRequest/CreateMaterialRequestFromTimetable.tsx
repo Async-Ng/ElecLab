@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import {
-  Modal,
   Form,
   Input,
   Select,
@@ -12,6 +11,7 @@ import {
   Divider,
   Button,
 } from "antd";
+import BaseModal from "@/components/common/BaseModal";
 import {
   DeleteOutlined,
   PlusOutlined,
@@ -209,67 +209,28 @@ export function CreateMaterialRequestFromTimetable({
   ];
 
   return (
-    <Modal
-      title={
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "8px",
-              background: brandColors.primaryLight,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <ShoppingOutlined
-              style={{ color: brandColors.primary, fontSize: "20px" }}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "18px",
-                fontWeight: 600,
-                color: brandColors.textPrimary,
-              }}
-            >
-              {timetable?.subject || "Yêu cầu vật tư"}
-            </div>
-            <div style={{ fontSize: "12px", color: brandColors.textSecondary }}>
-              {timetable?.className || ""}
-            </div>
-          </div>
-        </div>
-      }
+    <BaseModal
+      title={timetable?.subject || "Yêu cầu vật tư"}
       open={visible}
       onCancel={onClose}
-      onOk={handleSubmit}
-      confirmLoading={isSubmitting}
-      width="98%"
-      style={{ maxWidth: "1200px" }}
       okText="Gửi yêu cầu"
       cancelText="Hủy"
-      styles={{ body: { padding: "24px" } }}
+      onOk={handleSubmit}
+      loading={isSubmitting}
+      size="lg"
+      centered
     >
       <Form form={form} layout="vertical" className="mb-4">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "16px",
-          }}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Form.Item
             label="Loại Yêu Cầu"
             name="requestType"
             initialValue="Cấp phát vật tư"
             rules={[{ required: true, message: "Vui lòng chọn loại yêu cầu" }]}
-            style={{ marginBottom: 0 }}
           >
             <Select
               onChange={(value) => setRequestType(value as UnifiedRequestType)}
+              size="large"
             >
               {MATERIAL_REQUEST_TYPES.map((type) => (
                 <Select.Option key={type} value={type}>
@@ -280,12 +241,11 @@ export function CreateMaterialRequestFromTimetable({
           </Form.Item>
 
           <Form.Item
-            label="Mức Ưu Tiên"
+            label="Mức Ươ Tiên"
             name="priority"
             initialValue="Trung bình"
-            style={{ marginBottom: 0 }}
           >
-            <Select>
+            <Select size="large">
               <Select.Option value="Thấp">Thấp</Select.Option>
               <Select.Option value="Trung bình">Trung bình</Select.Option>
               <Select.Option value="Cao">Cao</Select.Option>
@@ -299,9 +259,8 @@ export function CreateMaterialRequestFromTimetable({
               rules={[
                 { required: true, message: "Vui lòng chọn phòng thực hành" },
               ]}
-              style={{ marginBottom: 0 }}
             >
-              <Select placeholder="Chọn phòng">
+              <Select placeholder="Chọn phòng..." size="large">
                 {rooms.map((r) => (
                   <Select.Option key={r._id} value={r._id}>
                     {r.room_id} - {r.name}
@@ -316,11 +275,11 @@ export function CreateMaterialRequestFromTimetable({
           label="Mô Tả"
           name="description"
           rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
-          style={{ marginTop: "16px" }}
         >
           <Input.TextArea
             rows={3}
-            placeholder="Mô tả chi tiết yêu cầu của bạn"
+            placeholder="Mô tả chi tiết yêu cầu của bạn..."
+            size="large"
           />
         </Form.Item>
       </Form>
@@ -328,23 +287,14 @@ export function CreateMaterialRequestFromTimetable({
       <Divider>Chọn Vật Tư</Divider>
 
       <Form form={materialForm} layout="vertical" className="mb-4">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "3fr 1fr 1.5fr auto",
-            gap: "12px",
-            alignItems: "flex-end",
-          }}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
           <Form.Item
             name="materialId"
-            label={
-              <span style={{ fontSize: "13px", fontWeight: 500 }}>Vật Tư</span>
-            }
+            label="Vật Tư"
             rules={[{ required: true, message: "Chọn vật tư" }]}
-            style={{ marginBottom: 0 }}
+            className="mb-0"
           >
-            <Select placeholder="Chọn vật tư">
+            <Select placeholder="Chọn vật tư..." size="large">
               {materials.map((m) => (
                 <Select.Option key={m._id} value={m._id}>
                   {m.name} (Kho: {m.quantity})
@@ -355,26 +305,25 @@ export function CreateMaterialRequestFromTimetable({
 
           <Form.Item
             name="quantity"
-            label={
-              <span style={{ fontSize: "13px", fontWeight: 500 }}>
-                Số Lượng
-              </span>
-            }
+            label="Số Lượng"
             rules={[{ required: true, message: "Nhập số lượng" }]}
-            style={{ marginBottom: 0 }}
+            className="mb-0"
           >
-            <InputNumber min={1} placeholder="SL" style={{ width: "100%" }} />
+            <InputNumber
+              min={1}
+              placeholder="SL"
+              style={{ width: "100%" }}
+              size="large"
+            />
           </Form.Item>
 
           <Form.Item
             name="reason"
-            label={
-              <span style={{ fontSize: "13px", fontWeight: 500 }}>Lý Do</span>
-            }
+            label="Lý Do"
             rules={[{ required: true, message: "Nhập lý do" }]}
-            style={{ marginBottom: 0 }}
+            className="mb-0"
           >
-            <Input placeholder="Lý do" />
+            <Input placeholder="Lý do yêu cầu..." size="large" />
           </Form.Item>
 
           <Button
@@ -382,6 +331,7 @@ export function CreateMaterialRequestFromTimetable({
             icon={<PlusOutlined />}
             onClick={handleAddMaterial}
             style={{ width: "100%" }}
+            size="large"
           >
             Thêm
           </Button>
@@ -395,6 +345,6 @@ export function CreateMaterialRequestFromTimetable({
         pagination={false}
         size="small"
       />
-    </Modal>
+    </BaseModal>
   );
 }
