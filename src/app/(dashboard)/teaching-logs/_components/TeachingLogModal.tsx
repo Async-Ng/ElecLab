@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Form, Radio, message } from "antd";
+import { Radio, message } from "antd";
 import BaseModal from "@/components/common/BaseModal";
+import FormField from "@/components/form/FormField";
 import Button from "@/components/ui/Button";
 import Textarea from "@/components/ui/Textarea";
 import Upload from "@/components/ui/Upload";
@@ -53,7 +54,15 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   materials = [],
   rooms = [],
 }) => {
-  const [form] = Form.useForm();
+  // State management - Controlled components
+  const [formData, setFormData] = useState<{
+    note: string;
+    status: TeachingLogStatus;
+  }>({
+    note: "",
+    status: TeachingLogStatus.NORMAL,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [fileList, setFileList] = useState<any[]>([]);
@@ -61,9 +70,6 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   const [previewImage, setPreviewImage] = useState<string | undefined>();
   const [previewVisible, setPreviewVisible] = useState(false);
   const [showMaterialRequest, setShowMaterialRequest] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<TeachingLogStatus>(
-    TeachingLogStatus.NORMAL
-  );
 
   // Hooks
   const { user } = useAuth();
@@ -74,11 +80,10 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
   useEffect(() => {
     if (open) {
       if (log) {
-        form.setFieldsValue({
+        setFormData({
           note: log.note || "",
           status: log.status || TeachingLogStatus.NORMAL,
         });
-        setCurrentStatus(log.status || TeachingLogStatus.NORMAL);
 
         // Handle existing images
         if (log.images && log.images.length > 0) {
@@ -97,15 +102,18 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         }
       } else {
         // Reset for new log
-        form.resetFields();
-        setCurrentStatus(TeachingLogStatus.NORMAL);
+        setFormData({
+          note: "",
+          status: TeachingLogStatus.NORMAL,
+        });
         setFileList([]);
         setUploadedImageUrls([]);
       }
+      setErrors({});
     }
-  }, [log, open, form]);
+  }, [log, open]);
 
-  const isIncident = currentStatus === TeachingLogStatus.INCIDENT;
+  const isIncident = formData.status === TeachingLogStatus.INCIDENT;
 
   // Permission check: only owner can edit
   const isOwner = (() => {
@@ -117,17 +125,42 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
     return user?._id === lecturerId;
   })();
 
+  // Handle field changes
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
   /**
    * Validation with user-friendly error messages
    */
-  const validate = async (): Promise<boolean> => {
-    try {
-      await form.validateFields();
-      return true;
-    } catch (error) {
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Note is required for incidents
+    if (formData.status === TeachingLogStatus.INCIDENT) {
+      if (!formData.note?.trim()) {
+        newErrors.note = "Vui lòng mô tả chi tiết sự cố!";
+      } else if (formData.note.trim().length < 10) {
+        newErrors.note = "Mô tả phải có ít nhất 10 ký tự!";
+      }
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
       message.error("Vui lòng kiểm tra lại thông tin nhập vào");
       return false;
     }
+
+    return true;
   };
 
   /**
@@ -185,12 +218,10 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
    */
   const handleOk = async () => {
     // Validate form
-    const isValid = await validate();
+    const isValid = validate();
     if (!isValid) {
       return;
     }
-
-    const values = form.getFieldsValue();
 
     // Permission check for editing
     if (log && !isOwner) {
@@ -225,8 +256,8 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
       // Prepare API payload
       const payload: any = {
         timetable: timetableId,
-        note: values.note?.trim() || "",
-        status: values.status,
+        note: formData.note?.trim() || "",
+        status: formData.status,
         images: imageUrls,
       };
 
@@ -310,191 +341,159 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
         size="xl"
         showFooter={false}
       >
-        <Form form={form} layout="vertical">
-          <div className="space-y-6">
-            {log && <TeachingLogDetail log={log} />}
+        <div className="space-y-6">
+          {log && <TeachingLogDetail log={log} />}
 
-            {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
-            {isOwner && (
-              <div className="space-y-6">
-                {/* Status Selection - Radio.Group for better accessibility */}
-                <Form.Item
-                  name="status"
-                  label={
-                    <span className="text-base font-semibold">
-                      Tình trạng ca dạy
-                    </span>
-                  }
-                  rules={[
-                    { required: true, message: "Vui lòng chọn tình trạng!" },
-                  ]}
-                  initialValue={TeachingLogStatus.NORMAL}
+          {/* Chỉ hiển thị form nếu là chủ sở hữu hoặc tạo mới */}
+          {isOwner && (
+            <div className="space-y-6">
+              {/* Status Selection - Radio.Group for better accessibility */}
+              <FormField label="Tình trạng ca dạy" required>
+                <Radio.Group
+                  value={formData.status}
+                  onChange={(e) => handleChange("status", e.target.value)}
+                  className="w-full"
                 >
-                  <Radio.Group
-                    size="large"
-                    onChange={(e) => setCurrentStatus(e.target.value)}
-                    className="w-full"
-                  >
-                    <div className="grid grid-cols-2 gap-3">
-                      <Radio.Button
-                        value={TeachingLogStatus.NORMAL}
-                        className="text-center h-12 flex items-center justify-center"
-                      >
-                        <span className="text-base">✅ Bình thường</span>
-                      </Radio.Button>
-                      <Radio.Button
-                        value={TeachingLogStatus.INCIDENT}
-                        className="text-center h-12 flex items-center justify-center"
-                      >
-                        <span className="text-base">⚠️ Sự cố</span>
-                      </Radio.Button>
-                    </div>
-                  </Radio.Group>
-                </Form.Item>
-
-                {/* Conditional Fields - Show only for Incidents */}
-                {isIncident && (
-                  <div className="space-y-6 p-5 border-2 border-amber-200 bg-amber-50 rounded-lg animate-fadeIn">
-                    <div className="flex items-center gap-2 text-amber-700 font-semibold">
-                      <WarningOutlined className="text-xl" />
-                      <span>Thông tin sự cố</span>
-                    </div>
-
-                    {/* Note - Required for incidents */}
-                    <Form.Item
-                      name="note"
-                      label={
-                        <span className="text-base font-semibold">
-                          Mô tả sự cố
-                        </span>
-                      }
-                      rules={[
-                        {
-                          required: true,
-                          message: "Vui lòng mô tả chi tiết sự cố!",
-                        },
-                        { min: 10, message: "Mô tả phải có ít nhất 10 ký tự!" },
-                      ]}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Radio.Button
+                      value={TeachingLogStatus.NORMAL}
+                      className="text-center h-12 flex items-center justify-center"
                     >
-                      <Textarea
-                        rows={4}
-                        placeholder="Mô tả chi tiết sự cố xảy ra. Ví dụ: Máy chiếu không lên hình, đã thử khởi động lại nhưng không được..."
-                        autoResize
-                        minRows={4}
-                        maxRows={8}
-                      />
-                    </Form.Item>
-                    <p className="text-gray-600 text-sm mt-2">
-                      💡 Hãy ghi rõ: thiết bị nào gặp sự cố, hiện tượng như thế
-                      nào, đã xử lý chưa
-                    </p>
-
-                    {/* Images - Optional for incidents */}
-                    <div>
-                      <label className="block text-base font-semibold text-gray-900 mb-2">
-                        <FileImageOutlined /> Ảnh minh họa sự cố (không bắt
-                        buộc)
-                      </label>
-
-                      {uploadingImages && (
-                        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-blue-700">
-                          <LoadingOutlined className="text-lg" />
-                          <span>Đang tải ảnh lên...</span>
-                        </div>
-                      )}
-
-                      <Upload
-                        fileList={fileList}
-                        onChange={handleFileChange}
-                        accept="image/*"
-                        multiple
-                        maxCount={5}
-                        disabled={uploadingImages || loading}
-                      />
-                      <p className="text-gray-600 text-sm mt-2">
-                        📸 Chụp ảnh thiết bị hư hỏng để hỗ trợ xử lý nhanh hơn
-                        (tối đa 5 ảnh)
-                      </p>
-                    </div>
+                      <span className="text-base">✅ Bình thường</span>
+                    </Radio.Button>
+                    <Radio.Button
+                      value={TeachingLogStatus.INCIDENT}
+                      className="text-center h-12 flex items-center justify-center"
+                    >
+                      <span className="text-base">⚠️ Sự cố</span>
+                    </Radio.Button>
                   </div>
-                )}
+                </Radio.Group>
+              </FormField>
 
-                {/* Note for normal status - Optional */}
-                {!isIncident && (
-                  <Form.Item
-                    name="note"
-                    label={
-                      <span className="text-base font-semibold">
-                        Ghi chú (không bắt buộc)
-                      </span>
-                    }
-                  >
+              {/* Conditional Fields - Show only for Incidents */}
+              {isIncident && (
+                <div className="space-y-6 p-5 border-2 border-amber-200 bg-amber-50 rounded-lg animate-fadeIn">
+                  <div className="flex items-center gap-2 text-amber-700 font-semibold">
+                    <WarningOutlined className="text-xl" />
+                    <span>Thông tin sự cố</span>
+                  </div>
+
+                  {/* Note - Required for incidents */}
+                  <FormField label="Mô tả sự cố" required error={errors.note}>
                     <Textarea
-                      rows={3}
-                      placeholder="Ghi chú thêm về ca dạy nếu cần. Ví dụ: Lớp học tập trung, sinh viên nhiệt tình..."
+                      rows={4}
+                      placeholder="Mô tả chi tiết sự cố xảy ra. Ví dụ: Máy chiếu không lên hình, đã thử khởi động lại nhưng không được..."
+                      value={formData.note}
+                      onChange={(e) => handleChange("note", e.target.value)}
+                      autoResize
+                      minRows={4}
+                      maxRows={8}
                     />
-                  </Form.Item>
-                )}
-              </div>
-            )}
-          </div>
+                  </FormField>
+                  <p className="text-gray-600 text-sm mt-2">
+                    💡 Hãy ghi rõ: thiết bị nào gặp sự cố, hiện tượng như thế
+                    nào, đã xử lý chưa
+                  </p>
 
-          {/* Footer buttons */}
-          <div className="flex justify-end gap-3 pt-6 border-t-2 border-gray-200 mt-6">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={loading || uploadingImages}
-              style={{
-                fontSize: "16px",
-                height: "48px",
-                minWidth: "120px",
-              }}
-            >
-              {loading ? "Đang lưu..." : "Hủy"}
-            </Button>
-            {isOwner && (
-              <>
+                  {/* Images - Optional for incidents */}
+                  <div>
+                    <label className="block text-base font-semibold text-gray-900 mb-2">
+                      <FileImageOutlined /> Ảnh minh họa sự cố (không bắt buộc)
+                    </label>
+
+                    {uploadingImages && (
+                      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-blue-700">
+                        <LoadingOutlined className="text-lg" />
+                        <span>Đang tải ảnh lên...</span>
+                      </div>
+                    )}
+
+                    <Upload
+                      fileList={fileList}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      multiple
+                      maxCount={5}
+                      disabled={uploadingImages || loading}
+                    />
+                    <p className="text-gray-600 text-sm mt-2">
+                      📸 Chụp ảnh thiết bị hư hỏng để hỗ trợ xử lý nhanh hơn
+                      (tối đa 5 ảnh)
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Note for normal status - Optional */}
+              {!isIncident && (
+                <FormField label="Ghi chú (không bắt buộc)">
+                  <Textarea
+                    rows={3}
+                    placeholder="Ghi chú thêm về ca dạy nếu cần. Ví dụ: Lớp học tập trung, sinh viên nhiệt tình..."
+                    value={formData.note}
+                    onChange={(e) => handleChange("note", e.target.value)}
+                  />
+                </FormField>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer buttons */}
+        <div className="flex justify-end gap-3 pt-6 border-t-2 border-gray-200 mt-6">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading || uploadingImages}
+            style={{
+              fontSize: "16px",
+              height: "48px",
+              minWidth: "120px",
+            }}
+          >
+            {loading ? "Đang lưu..." : "Hủy"}
+          </Button>
+          {isOwner && (
+            <>
+              <Button
+                variant="primary"
+                onClick={handleOk}
+                loading={loading || uploadingImages}
+                disabled={loading || uploadingImages}
+                style={{
+                  fontSize: "16px",
+                  height: "48px",
+                  minWidth: "140px",
+                }}
+              >
+                {uploadingImages ? (
+                  <>
+                    <LoadingOutlined /> Đang tải ảnh...
+                  </>
+                ) : loading ? (
+                  "Đang lưu..."
+                ) : (
+                  "Lưu nhật ký"
+                )}
+              </Button>
+              {timetable && (
                 <Button
-                  variant="primary"
-                  onClick={handleOk}
-                  loading={loading || uploadingImages}
+                  variant="secondary"
+                  onClick={() => setShowMaterialRequest(true)}
                   disabled={loading || uploadingImages}
                   style={{
                     fontSize: "16px",
                     height: "48px",
-                    minWidth: "140px",
                   }}
                 >
-                  {uploadingImages ? (
-                    <>
-                      <LoadingOutlined /> Đang tải ảnh...
-                    </>
-                  ) : loading ? (
-                    "Đang lưu..."
-                  ) : (
-                    "Lưu nhật ký"
-                  )}
+                  Gửi yêu cầu vật tư
                 </Button>
-                {timetable && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => setShowMaterialRequest(true)}
-                    disabled={loading || uploadingImages}
-                    style={{
-                      fontSize: "16px",
-                      height: "48px",
-                    }}
-                  >
-                    Gửi yêu cầu vật tư
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        </Form>
-      </BaseModal>
-
+              )}
+            </>
+          )}
+        </div>
+      </BaseModal>{" "}
       {/* Preview Modal */}
       {previewVisible && (
         <BaseModal
@@ -506,7 +505,6 @@ const TeachingLogModal: React.FC<TeachingLogModalProps> = ({
           <img alt="preview" className="w-full" src={previewImage} />
         </BaseModal>
       )}
-
       {timetable && (
         <CreateMaterialRequestFromTimetable
           visible={showMaterialRequest}
