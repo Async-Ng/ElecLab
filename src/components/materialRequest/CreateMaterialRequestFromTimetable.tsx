@@ -6,25 +6,24 @@ import {
   Input,
   Select,
   message,
-  Table,
   InputNumber,
-  Divider,
   Button,
+  Tag,
+  Empty,
 } from "antd";
 import BaseModal from "@/components/common/BaseModal";
+import Card from "@/components/ui/Card";
 import {
   DeleteOutlined,
   PlusOutlined,
-  ShoppingOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { useUnifiedRequestsStore } from "@/stores/useUnifiedRequestsStore";
 import {
   UnifiedRequestType,
-  UnifiedRequestPriority,
   MATERIAL_REQUEST_TYPES,
 } from "@/types/unifiedRequest";
 import { Timetable } from "@/types/timetable";
-import { brandColors } from "@/styles/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch } from "@/lib/apiClient";
 
@@ -208,143 +207,260 @@ export function CreateMaterialRequestFromTimetable({
     },
   ];
 
+  const footerContent = (
+    <div className="flex justify-between items-center w-full">
+      <div className="flex items-center gap-2">
+        <ShoppingCartOutlined className="text-xl text-blue-600" />
+        <span className="text-gray-600">
+          Đã chọn:{" "}
+          <strong className="text-blue-600">{selectedMaterials.length}</strong>{" "}
+          vật tư
+        </span>
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={onClose} size="large">
+          Hủy
+        </Button>
+        <Button
+          type="primary"
+          size="large"
+          onClick={handleSubmit}
+          loading={isSubmitting}
+          disabled={selectedMaterials.length === 0}
+        >
+          Gửi yêu cầu
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <BaseModal
-      title={timetable?.subject || "Yêu cầu vật tư"}
+      title="Gửi yêu cầu vật tư"
       open={visible}
       onCancel={onClose}
-      okText="Gửi yêu cầu"
-      cancelText="Hủy"
-      onOk={handleSubmit}
-      loading={isSubmitting}
-      size="lg"
-      centered
+      size="full"
+      customFooter={footerContent}
     >
-      <Form form={form} layout="vertical" className="mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Form.Item
-            label="Loại Yêu Cầu"
-            name="requestType"
-            initialValue="Cấp phát vật tư"
-            rules={[{ required: true, message: "Vui lòng chọn loại yêu cầu" }]}
-          >
-            <Select
-              onChange={(value) => setRequestType(value as UnifiedRequestType)}
-              size="large"
-            >
-              {MATERIAL_REQUEST_TYPES.map((type) => (
-                <Select.Option key={type} value={type}>
-                  {type}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+      {/* Request Info Section */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+          <h3 className="text-base font-semibold text-gray-800">
+            Thông tin yêu cầu
+          </h3>
+        </div>
 
-          <Form.Item
-            label="Mức Ươ Tiên"
-            name="priority"
-            initialValue="Trung bình"
-          >
-            <Select size="large">
-              <Select.Option value="Thấp">Thấp</Select.Option>
-              <Select.Option value="Trung bình">Trung bình</Select.Option>
-              <Select.Option value="Cao">Cao</Select.Option>
-            </Select>
-          </Form.Item>
-
-          {requestType === "Sửa chữa vật tư" && (
+        <Form form={form} layout="vertical">
+          <div className="grid grid-cols-2 gap-4">
             <Form.Item
-              label="Phòng Thực Hành"
-              name="room"
-              rules={[
-                { required: true, message: "Vui lòng chọn phòng thực hành" },
-              ]}
+              label="Loại yêu cầu"
+              name="requestType"
+              initialValue="Cấp phát vật tư"
+              rules={[{ required: true }]}
             >
-              <Select placeholder="Chọn phòng..." size="large">
-                {rooms.map((r) => (
-                  <Select.Option key={r._id} value={r._id}>
-                    {r.room_id} - {r.name}
+              <Select
+                onChange={(value) =>
+                  setRequestType(value as UnifiedRequestType)
+                }
+                size="large"
+                getPopupContainer={(trigger) =>
+                  trigger.parentElement || document.body
+                }
+                dropdownStyle={{ zIndex: 10000 }}
+              >
+                {MATERIAL_REQUEST_TYPES.map((type) => (
+                  <Select.Option key={type} value={type}>
+                    {type}
                   </Select.Option>
                 ))}
               </Select>
             </Form.Item>
-          )}
-        </div>
 
-        <Form.Item
-          label="Mô Tả"
-          name="description"
-          rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
-        >
-          <Input.TextArea
-            rows={3}
-            placeholder="Mô tả chi tiết yêu cầu của bạn..."
-            size="large"
-          />
-        </Form.Item>
-      </Form>
-
-      <Divider>Chọn Vật Tư</Divider>
-
-      <Form form={materialForm} layout="vertical" className="mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-          <Form.Item
-            name="materialId"
-            label="Vật Tư"
-            rules={[{ required: true, message: "Chọn vật tư" }]}
-            className="mb-0"
-          >
-            <Select placeholder="Chọn vật tư..." size="large">
-              {materials.map((m) => (
-                <Select.Option key={m._id} value={m._id}>
-                  {m.name} (Kho: {m.quantity})
+            <Form.Item
+              label="Mức ưu tiên"
+              name="priority"
+              initialValue="Trung bình"
+            >
+              <Select
+                size="large"
+                getPopupContainer={(trigger) =>
+                  trigger.parentElement || document.body
+                }
+                dropdownStyle={{ zIndex: 10000 }}
+              >
+                <Select.Option value="Thấp">
+                  <Tag color="default">Thấp</Tag>
                 </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+                <Select.Option value="Trung bình">
+                  <Tag color="blue">Trung bình</Tag>
+                </Select.Option>
+                <Select.Option value="Cao">
+                  <Tag color="red">Cao</Tag>
+                </Select.Option>
+              </Select>
+            </Form.Item>
+          </div>
 
           <Form.Item
-            name="quantity"
-            label="Số Lượng"
-            rules={[{ required: true, message: "Nhập số lượng" }]}
-            className="mb-0"
+            label="Mô tả"
+            name="description"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
-            <InputNumber
-              min={1}
-              placeholder="SL"
-              style={{ width: "100%" }}
-              size="large"
+            <Input.TextArea
+              rows={3}
+              placeholder="Mô tả chi tiết yêu cầu của bạn..."
+              showCount
+              maxLength={500}
             />
           </Form.Item>
+        </Form>
+      </div>
 
-          <Form.Item
-            name="reason"
-            label="Lý Do"
-            rules={[{ required: true, message: "Nhập lý do" }]}
-            className="mb-0"
-          >
-            <Input placeholder="Lý do yêu cầu..." size="large" />
-          </Form.Item>
+      {/* Materials Selection & List Combined Section */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Left Column - Add Material Form */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-6 bg-green-600 rounded-full"></div>
+            <h3 className="text-base font-semibold text-gray-800">
+              Chọn vật tư
+            </h3>
+          </div>
 
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAddMaterial}
-            style={{ width: "100%" }}
-            size="large"
-          >
-            Thêm
-          </Button>
+          <Card className="bg-gray-50 border-dashed">
+            <Form form={materialForm} layout="vertical">
+              <div className="space-y-3">
+                <Form.Item
+                  name="materialId"
+                  label="Vật tư"
+                  rules={[{ required: true, message: "Chọn vật tư" }]}
+                  className="mb-0"
+                >
+                  <Select
+                    placeholder="Chọn vật tư..."
+                    showSearch
+                    optionFilterProp="children"
+                    getPopupContainer={(trigger) =>
+                      trigger.parentElement || document.body
+                    }
+                    dropdownStyle={{ zIndex: 10000 }}
+                  >
+                    {materials.map((m) => (
+                      <Select.Option key={m._id} value={m._id}>
+                        {m.name}{" "}
+                        <span className="text-gray-400">
+                          (Kho: {m.quantity})
+                        </span>
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+
+                <Form.Item
+                  name="quantity"
+                  label="Số lượng"
+                  rules={[{ required: true, message: "Nhập số lượng" }]}
+                  className="mb-0"
+                >
+                  <InputNumber
+                    min={1}
+                    placeholder="Nhập số lượng"
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="reason"
+                  label="Lý do"
+                  rules={[{ required: true, message: "Nhập lý do" }]}
+                  className="mb-0"
+                >
+                  <Input.TextArea
+                    placeholder="Mô tả chi tiết lý do yêu cầu..."
+                    rows={3}
+                    showCount
+                    maxLength={200}
+                  />
+                </Form.Item>
+
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleAddMaterial}
+                  block
+                  size="large"
+                >
+                  Thêm vật tư
+                </Button>
+              </div>
+            </Form>
+          </Card>
         </div>
-      </Form>
 
-      <Table
-        columns={materialColumns}
-        dataSource={selectedMaterials}
-        rowKey="key"
-        pagination={false}
-        size="small"
-      />
+        {/* Right Column - Selected Materials List */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-6 bg-purple-600 rounded-full"></div>
+              <h3 className="text-base font-semibold text-gray-800">
+                Danh sách đã chọn
+              </h3>
+            </div>
+            {selectedMaterials.length > 0 && (
+              <Tag color="blue">{selectedMaterials.length} vật tư</Tag>
+            )}
+          </div>
+
+          {selectedMaterials.length === 0 ? (
+            <Card className="bg-gray-50 h-full min-h-[400px] flex items-center justify-center">
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span className="text-gray-500">
+                    Chưa có vật tư nào được chọn.
+                    <br />
+                    Vui lòng thêm vật tư từ form bên trái.
+                  </span>
+                }
+              />
+            </Card>
+          ) : (
+            <div className="space-y-2 max-h-[500px] overflow-y-auto">
+              {selectedMaterials.map((item) => (
+                <Card
+                  key={item.key}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-medium text-gray-900 truncate">
+                          {item.materialName}
+                        </p>
+                        <Tag color="blue" className="ml-2 flex-shrink-0">
+                          SL: {item.quantity}
+                        </Tag>
+                      </div>
+                      <p className="text-sm text-gray-500 line-clamp-2">
+                        {item.reason}
+                      </p>
+                    </div>
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleRemoveMaterial(item.key)}
+                      className="flex-shrink-0"
+                      size="small"
+                    />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </BaseModal>
   );
 }

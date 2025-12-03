@@ -276,6 +276,10 @@ export default function TimetableModal({
               value={formData.room}
               onChange={(value) => handleChange("room", value)}
               style={{ width: "100%" }}
+              getPopupContainer={(trigger) =>
+                trigger.parentElement || document.body
+              }
+              dropdownStyle={{ zIndex: 10000 }}
               filterOption={(input, option) =>
                 String(option?.children ?? "")
                   .toLowerCase()
@@ -307,6 +311,10 @@ export default function TimetableModal({
                 value={formData.lecturer}
                 onChange={(value) => handleChange("lecturer", value)}
                 style={{ width: "100%" }}
+                getPopupContainer={(trigger) =>
+                  trigger.parentElement || document.body
+                }
+                dropdownStyle={{ zIndex: 10000 }}
                 filterOption={(input, option) =>
                   String(option?.children ?? "")
                     .toLowerCase()
