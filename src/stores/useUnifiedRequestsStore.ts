@@ -94,7 +94,7 @@ export const useUnifiedRequestsStore = create<UnifiedRequestsState>(
       try {
         // Try unified API first, fall back to old APIs if needed
         const endpoint = "/api/unified-requests";
-        const response = await authFetch(endpoint, userId, userRole);
+        const response = await authFetch(endpoint, userId, userRoles);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));

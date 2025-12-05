@@ -59,7 +59,7 @@ export default function Sidebar({ onClose }: Props) {
     },
 
     {
-      href: "/admin-timetables",
+      href: "/admin/timetables",
       label: "Quản lý TKB",
       icon: (
         <svg
@@ -259,7 +259,7 @@ export default function Sidebar({ onClose }: Props) {
                   localStorage.setItem("activeRole", value);
                   // Navigate to appropriate page based on role
                   if (value === UserRole.Admin) {
-                    router.push("/admin-timetables");
+                    router.push("/admin/timetables");
                   } else {
                     router.push("/timetables");
                   }

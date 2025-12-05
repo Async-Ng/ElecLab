@@ -88,6 +88,8 @@ export async function POST(req: Request) {
         email: user.email,
         roles: user.roles,
         rooms_manage: user.rooms_manage,
+        avatar: user.avatar,
+        position: user.position,
       },
     });
   } catch (error) {

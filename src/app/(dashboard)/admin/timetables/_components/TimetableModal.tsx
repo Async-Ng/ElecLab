@@ -8,7 +8,7 @@ import BaseModal from "@/components/common/BaseModal";
 import FormField from "@/components/form/FormField";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
-import { CreateMaterialRequestFromTimetable } from "@/components/materialRequest/CreateMaterialRequestFromTimetable";
+import { CreateMaterialRequestFromTimetable } from "@/components/requests/CreateMaterialRequestFromTimetable";
 
 interface TimetableModalProps {
   visible: boolean;

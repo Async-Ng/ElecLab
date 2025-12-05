@@ -16,6 +16,7 @@ interface AuthContextType {
   getPrimaryRole: () => string | null;
   isAdmin: () => boolean;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -90,6 +91,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user?.roles.includes("Admin" as any) || false;
   };
 
+  const refreshUser = async () => {
+    const storedToken = localStorage.getItem("auth_token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Failed to refresh user", error);
+      }
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -97,11 +112,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         login,
         logout,
-        isAuthenticated: !!token,
+        isAuthenticated: !!user,
         hasRole,
         getPrimaryRole,
         isAdmin,
         loading,
+        refreshUser,
       }}
     >
       {children}

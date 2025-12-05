@@ -75,7 +75,7 @@ export default function ModernSidebar({ onClose }: Props) {
       roles: [UserRole.User],
     },
     {
-      href: "/admin-timetables",
+      href: "/admin/timetables",
       label: "Quản lý TKB",
       icon: <CalendarOutlined className="text-lg" />,
       roles: [UserRole.Admin],
@@ -178,7 +178,7 @@ export default function ModernSidebar({ onClose }: Props) {
     setActiveRole(role);
     localStorage.setItem("activeRole", role);
     if (role === UserRole.Admin) {
-      router.push("/admin-timetables");
+      router.push("/admin/timetables");
     } else {
       router.push("/timetables");
     }
@@ -251,42 +251,6 @@ export default function ModernSidebar({ onClose }: Props) {
           </svg>
         </button>
       </div>
-
-      {/* User Info */}
-      {user && (
-        <div
-          className={cn(
-            "p-4 border-b border-gray-200",
-            collapsed && "flex justify-center"
-          )}
-        >
-          {collapsed ? (
-            <Tooltip title={user.name} placement="right">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold cursor-pointer">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-            </Tooltip>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user.name}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user.roles
-                    .map((role) =>
-                      role === UserRole.Admin ? "Quản lý" : "Người dùng"
-                    )
-                    .join(", ")}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Search Bar - Only when expanded */}
       {!collapsed && (

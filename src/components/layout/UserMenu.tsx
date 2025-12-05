@@ -10,11 +10,13 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { cn } from "@/design-system/utilities";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 export default function UserMenu() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   if (!user) return null;
 
@@ -24,8 +26,7 @@ export default function UserMenu() {
       icon: <UserOutlined />,
       label: "Thông tin cá nhân",
       onClick: () => {
-        // TODO: Navigate to profile page
-        console.log("Navigate to profile");
+        setProfileModalOpen(true);
         setOpen(false);
       },
     },
@@ -102,29 +103,36 @@ export default function UserMenu() {
   );
 
   return (
-    <Dropdown
-      menu={{ items: menuItems }}
-      trigger={["click"]}
-      open={open}
-      onOpenChange={setOpen}
-      placement="bottomRight"
-    >
-      <button
-        className={cn(
-          "flex items-center gap-2 p-1 rounded-lg transition-colors",
-          "hover:bg-gray-100",
-          open && "bg-gray-100"
-        )}
+    <>
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={["click"]}
+        open={open}
+        onOpenChange={setOpen}
+        placement="bottomRight"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
-          {user.name.charAt(0).toUpperCase()}
-        </div>
-        <div className="hidden md:block text-left">
-          <p className="text-sm font-medium text-gray-900 leading-tight">
-            {user.name.split(" ").slice(-1)[0]}
-          </p>
-        </div>
-      </button>
-    </Dropdown>
+        <button
+          className={cn(
+            "flex items-center gap-2 p-1 rounded-lg transition-colors",
+            "hover:bg-gray-100",
+            open && "bg-gray-100"
+          )}
+        >
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="hidden md:block text-left">
+            <p className="text-sm font-medium text-gray-900 leading-tight">
+              {user.name.split(" ").slice(-1)[0]}
+            </p>
+          </div>
+        </button>
+      </Dropdown>
+
+      <ProfileModal
+        open={profileModalOpen}
+        onCancel={() => setProfileModalOpen(false)}
+      />
+    </>
   );
 }

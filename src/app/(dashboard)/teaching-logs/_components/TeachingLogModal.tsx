@@ -8,7 +8,7 @@ import Upload from "@/components/ui/Upload";
 import { TeachingLog, TeachingLogStatus } from "../../../../types/teachingLog";
 import { Timetable } from "../../../../types/timetable";
 import TeachingLogDetail from "./TeachingLogDetail";
-import { CreateMaterialRequestFromTimetable } from "@/components/materialRequest/CreateMaterialRequestFromTimetable";
+import { CreateMaterialRequestFromTimetable } from "@/components/requests/CreateMaterialRequestFromTimetable";
 import {
   FileImageOutlined,
   WarningOutlined,

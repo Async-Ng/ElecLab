@@ -66,7 +66,7 @@ export default function LoginPage() {
       // Nếu có activeRole được lưu và user vẫn có role đó, giữ nguyên
       if (storedActiveRole && userRoles.includes(storedActiveRole)) {
         if (storedActiveRole === "Admin") {
-          router.push("/admin-timetables");
+          router.push("/admin/timetables");
         } else {
           router.push("/timetables");
         }
@@ -75,7 +75,7 @@ export default function LoginPage() {
         if (hasAdmin) {
           // Ưu tiên Admin nếu có role Admin
           localStorage.setItem("activeRole", "Admin");
-          router.push("/admin-timetables");
+          router.push("/admin/timetables");
         } else if (hasUser) {
           localStorage.setItem("activeRole", "User");
           router.push("/timetables");

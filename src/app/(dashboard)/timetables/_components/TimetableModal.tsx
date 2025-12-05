@@ -14,7 +14,7 @@ import dayjs from "dayjs";
 import viVN from "antd/es/date-picker/locale/vi_VN";
 import { Timetable, StudyTime } from "@/types/timetable";
 import FormModal from "@/components/common/FormModal";
-import { CreateMaterialRequestFromTimetable } from "@/components/materialRequest/CreateMaterialRequestFromTimetable";
+import { CreateMaterialRequestFromTimetable } from "@/components/requests/CreateMaterialRequestFromTimetable";
 
 interface TimetableModalProps {
   visible: boolean;

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { UnifiedRequestModal } from "@/components/request";
-import { MyRequestsList } from "@/components/request/MyRequestsList";
+import { UnifiedRequestModal } from "@/components/requests";
+import { MyRequestsList } from "@/components/requests/MyRequestsList";
 
 export default function RequestsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -34,7 +34,7 @@ export default function MobileBottomNav() {
       roles: [UserRole.User],
     },
     {
-      href: "/admin-timetables",
+      href: "/admin/timetables",
       label: "TKB",
       icon: <CalendarOutlined className="text-xl" />,
       roles: [UserRole.Admin],

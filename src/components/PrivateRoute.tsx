@@ -39,7 +39,7 @@ export default function PrivateRoute({
 
     if (isAuthenticated && pathname === "/login") {
       const redirectPath =
-        activeRole === UserRole.Admin ? "/admin-timetables" : "/timetables";
+        activeRole === UserRole.Admin ? "/admin/timetables" : "/timetables";
       router.replace(redirectPath);
       return;
     }

@@ -14,6 +14,7 @@ interface BreadcrumbItem {
 const routeMap: Record<string, string> = {
   timetables: "Thời khóa biểu",
   "admin-timetables": "Quản lý TKB",
+  timetables: "Quản lý TKB",
   "teaching-logs": "Nhật ký ca dạy",
   requests: "Yêu cầu",
   materials: "Vật tư",

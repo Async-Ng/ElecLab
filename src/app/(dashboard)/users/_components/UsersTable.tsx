@@ -1,7 +1,6 @@
 "use client";
 
 import { UserOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import { User, UserRole, UserRoleLabels } from "@/types/user";
@@ -38,7 +37,6 @@ export const UsersTable = ({
     room: undefined,
   });
 
-  // Filter configurations
   const filterConfigs: FilterConfig[] = [
     {
       key: "search",
@@ -66,10 +64,8 @@ export const UsersTable = ({
     },
   ];
 
-  // Apply filters
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
-      // Search filter
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesSearch =
@@ -79,12 +75,10 @@ export const UsersTable = ({
         if (!matchesSearch) return false;
       }
 
-      // Role filter
       if (filters.role && !user.roles.includes(filters.role)) {
         return false;
       }
 
-      // Room filter
       if (filters.room && !user.rooms_manage?.includes(filters.room)) {
         return false;
       }
@@ -93,86 +87,74 @@ export const UsersTable = ({
     });
   }, [users, filters]);
 
-  // Get avatar src
-  const getAvatarSrc = (avatar?: string) => {
-    if (!avatar) return undefined;
-    if (avatar.startsWith("http")) return avatar;
-    if (avatar.startsWith("data:image")) return avatar;
-    return `data:image/png;base64,${avatar}`;
-  };
-
-  // Table columns for SmartTable
   const columns: SmartTableColumn<User>[] = [
     {
       key: "avatar",
       title: "Avatar",
       dataIndex: "avatar",
-      width: "8%",
+      width: 150,
+      align: "center",
       mobile: true,
-      render: (avatar: string | undefined, record: User) => (
-        <Avatar
-          size="lg"
-          src={getAvatarSrc(avatar)}
-          alt={record.name}
-          fallback={record.name.charAt(0).toUpperCase()}
-        />
-      ),
+      render: (avatar: string | undefined, record: User) => {
+        const avatarSrc = avatar?.startsWith("http") ? avatar : undefined;
+        return (
+          <div className="flex items-center justify-center w-full h-full py-2">
+            <Avatar
+              size="2xl"
+              shape="square"
+              src={avatarSrc}
+              name={record.name}
+              fallbackText={record.name.charAt(0).toUpperCase()}
+              className="w-[100px] h-[100px]"
+            />
+          </div>
+        );
+      },
     },
     {
       key: "staff_id",
-      title: "Mã nhân viên",
+      title: "Mã NV",
       dataIndex: "staff_id",
-      width: "10%",
+      width: 100,
       mobile: true,
-      render: (value: string) => (
-        <span className="font-semibold text-gray-800 text-[15px]">{value}</span>
-      ),
     },
     {
       key: "name",
       title: "Họ và tên",
       dataIndex: "name",
-      width: "15%",
+      width: 180,
       mobile: true,
-      render: (value: string) => (
-        <span className="font-semibold text-gray-800 text-[15px]">{value}</span>
-      ),
     },
     {
       key: "email",
       title: "Email",
       dataIndex: "email",
-      width: "18%",
-      render: (value: string) => (
-        <span className="text-gray-700 text-[15px]">{value}</span>
-      ),
+      width: 220,
     },
     {
       key: "position",
       title: "Chức vụ",
       dataIndex: "position",
-      width: "12%",
-      render: (position: string | undefined) => (
-        <span className="text-gray-700 text-[15px]">{position || "-"}</span>
-      ),
+      width: 130,
+      render: (position: string | undefined) => position || "-",
     },
     {
       key: "roles",
       title: "Vai trò",
       dataIndex: "roles",
-      width: "14%",
+      width: 140,
       mobile: true,
       render: (roles: string[]) => (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {roles.map((role) => {
             const isAdmin = role === UserRole.Admin;
             return (
               <Badge
                 key={role}
                 variant={isAdmin ? "warning" : "info"}
-                size="md"
+                size="sm"
               >
-                {isAdmin ? "Quản trị viên" : "Giảng viên"}
+                {isAdmin ? "Admin" : "User"}
               </Badge>
             );
           })}
@@ -181,25 +163,34 @@ export const UsersTable = ({
     },
     {
       key: "rooms_manage",
-      title: "Quản lý phòng",
+      title: "Phòng quản lý",
       dataIndex: "rooms_manage",
-      width: "15%",
-      render: (roomIds: string[]) => (
-        <div className="flex flex-wrap gap-1.5">
-          {roomIds?.map((roomId) => {
-            const room = rooms.find((r) => r._id === roomId);
-            return (
-              <Badge key={roomId} variant="success" size="sm">
-                {room?.name || roomId}
+      width: 150,
+      render: (roomIds: string[]) => {
+        if (!roomIds || roomIds.length === 0) {
+          return <span className="text-gray-400 text-sm">-</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            {roomIds.slice(0, 2).map((roomId) => {
+              const room = rooms.find((r) => r._id === roomId);
+              return (
+                <Badge key={roomId} variant="success" size="sm">
+                  {room?.name || roomId}
+                </Badge>
+              );
+            })}
+            {roomIds.length > 2 && (
+              <Badge variant="default" size="sm">
+                +{roomIds.length - 2}
               </Badge>
-            );
-          })}
-        </div>
-      ),
+            )}
+          </div>
+        );
+      },
     },
   ];
 
-  // Export columns configuration
   const exportColumns: ExportColumn[] = [
     { key: "staff_id", header: "Mã nhân viên", accessor: "staff_id" },
     { key: "name", header: "Họ và tên", accessor: "name" },
@@ -226,7 +217,6 @@ export const UsersTable = ({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <FilterBar
         filters={filterConfigs}
         values={filters}
@@ -240,7 +230,6 @@ export const UsersTable = ({
         }
       />
 
-      {/* Table */}
       <SmartTable
         columns={columns}
         data={filteredUsers}
@@ -250,14 +239,12 @@ export const UsersTable = ({
           title: "Chưa có người dùng nào",
           description: "Thêm người dùng mới để bắt đầu quản lý",
           illustration: "search",
-          icon: <UserOutlined />,
         }}
         stickyHeader
         zebraStriping
         cardConfig={{
           title: (record) => record.name,
           subtitle: (record) => `${record.staff_id} • ${record.email}`,
-          meta: (record) => record.position || undefined,
           badge: (record) => {
             const isAdmin = record.roles.includes(UserRole.Admin);
             return (
@@ -267,7 +254,6 @@ export const UsersTable = ({
             );
           },
         }}
-        onRowClick={onEdit}
       />
     </div>
   );

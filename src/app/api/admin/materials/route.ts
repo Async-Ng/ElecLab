@@ -1,18 +1,47 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Material } from "@/models/Material";
-import { requireAdmin } from "@/lib/apiMiddleware";
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key"
+);
 
 /**
  * GET /api/admin/materials
  * Lấy tất cả materials (chỉ admin)
  */
-export async function GET(request: Request) {
-  // Check admin authorization
-  const authError = requireAdmin(request);
-  if (authError) return authError;
+export async function GET(request: NextRequest) {
+  console.log("📦 Materials API called");
 
+  // Verify JWT from cookie
   try {
+    const token = request.cookies.get("auth_token")?.value;
+    console.log("🔑 Token from cookie:", token ? "Found" : "Not found");
+
+    if (!token) {
+      return NextResponse.json(
+        { message: "Unauthorized - No token" },
+        { status: 401 }
+      );
+    }
+
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const user = payload as any;
+
+    console.log("✅ User verified:", {
+      userId: user.userId,
+      roles: user.roles,
+    });
+
+    // Check admin role
+    if (!user.roles || !user.roles.includes("Admin")) {
+      return NextResponse.json(
+        { message: "Forbidden - Admin only" },
+        { status: 403 }
+      );
+    }
+
     await connectToDatabase();
 
     const materials = await Material.find()
@@ -23,10 +52,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json(materials);
   } catch (error) {
-    console.error("GET /api/admin/materials error:", error);
+    console.error("❌ Materials API error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch materials" },
-      { status: 500 }
+      { message: "Unauthorized - Invalid token" },
+      { status: 401 }
     );
   }
 }
