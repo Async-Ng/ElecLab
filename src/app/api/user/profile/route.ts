@@ -95,13 +95,14 @@ export async function GET(req: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { message: "Unauthorized - No user ID provided" },
-      { status: 401 }
-    );
-  }
+        { status: 401 }
+      );
+    }
 
-  await connectToDatabase();
+    await connectToDatabase();
 
-  const user = await UserModel.findById(userId).select("-password");    if (!user) {
+    const user = await UserModel.findById(userId).select("-password");
+    if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
