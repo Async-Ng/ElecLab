@@ -104,6 +104,12 @@ export async function PUT(request: Request) {
 
     await connectToDatabase();
 
+    // Get current user to check for old avatar
+    const currentUser = await User.findById(id);
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // If password is being updated, hash it; otherwise remove it from updateData
     if (updateData.password) {
       const salt = await bcrypt.genSalt(10);
@@ -113,17 +119,24 @@ export async function PUT(request: Request) {
       delete updateData.password;
     }
 
-    // Upload avatar to ImgBB if provided
-    if (updateData.avatar && typeof updateData.avatar === "string") {
-      const avatarUrl = await uploadImageToImgBB(
-        updateData.avatar,
-        `avatar_${Date.now()}`
-      );
-      if (avatarUrl) {
-        updateData.avatar = avatarUrl;
-      } else {
-        delete updateData.avatar;
+    // Handle avatar update/removal
+    if (updateData.avatar !== undefined) {
+      if (updateData.avatar === "" || updateData.avatar === null) {
+        // User wants to remove avatar
+        updateData.avatar = null;
+      } else if (updateData.avatar.startsWith("data:")) {
+        // New avatar upload - upload to ImgBB
+        const avatarUrl = await uploadImageToImgBB(
+          updateData.avatar,
+          `avatar_${Date.now()}`
+        );
+        if (avatarUrl) {
+          updateData.avatar = avatarUrl;
+        } else {
+          delete updateData.avatar;
+        }
       }
+      // If avatar is already a URL (http/https), keep it as is
     }
 
     const updated = await User.findByIdAndUpdate(id, updateData, {

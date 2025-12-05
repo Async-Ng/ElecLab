@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { User } from "@/types/user";
 import { Room } from "@/types/room";
-import { Form, Input, Select, Row, Col, message } from "antd";
+import { Form, Input, Select as AntSelect, Row, Col, message } from "antd";
 import FormModal from "@/components/common/FormModal";
 import Upload from "@/components/ui/Upload";
 import Button from "@/components/ui/Button";
@@ -39,6 +39,7 @@ const UserModal: React.FC<UserModalProps> = ({
   const [form] = Form.useForm();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize form data when modal opens
   useEffect(() => {
@@ -64,15 +65,34 @@ const UserModal: React.FC<UserModalProps> = ({
 
   // Handle avatar upload
   const handleAvatarChange = (fileList: any[]) => {
+    console.log("Avatar onChange called:", fileList);
+
     if (fileList.length > 0) {
-      const file = fileList[0];
-      if (file.originFileObj) {
+      const file = fileList[fileList.length - 1]; // Get the last file
+
+      // Check if it's a custom Upload component structure
+      if (file.url && file.url.startsWith("data:")) {
+        // Already base64
+        setAvatarPreview(file.url);
+        setAvatarFile(null); // We already have base64
+      } else if (file.originFileObj) {
+        // Ant Design Upload structure
         setAvatarFile(file.originFileObj);
         const reader = new FileReader();
         reader.onloadend = () => {
           setAvatarPreview(reader.result as string);
         };
         reader.readAsDataURL(file.originFileObj);
+      } else if (file instanceof File) {
+        // Raw File object
+        setAvatarFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAvatarPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        console.warn("Unknown file structure:", file);
       }
     } else {
       setAvatarFile(null);
@@ -105,7 +125,17 @@ const UserModal: React.FC<UserModalProps> = ({
           onSubmit(submitData);
         };
         reader.readAsDataURL(avatarFile);
+      } else if (avatarPreview && avatarPreview.startsWith("data:")) {
+        // Already have base64 preview
+        submitData.append("avatar", avatarPreview);
+        onSubmit(submitData);
+      } else if (avatarPreview) {
+        // Existing avatar URL - keep it
+        submitData.append("avatar", avatarPreview);
+        onSubmit(submitData);
       } else {
+        // No avatar - send empty string to remove
+        submitData.append("avatar", "");
         onSubmit(submitData);
       }
     } catch (error) {
@@ -206,35 +236,74 @@ const UserModal: React.FC<UserModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ảnh đại diện
               </label>
-              <Upload
-                fileList={
-                  avatarFile
-                    ? [
-                        {
-                          uid: "-1",
-                          name: avatarFile.name,
-                          status: "done" as const,
-                          url: avatarPreview,
-                          size: avatarFile.size,
-                          type: avatarFile.type,
-                        },
-                      ]
-                    : avatarPreview
-                    ? [
-                        {
-                          uid: "-1",
-                          name: "avatar",
-                          status: "done" as const,
-                          url: avatarPreview,
-                          size: 0,
-                          type: "image/*",
-                        },
-                      ]
-                    : []
-                }
-                onChange={handleAvatarChange}
+              {avatarPreview ? (
+                <div className="relative group w-full aspect-square border-2 border-dashed border-gray-300 rounded-lg overflow-hidden hover:border-primary-500 transition-all">
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        inputRef.current?.click();
+                      }}
+                      className="bg-white"
+                    >
+                      Thay đổi
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAvatarPreview("");
+                        setAvatarFile(null);
+                      }}
+                    >
+                      Xóa
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onClick={() => inputRef.current?.click()}
+                  className="w-full aspect-square border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-3"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                    <UserOutlined className="text-3xl text-gray-400" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-900">
+                      Kéo thả file vào đây hoặc
+                    </p>
+                    <p className="text-sm text-primary-600 font-medium">
+                      chọn từ máy tính
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500">Định dạng: image/*</p>
+                </div>
+              )}
+              <input
+                ref={inputRef}
+                type="file"
                 accept="image/*"
-                maxCount={1}
+                className="hidden"
+                aria-label="Upload avatar"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setAvatarFile(file);
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setAvatarPreview(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
               />
             </div>
 
@@ -300,18 +369,22 @@ const UserModal: React.FC<UserModalProps> = ({
                 },
               ]}
             >
-              <Select
+              <AntSelect
                 mode="multiple"
                 placeholder="Chọn vai trò hệ thống..."
                 options={roles}
                 size="large"
                 suffixIcon={<TeamOutlined />}
+                getPopupContainer={(trigger) =>
+                  trigger.parentElement || document.body
+                }
+                dropdownStyle={{ zIndex: 9999 }}
               />
             </Form.Item>
 
             {/* Rooms Manage */}
             <Form.Item name="rooms_manage" label="Quản lý phòng">
-              <Select
+              <AntSelect
                 mode="multiple"
                 placeholder="Chọn phòng thực hành..."
                 options={rooms.map((room) => ({
@@ -326,6 +399,10 @@ const UserModal: React.FC<UserModalProps> = ({
                     .toLowerCase()
                     .includes(input.toLowerCase())
                 }
+                getPopupContainer={(trigger) =>
+                  trigger.parentElement || document.body
+                }
+                dropdownStyle={{ zIndex: 9999 }}
               />
             </Form.Item>
           </div>

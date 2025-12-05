@@ -154,7 +154,7 @@ export const UsersTable = ({
                 variant={isAdmin ? "warning" : "info"}
                 size="sm"
               >
-                {isAdmin ? "Admin" : "User"}
+                {isAdmin ? "Quản trị viên" : "Giảng viên"}
               </Badge>
             );
           })}
@@ -235,6 +235,7 @@ export const UsersTable = ({
         data={filteredUsers}
         loading={loading}
         rowKey="_id"
+        onRowClick={onEdit}
         emptyState={{
           title: "Chưa có người dùng nào",
           description: "Thêm người dùng mới để bắt đầu quản lý",
