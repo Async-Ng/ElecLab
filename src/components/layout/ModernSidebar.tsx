@@ -21,6 +21,7 @@ import {
   LogoutOutlined,
 } from "@ant-design/icons";
 import { Input, Badge, Tooltip } from "antd";
+import { useUnifiedRequestsStore } from "@/stores/useUnifiedRequestsStore";
 
 type Props = {
   onClose?: () => void;
@@ -41,6 +42,7 @@ export default function ModernSidebar({ onClose }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [activeRole, setActiveRole] = useState<UserRole | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { requests, fetchRequests } = useUnifiedRequestsStore();
 
   // Initialize active role
   useEffect(() => {
@@ -52,6 +54,13 @@ export default function ModernSidebar({ onClose }: Props) {
       localStorage.setItem("activeRole", user.roles[0]);
     }
   }, [user?.roles]);
+
+  // Fetch requests for admin users
+  useEffect(() => {
+    if (user?._id && user?.roles.includes(UserRole.Admin)) {
+      fetchRequests(user._id, user.roles || []);
+    }
+  }, [user?._id, user?.roles, fetchRequests]);
 
   // Load collapsed state from localStorage
   useEffect(() => {
@@ -66,6 +75,11 @@ export default function ModernSidebar({ onClose }: Props) {
     setCollapsed(newState);
     localStorage.setItem("sidebarCollapsed", String(newState));
   };
+
+  // Calculate pending requests count
+  const pendingRequestsCount = requests.filter(
+    (r) => r.status === "Chờ duyệt"
+  ).length;
 
   const allMenuItems: MenuItem[] = [
     {
@@ -157,7 +171,7 @@ export default function ModernSidebar({ onClose }: Props) {
       label: "Quản lý yêu cầu",
       icon: <UnorderedListOutlined className="text-lg" />,
       roles: [UserRole.Admin],
-      badge: 3,
+      badge: pendingRequestsCount,
     },
   ];
 
@@ -349,6 +363,7 @@ export default function ModernSidebar({ onClose }: Props) {
             <button
               onClick={logout}
               className="w-full flex items-center justify-center h-12 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              aria-label="Đăng xuất"
             >
               <LogoutOutlined className="text-lg" />
             </button>

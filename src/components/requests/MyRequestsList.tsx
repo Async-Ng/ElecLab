@@ -138,60 +138,8 @@ export function MyRequestsList({ onEdit, onRefresh }: MyRequestsListProps) {
 
   const filteredRequests = getFilteredRequests();
 
-  return (
-    <div className="space-y-4">
-      {alertMessage && (
-        <Alert
-          type={alertMessage.type}
-          message={alertMessage.message}
-          onClose={() => setAlertMessage(null)}
-        />
-      )}
-
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          {
-            key: "all",
-            label: "Tất Cả",
-            children: <></>,
-            icon: (
-              <Badge variant="info" className="ml-2">
-                {requests.length}
-              </Badge>
-            ),
-          },
-          {
-            key: "general",
-            label: "📋 Yêu Cầu Chung",
-            children: <></>,
-            icon: (
-              <Badge variant="default" className="ml-2">
-                {
-                  requests.filter((r) => GENERAL_REQUEST_TYPES.includes(r.type))
-                    .length
-                }
-              </Badge>
-            ),
-          },
-          {
-            key: "material",
-            label: "🛍️ Yêu Cầu Vật Tư",
-            children: <></>,
-            icon: (
-              <Badge variant="default" className="ml-2">
-                {
-                  requests.filter((r) =>
-                    MATERIAL_REQUEST_TYPES.includes(r.type)
-                  ).length
-                }
-              </Badge>
-            ),
-          },
-        ]}
-      />
-
+  const renderRequestList = () => (
+    <>
       {loading ? (
         <div className="text-center py-12">
           <LoadingSpinner tip="Đang tải danh sách yêu cầu..." />
@@ -274,6 +222,73 @@ export function MyRequestsList({ onEdit, onRefresh }: MyRequestsListProps) {
           Tổng {filteredRequests.length} yêu cầu
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className="space-y-4">
+      {alertMessage && (
+        <Alert
+          type={alertMessage.type}
+          message={alertMessage.message}
+          onClose={() => setAlertMessage(null)}
+        />
+      )}
+
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: "all",
+            label: (
+              <span className="flex items-center gap-2">
+                Tất Cả
+                <Badge variant="info">
+                  {requests.filter((r) => r.requester._id === user?._id).length}
+                </Badge>
+              </span>
+            ),
+            children: renderRequestList(),
+          },
+          {
+            key: "general",
+            label: (
+              <span className="flex items-center gap-2">
+                📋 Yêu Cầu Chung
+                <Badge variant="default">
+                  {
+                    requests.filter(
+                      (r) =>
+                        r.requester._id === user?._id &&
+                        GENERAL_REQUEST_TYPES.includes(r.type)
+                    ).length
+                  }
+                </Badge>
+              </span>
+            ),
+            children: renderRequestList(),
+          },
+          {
+            key: "material",
+            label: (
+              <span className="flex items-center gap-2">
+                🛍️ Yêu Cầu Vật Tư
+                <Badge variant="default">
+                  {
+                    requests.filter(
+                      (r) =>
+                        r.requester._id === user?._id &&
+                        MATERIAL_REQUEST_TYPES.includes(r.type)
+                    ).length
+                  }
+                </Badge>
+              </span>
+            ),
+            children: renderRequestList(),
+          },
+        ]}
+      />
     </div>
   );
 }

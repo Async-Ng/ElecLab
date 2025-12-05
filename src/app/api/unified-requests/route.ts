@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { RequestUnified } from "@/models/RequestUnified";
 import { User } from "@/models/User";
+import { Material } from "@/models/Material";
+import { Room } from "@/models/Room";
 import { getAuthContext, requireAuth, isAdmin } from "@/lib/apiMiddleware";
 
 /**
@@ -22,6 +24,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const auth = getAuthContext(request);
+    console.log("🔐 Auth context:", auth);
+
     if (!auth) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -29,6 +33,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log("🔌 Connecting to database...");
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
@@ -41,6 +46,12 @@ export async function GET(request: NextRequest) {
     const query: any = {};
 
     // Build query based on user role
+    console.log(
+      "👤 User role check:",
+      auth.userRole,
+      "isAdmin:",
+      isAdmin(auth.userRole)
+    );
     if (!isAdmin(auth.userRole)) {
       // Regular user - only see own requests
       query.requester = auth.userId;
@@ -58,19 +69,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch data
+    console.log("📊 Query:", query);
     const total = await RequestUnified.countDocuments(query);
+    console.log("📈 Total count:", total);
+
     const requests = await RequestUnified.find(query)
       .populate("requester", "name email staff_id")
       .populate("reviewedBy", "name")
       .populate("handledBy", "name")
       .populate("completedBy", "name")
-      .populate("materials.material", "material_id name")
       .populate("room", "name room_id")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
+    console.log("✅ Fetched requests:", requests.length);
     return NextResponse.json({
       data: requests,
       total,
@@ -78,9 +92,12 @@ export async function GET(request: NextRequest) {
       limit,
     });
   } catch (error) {
-    console.error("GET /api/unified-requests error:", error);
+    console.error("❌ GET /api/unified-requests error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch requests" },
+      {
+        error: "Failed to fetch requests",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

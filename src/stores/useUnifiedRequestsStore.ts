@@ -94,17 +94,23 @@ export const useUnifiedRequestsStore = create<UnifiedRequestsState>(
       try {
         // Try unified API first, fall back to old APIs if needed
         const endpoint = "/api/unified-requests";
+        const userRoles = Array.isArray(userRole) ? userRole : [userRole];
+        console.log("🔍 Fetching requests from:", endpoint);
         const response = await authFetch(endpoint, userId, userRoles);
 
+        console.log("📡 Response status:", response.status);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.error("❌ Fetch failed:", errorData);
           throw new Error(
             errorData.message || `Failed to fetch requests: ${response.status}`
           );
         }
 
         const data = await response.json();
+        console.log("📦 Raw API response:", data);
         const requests = Array.isArray(data.data) ? data.data : [];
+        console.log("✅ Parsed requests:", requests.length, requests);
 
         set({
           requests,
@@ -115,6 +121,7 @@ export const useUnifiedRequestsStore = create<UnifiedRequestsState>(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
+        console.error("💥 Store fetch error:", errorMessage);
         set({ loading: false, error: errorMessage });
       }
     },

@@ -10,29 +10,15 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Alert from "@/components/ui/Alert";
 import { useUnifiedRequestsStore } from "@/stores/useUnifiedRequestsStore";
-import {
-  UnifiedRequestTypeLabels,
-  UnifiedRequestStatusLabels,
-  UnifiedRequestType,
-  UnifiedRequestStatus,
-  GENERAL_REQUEST_TYPES,
-  MATERIAL_REQUEST_TYPES,
-} from "@/types/unifiedRequest";
+import { UnifiedRequestTypeLabels } from "@/types/unifiedRequest";
 import { authFetch } from "@/lib/apiClient";
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  MinusOutlined,
-} from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { Tag } from "antd";
 
 export default function AdminRequestsPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const router = useRouter();
   const { requests, loading, fetchRequests } = useUnifiedRequestsStore();
-  const [activeTab, setActiveTab] = useState<string>("pending");
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<{
     type: "success" | "error" | "warning" | "info";
@@ -51,8 +37,8 @@ export default function AdminRequestsPage() {
     }
   }, [user]);
 
-  if (authLoading) {
-    return <LoadingSpinner tip="Đang xác thực..." />;
+  if (authLoading || loading) {
+    return <LoadingSpinner tip="Đang tải..." />;
   }
 
   if (!user || !isAdmin()) {
@@ -66,19 +52,6 @@ export default function AdminRequestsPage() {
       </div>
     );
   }
-
-  const getFilteredRequests = () => {
-    if (activeTab === "pending") {
-      return requests.filter((r) => r.status === "Chờ duyệt");
-    } else if (activeTab === "approved") {
-      return requests.filter((r) => r.status === "Chấp thuận");
-    } else if (activeTab === "processing") {
-      return requests.filter((r) => r.status === "Đang xử lý");
-    } else if (activeTab === "completed") {
-      return requests.filter((r) => r.status === "Hoàn thành");
-    }
-    return requests;
-  };
 
   const handleReview = async (id: string, approved: boolean) => {
     try {
@@ -117,37 +90,6 @@ export default function AdminRequestsPage() {
     }
   };
 
-  // Get priority icon and color
-  const getPriorityDisplay = (priority: string) => {
-    switch (priority) {
-      case "Cao":
-        return {
-          icon: <ArrowUpOutlined />,
-          color: "error",
-          text: "Ưu tiên cao",
-        };
-      case "Trung bình":
-        return {
-          icon: <MinusOutlined />,
-          color: "warning",
-          text: "Ưu tiên trung bình",
-        };
-      case "Thấp":
-        return {
-          icon: <ArrowDownOutlined />,
-          color: "default",
-          text: "Ưu tiên thấp",
-        };
-      default:
-        return {
-          icon: <MinusOutlined />,
-          color: "default",
-          text: priority,
-        };
-    }
-  };
-
-  // Get status tag
   const getStatusTag = (status: string) => {
     switch (status) {
       case "Chờ duyệt":
@@ -165,7 +107,99 @@ export default function AdminRequestsPage() {
     }
   };
 
-  const filteredRequests = getFilteredRequests();
+  const renderRequestList = (filteredRequests: any[]) => (
+    <div className="space-y-3">
+      {filteredRequests.length === 0 ? (
+        <div className="text-center py-12 text-neutral-500">
+          Không có yêu cầu nào
+        </div>
+      ) : (
+        filteredRequests.map((request) => {
+          const statusTag = getStatusTag(request.status);
+
+          return (
+            <Card
+              key={request._id}
+              className="hover:shadow-md transition-shadow p-5"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                {/* Requester Info */}
+                <div className="md:col-span-2">
+                  <div className="text-[15px] font-semibold text-gray-800">
+                    {request.requester?.name}
+                  </div>
+                  <div className="text-[13px] text-gray-500 mt-0.5">
+                    {new Date(request.createdAt).toLocaleDateString("vi-VN")}
+                  </div>
+                </div>
+
+                {/* Request Info */}
+                <div className="md:col-span-3">
+                  <div className="font-semibold text-gray-800 text-[15px] mb-1">
+                    {request.title}
+                  </div>
+                  <div className="text-[14px] text-gray-600">
+                    {
+                      UnifiedRequestTypeLabels[
+                        request.type as keyof typeof UnifiedRequestTypeLabels
+                      ]
+                    }
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="md:col-span-2">
+                  <Tag
+                    color={statusTag.color}
+                    className="text-[14px] px-3 py-1 border-0"
+                  >
+                    {statusTag.text}
+                  </Tag>
+                </div>
+
+                {/* Priority */}
+                <div className="md:col-span-2">
+                  <div className="text-[14px] text-gray-600">
+                    {request.priority}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="md:col-span-3 flex justify-end gap-2">
+                  {request.status === "Chờ duyệt" && (
+                    <>
+                      <Button
+                        onClick={() => handleReview(request._id, true)}
+                        loading={reviewing === request._id}
+                        variant="primary"
+                        className="bg-green-600 hover:bg-green-700 border-green-600"
+                      >
+                        <CheckCircleOutlined className="mr-1" />
+                        Duyệt
+                      </Button>
+                      <Button
+                        onClick={() => handleReview(request._id, false)}
+                        loading={reviewing === request._id}
+                        variant="danger"
+                      >
+                        <CloseCircleOutlined className="mr-1" />
+                        Từ chối
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })
+      )}
+    </div>
+  );
+
+  const pendingRequests = requests.filter((r) => r.status === "Chờ duyệt");
+  const approvedRequests = requests.filter((r) => r.status === "Chấp thuận");
+  const processingRequests = requests.filter((r) => r.status === "Đang xử lý");
+  const completedRequests = requests.filter((r) => r.status === "Hoàn thành");
 
   return (
     <div className="p-6 space-y-6">
@@ -192,214 +226,49 @@ export default function AdminRequestsPage() {
 
       <Card>
         <Tabs
-          activeTab={activeTab}
-          onChange={setActiveTab}
-          tabs={[
+          items={[
             {
-              id: "pending",
+              key: "pending",
               label: (
                 <span className="flex items-center gap-2">
                   Chờ Duyệt
-                  <Badge variant="warning">
-                    {requests.filter((r) => r.status === "Chờ duyệt").length}
-                  </Badge>
+                  <Badge variant="warning">{pendingRequests.length}</Badge>
                 </span>
               ),
+              children: renderRequestList(pendingRequests),
             },
             {
-              id: "approved",
+              key: "approved",
               label: (
                 <span className="flex items-center gap-2">
                   Đã Duyệt
-                  <Badge variant="success">
-                    {requests.filter((r) => r.status === "Chấp thuận").length}
-                  </Badge>
+                  <Badge variant="success">{approvedRequests.length}</Badge>
                 </span>
               ),
+              children: renderRequestList(approvedRequests),
             },
             {
-              id: "processing",
+              key: "processing",
               label: (
                 <span className="flex items-center gap-2">
                   Đang Xử Lý
-                  <Badge variant="info">
-                    {requests.filter((r) => r.status === "Đang xử lý").length}
-                  </Badge>
+                  <Badge variant="info">{processingRequests.length}</Badge>
                 </span>
               ),
+              children: renderRequestList(processingRequests),
             },
             {
-              id: "completed",
+              key: "completed",
               label: (
                 <span className="flex items-center gap-2">
                   Hoàn Thành
-                  <Badge variant="neutral">
-                    {requests.filter((r) => r.status === "Hoàn thành").length}
-                  </Badge>
+                  <Badge variant="default">{completedRequests.length}</Badge>
                 </span>
               ),
+              children: renderRequestList(completedRequests),
             },
           ]}
-        >
-          <div className="mt-4">
-            {loading ? (
-              <LoadingSpinner tip="Đang tải yêu cầu..." />
-            ) : (
-              <div className="space-y-3">
-                {filteredRequests.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500">
-                    Không có yêu cầu nào
-                  </div>
-                ) : (
-                  filteredRequests.map((request) => {
-                    const statusTag = getStatusTag(request.status);
-                    const priorityDisplay = getPriorityDisplay(
-                      request.priority
-                    );
-
-                    return (
-                      <Card
-                        key={request._id}
-                        className="hover:shadow-md transition-shadow"
-                        style={{ padding: "20px" }}
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                          {/* Requester Info */}
-                          <div className="md:col-span-2">
-                            <div
-                              style={{
-                                fontSize: "15px",
-                                fontWeight: 600,
-                                color: "#1E293B",
-                              }}
-                            >
-                              {request.requester?.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "13px",
-                                color: "#64748B",
-                                marginTop: "2px",
-                              }}
-                            >
-                              {new Date(request.createdAt).toLocaleDateString(
-                                "vi-VN"
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Request Info */}
-                          <div className="md:col-span-3">
-                            <div
-                              style={{
-                                fontWeight: 600,
-                                color: "#1E293B",
-                                fontSize: "15px",
-                                marginBottom: "4px",
-                              }}
-                            >
-                              {request.title}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "14px",
-                                color: "#64748B",
-                              }}
-                            >
-                              {UnifiedRequestTypeLabels[request.type]}
-                            </div>
-                          </div>
-
-                          {/* Status */}
-                          <div className="md:col-span-2">
-                            <Tag
-                              color={statusTag.color}
-                              style={{
-                                fontSize: "14px",
-                                padding: "4px 12px",
-                                border: "none",
-                              }}
-                            >
-                              {statusTag.text}
-                            </Tag>
-                          </div>
-
-                          {/* Priority */}
-                          <div className="md:col-span-2">
-                            <Tag
-                              color={priorityDisplay.color}
-                              icon={priorityDisplay.icon}
-                              style={{
-                                fontSize: "14px",
-                                padding: "4px 12px",
-                                border: "none",
-                              }}
-                            >
-                              {priorityDisplay.text}
-                            </Tag>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="md:col-span-3 flex justify-end gap-2">
-                            {request.status === "Chờ duyệt" && (
-                              <>
-                                <Button
-                                  icon={<CheckCircleOutlined />}
-                                  onClick={() =>
-                                    handleReview(request._id, true)
-                                  }
-                                  loading={reviewing === request._id}
-                                  className="bg-green-600 hover:bg-green-700"
-                                  style={{
-                                    backgroundColor: "#16A34A",
-                                    borderColor: "#16A34A",
-                                    color: "white",
-                                    fontSize: "15px",
-                                    height: "40px",
-                                    paddingLeft: "16px",
-                                    paddingRight: "16px",
-                                    fontWeight: 600,
-                                  }}
-                                  onMouseEnter={(e: any) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      "#15803D";
-                                  }}
-                                  onMouseLeave={(e: any) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      "#16A34A";
-                                  }}
-                                >
-                                  Duyệt
-                                </Button>
-                                <Button
-                                  danger
-                                  icon={<CloseCircleOutlined />}
-                                  onClick={() =>
-                                    handleReview(request._id, false)
-                                  }
-                                  loading={reviewing === request._id}
-                                  style={{
-                                    fontSize: "15px",
-                                    height: "40px",
-                                    paddingLeft: "16px",
-                                    paddingRight: "16px",
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  Từ chối
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })
-                )}
-              </div>
-            )}
-          </div>
-        </Tabs>
+        />
       </Card>
     </div>
   );
