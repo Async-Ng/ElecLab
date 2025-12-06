@@ -183,7 +183,9 @@ const Tabs: React.FC<TabsProps> = ({
       <div
         role="tablist"
         className={tabListStyles}
-        aria-orientation={orientation === "horizontal" ? "horizontal" : "vertical"}
+        aria-orientation={
+          orientation === "horizontal" ? "horizontal" : "vertical"
+        }
       >
         {items.map((item, index) => {
           const isActive = item.key === activeKey;
