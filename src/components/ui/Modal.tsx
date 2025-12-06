@@ -116,20 +116,21 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!open) return null;
 
-  // Size presets with exact pixel values
+  // Size presets with responsive pixel values
   const sizeStyles = {
-    sm: "max-w-[400px]", // Small - Simple forms (1-2 fields)
-    md: "max-w-[600px]", // Medium - Standard forms (default)
-    lg: "max-w-[800px]", // Large - Two-column forms
-    xl: "max-w-[1000px]", // Extra Large - Tables, preview
-    full: "max-w-[calc(100vw-40px)]", // Full - Calendar, charts
+    sm: "max-w-[95vw] sm:max-w-[400px]", // Small - Simple forms (1-2 fields)
+    md: "max-w-[95vw] sm:max-w-[600px]", // Medium - Standard forms (default)
+    lg: "max-w-[95vw] sm:max-w-[700px] md:max-w-[800px]", // Large - Two-column forms
+    xl: "max-w-[95vw] sm:max-w-[900px] md:max-w-[1000px]", // Extra Large - Tables, preview
+    full: "max-w-[95vw] sm:max-w-[calc(100vw-40px)]", // Full - Calendar, charts
   };
 
   const modalContent = (
     <div
       className={cn(
-        "fixed inset-0 z-[9999] flex items-center justify-center p-4",
-        centered ? "items-center" : "items-start pt-20"
+        "fixed inset-0 z-[9999] flex items-center justify-center",
+        "p-2 sm:p-4",
+        centered ? "items-center" : "items-start pt-12 sm:pt-20"
       )}
     >
       {/* Glassmorphism Backdrop */}
@@ -162,11 +163,11 @@ const Modal: React.FC<ModalProps> = ({
       >
         {/* Header - Enhanced Styling */}
         {(title || closable) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
             {title && (
               <h2
                 id="modal-title"
-                className="text-lg font-semibold text-neutral-900"
+                className="text-base sm:text-lg font-semibold text-neutral-900 pr-8"
               >
                 {title}
               </h2>
@@ -175,9 +176,9 @@ const Modal: React.FC<ModalProps> = ({
               <button
                 onClick={onClose}
                 className={cn(
-                  "p-1 rounded-md text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100",
-                  "transition-colors",
-                  !title && "absolute top-4 right-4 z-10"
+                  "p-2 rounded-md text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100",
+                  "transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center",
+                  !title && "absolute top-2 sm:top-4 right-2 sm:right-4 z-10"
                 )}
                 aria-label="Close modal"
               >
@@ -200,13 +201,13 @@ const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Body */}
-        <div className="px-6 py-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 max-h-[calc(100vh-160px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto">
           {children}
         </div>
 
         {/* Footer - Subtle Background */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-50 bg-gray-50/50">
+          <div className="flex items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-50 bg-gray-50/50">
             {footer}
           </div>
         )}

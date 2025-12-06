@@ -45,39 +45,31 @@ export default function PageHeader({
 }: PageHeaderProps) {
   return (
     <div
+      className="bg-white border-b mb-4 sm:mb-6 p-4 sm:p-5 md:p-6 rounded-b-lg"
       style={{
-        backgroundColor: "#FFFFFF",
-        borderBottom: `1px solid ${brandColors.borderLight}`,
-        marginBottom: 24,
-        padding: "20px 24px",
-        borderRadius: "0 0 10px 10px",
+        borderColor: brandColors.borderLight,
       }}
     >
       {/* Breadcrumbs Navigation */}
       {showBreadcrumbs && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-3 sm:mb-4">
           <Breadcrumbs />
         </div>
       )}
 
       {/* Title and Actions Row */}
       <div
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4"
         style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 16,
           marginBottom: description ? 12 : 0,
         }}
       >
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0">
           <Title
             level={2}
+            className="!m-0 !text-2xl sm:!text-3xl md:!text-4xl"
             style={{
-              margin: 0,
-              color: "#1F2937", // Near black for maximum readability
-              fontSize: "1.875rem", // 30px - large and bold
+              color: "#1F2937",
               fontWeight: 700,
               lineHeight: 1.4,
             }}
@@ -88,14 +80,7 @@ export default function PageHeader({
 
         {/* Action Buttons */}
         {extra && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {extra}
           </div>
         )}
@@ -104,13 +89,10 @@ export default function PageHeader({
       {/* Description */}
       {description && (
         <p
+          className="m-0 mt-2 text-sm sm:text-base max-w-full md:max-w-3xl"
           style={{
-            margin: 0,
-            marginTop: 8,
             color: brandColors.textSecondary,
-            fontSize: "1rem", // 16px - readable
             lineHeight: 1.6,
-            maxWidth: "800px",
           }}
         >
           {description}

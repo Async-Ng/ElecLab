@@ -38,7 +38,7 @@ export default function DataTable<
       ? {
           title: "Thao tác",
           key: "actions",
-          width: 150,
+          width: 180,
           fixed: "right" as const,
           render: (_: any, record: T) => {
             if (customActions) {
@@ -46,15 +46,16 @@ export default function DataTable<
             }
 
             return (
-              <Space size="small">
+              <Space size="small" className="flex-wrap">
                 {onEdit && (
                   <Button
                     type="link"
                     size="small"
                     icon={<EditOutlined />}
                     onClick={() => onEdit(record)}
+                    className="min-h-[44px] sm:min-h-0"
                   >
-                    {editText}
+                    <span className="hidden sm:inline">{editText}</span>
                   </Button>
                 )}
                 {onDelete && (
@@ -64,8 +65,9 @@ export default function DataTable<
                     danger
                     icon={<DeleteOutlined />}
                     onClick={() => onDelete(record)}
+                    className="min-h-[44px] sm:min-h-0"
                   >
-                    {deleteText}
+                    <span className="hidden sm:inline">{deleteText}</span>
                   </Button>
                 )}
               </Space>
@@ -76,20 +78,36 @@ export default function DataTable<
 
   const finalColumns = actionColumn ? [...columns, actionColumn] : columns;
 
-  // Build scroll config - only y scroll, x will fit to container
-  const scrollConfig = scrollY ? { y: scrollY } : undefined;
+  // Build scroll config - responsive horizontal scroll for mobile
+  const scrollConfig = {
+    x: "max-content", // Horizontal scroll on small screens
+    ...(scrollY ? { y: scrollY } : {}),
+  };
 
   return (
-    <div style={{ width: "100%" }}>
-      <Table
-        columns={finalColumns}
-        dataSource={data}
-        rowKey={(record) => record._id || record.key || ""}
-        loading={loading}
-        pagination={pagination}
-        scroll={scrollConfig}
-        {...restProps}
-      />
+    <div className="w-full">
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <div className="overflow-hidden">
+            <Table
+              columns={finalColumns}
+              dataSource={data}
+              rowKey={(record) => record._id || record.key || ""}
+              loading={loading}
+              pagination={{
+                ...pagination,
+                className: "px-4 sm:px-0",
+                responsive: true,
+                showSizeChanger: true,
+                pageSizeOptions: ["10", "20", "50", "100"],
+              }}
+              scroll={scrollConfig}
+              className="min-w-full"
+              {...restProps}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

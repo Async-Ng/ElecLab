@@ -408,7 +408,7 @@ export default function TimetableCalendarView({
       {contextHolder}
       <Card className="mt-4">
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <AntSelect
             placeholder="Năm học"
             value={schoolYear || undefined}
@@ -508,99 +508,101 @@ export default function TimetableCalendarView({
             </div>
 
             {/* Status Legend */}
-            <div className="flex flex-wrap items-center gap-6 mb-6 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-8 bg-cyan-500 rounded-full" />
-                <span className="text-sm font-medium text-gray-700">
+                <div className="w-1 h-6 sm:h-8 bg-cyan-500 rounded-full" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">
                   Có thể ghi log
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-1 h-8 bg-orange-500 rounded-full" />
-                <span className="text-sm font-medium text-gray-700">
-                  Quá hạn
+                <div className="w-1 h-6 sm:h-8 bg-orange-500 rounded-full" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">
+                  Chưa ghi nhật ký
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-1 h-8 bg-gray-400 rounded-full" />
-                <span className="text-sm font-medium text-gray-700">
-                  Đã ghi log
+                <div className="w-1 h-6 sm:h-8 bg-gray-400 rounded-full" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">
+                  Đã qua
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-1 h-8 bg-blue-400 rounded-full" />
-                <span className="text-sm font-medium text-gray-700">
+                <div className="w-1 h-6 sm:h-8 bg-blue-400 rounded-full" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">
                   Sắp tới
                 </span>
               </div>
             </div>
 
             {/* Calendar Grid */}
-            <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-              <table className="w-full border-collapse min-w-[800px] bg-white">
-                <thead>
-                  <tr>
-                    <th className="p-4 text-white font-semibold border-r border-gray-300 min-w-[120px] sticky left-0 z-10 bg-gradient-primary">
-                      Ca học
-                    </th>
-                    {weekDays.map((day) => (
-                      <th
-                        key={day.format("YYYY-MM-DD")}
-                        className={`p-4 text-white font-semibold border-r border-gray-300 last:border-r-0 min-w-[180px] ${
-                          day.isSame(dayjs(), "day")
-                            ? "bg-gradient-success"
-                            : "bg-gradient-primary-secondary"
-                        }`}
-                      >
-                        <div className="font-bold text-base">
-                          {capitalize(day.format("dddd"))}
-                        </div>
-                        <div className="text-sm font-normal opacity-90 mt-0.5">
-                          {day.format("DD/MM/YYYY")}
-                        </div>
+            <div className="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border border-gray-200 shadow-sm">
+              <div className="inline-block min-w-full align-middle">
+                <table className="w-full border-collapse min-w-[600px] sm:min-w-[800px] bg-white">
+                  <thead>
+                    <tr>
+                      <th className="p-2 sm:p-4 text-white text-xs sm:text-base font-semibold border-r border-gray-300 min-w-[80px] sm:min-w-[120px] sticky left-0 z-10 bg-gradient-primary">
+                        Ca học
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    Period.Period1,
-                    Period.Period2,
-                    Period.Period3,
-                    Period.Period4,
-                  ].map((period) => {
-                    const periodConfig = PERIOD_CONFIG[period];
-                    return (
-                      <tr key={period}>
-                        <td className="p-4 bg-gray-50 font-semibold border-r border-t border-gray-200 align-top sticky left-0 z-[5]">
-                          <div className="font-bold text-brand-primary text-base">
-                            {periodConfig.label}
+                      {weekDays.map((day) => (
+                        <th
+                          key={day.format("YYYY-MM-DD")}
+                          className={`p-2 sm:p-4 text-white font-semibold border-r border-gray-300 last:border-r-0 min-w-[140px] sm:min-w-[180px] text-xs sm:text-base ${
+                            day.isSame(dayjs(), "day")
+                              ? "bg-gradient-success"
+                              : "bg-gradient-primary-secondary"
+                          }`}
+                        >
+                          <div className="font-bold text-sm sm:text-base">
+                            {capitalize(day.format("dddd"))}
                           </div>
-                          <div className="text-xs text-gray-600 mt-1 font-medium">
-                            {periodConfig.studyTime}
+                          <div className="text-xs sm:text-sm font-normal opacity-90 mt-0.5">
+                            {day.format("DD/MM/YYYY")}
                           </div>
-                        </td>
-                        {weekDays.map((day) => {
-                          const dateKey = day.format("YYYY-MM-DD");
-                          const tt = timetableGrid[dateKey]?.[period];
-                          return (
-                            <td
-                              key={dateKey}
-                              className={`p-3 border-r border-t border-gray-200 last:border-r-0 align-top transition-colors ${
-                                day.isSame(dayjs(), "day")
-                                  ? "bg-green-50/20"
-                                  : "bg-gray-50/30"
-                              }`}
-                            >
-                              {renderTimetableCell(tt, day, period)}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      Period.Period1,
+                      Period.Period2,
+                      Period.Period3,
+                      Period.Period4,
+                    ].map((period) => {
+                      const periodConfig = PERIOD_CONFIG[period];
+                      return (
+                        <tr key={period}>
+                          <td className="p-2 sm:p-4 bg-gray-50 font-semibold border-r border-t border-gray-200 align-top sticky left-0 z-[5]">
+                            <div className="font-bold text-brand-primary text-sm sm:text-base">
+                              {periodConfig.label}
+                            </div>
+                            <div className="text-[10px] sm:text-xs text-gray-600 mt-1 font-medium">
+                              {periodConfig.studyTime}
+                            </div>
+                          </td>
+                          {weekDays.map((day) => {
+                            const dateKey = day.format("YYYY-MM-DD");
+                            const tt = timetableGrid[dateKey]?.[period];
+                            return (
+                              <td
+                                key={dateKey}
+                                className={`p-2 sm:p-3 border-r border-t border-gray-200 last:border-r-0 align-top transition-colors ${
+                                  day.isSame(dayjs(), "day")
+                                    ? "bg-green-50/20"
+                                    : "bg-gray-50/30"
+                                }`}
+                              >
+                                {renderTimetableCell(tt, day, period)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

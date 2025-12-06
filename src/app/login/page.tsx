@@ -2,25 +2,13 @@
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  Form,
-  Input,
-  Button,
-  message,
-  Typography,
-  Row,
-  Col,
-  Divider,
-} from "antd";
-import {
-  UserOutlined,
-  LockOutlined,
-  ArrowRightOutlined,
-} from "@ant-design/icons";
+import { Form, Input, message } from "antd";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-const { Title, Text } = Typography;
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { brandColors } from "@/styles/theme";
+import "./login.css";
 
 interface LoginForm {
   username: string;
@@ -79,146 +67,196 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center p-0 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      {/* Background Image */}
       <Image
         src="/images/background.jpg"
-        alt="Login Background"
+        alt="Background"
         fill
         className="object-cover"
         priority
+        quality={100}
       />
-      <div className="absolute inset-0 bg-black/40 z-0" />
-      <div className="relative z-10 w-[90%] h-[90%] flex bg-transparent shadow-lg rounded-xl overflow-hidden">
-        <Row className="w-full h-full">
-          <Col
-            xs={0}
-            md={15}
-            className="relative flex flex-col justify-center text-left p-12"
-          >
-            <div className="relative z-10 w-full">
-              <Title
-                level={1}
-                style={{ color: "#FFFFFF", fontSize: "4rem" }}
-                className="!mt-0 !mb-2"
-              >
-                Khoa kỹ thuật Điện - Điện tử
-              </Title>
 
-              <Text
-                style={{
-                  color: "#fff",
-                  fontSize: "2.2rem",
-                }}
-                className="block"
-              >
-                Hệ thống quản lý phòng thực hành - ElecLab
-              </Text>
-            </div>
-          </Col>
-          <Col
-            xs={24}
-            md={10}
-            className="relative flex flex-col justify-center items-center p-8 sm:p-12 lg:p-16 bg-white overflow-hidden"
-            style={{
-              borderTopLeftRadius: "50% 50%",
-              borderBottomLeftRadius: "50% 50%",
-              marginLeft: "-150px",
-              paddingLeft: "180px",
-            }}
-          >
-            <div className="w-full max-w-md">
-              <div className="flex flex-col items-center mb-10">
-                <div className="relative w-32 h-32 mb-4">
-                  <Image
-                    src="/images/logo.png"
-                    alt="Logo"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-                <Title level={3} className="text-center !mb-1 text-gray-800">
-                  Đăng nhập
-                </Title>
-                <Text type="secondary" className="text-center text-base">
-                  Chào mừng bạn trở lại với hệ thống Eleclab.
-                </Text>
+      {/* Dark Overlay for better contrast */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 login-pattern" />
+      </div>
+
+      <div className="relative w-full max-w-6xl z-10 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+          {/* Left Side - Branding */}
+          <div className="hidden lg:flex flex-col items-center justify-center p-6 lg:p-12 text-center">
+            <div className="relative w-48 h-48 lg:w-64 lg:h-64 mb-6 lg:mb-8">
+              {/* White circular background */}
+              <div className="absolute inset-0 bg-white rounded-full shadow-2xl" />
+              {/* Logo */}
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/logo.png"
+                  alt="Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
+            </div>
+            <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 lg:mb-6 text-white drop-shadow-2xl">
+              ElecLab
+            </h1>
+            <p className="text-xl lg:text-2xl xl:text-3xl text-white font-semibold mb-2 lg:mb-3 drop-shadow-lg">
+              Hệ thống quản lý phòng thực hành
+            </p>
+            <p className="text-base lg:text-lg xl:text-xl text-white/95 drop-shadow-lg">
+              Khoa kỹ thuật Điện - Điện tử
+            </p>
+          </div>
 
-              <Form
-                name="login"
-                initialValues={{ remember: true }}
-                onFinish={onFinish}
-                layout="vertical"
-                size="large"
+          {/* Right Side - Login Form */}
+          <Card className="p-6 sm:p-8 md:p-10 lg:p-14 shadow-2xl border-0 bg-white">
+            <div className="mb-6 lg:mb-8 text-center">
+              <div className="lg:hidden relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6">
+                <Image
+                  src="/images/logo.png"
+                  alt="Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                Đăng nhập
+              </h2>
+              <p className="text-sm sm:text-base text-gray-600">
+                Chào mừng bạn trở lại với hệ thống ElecLab
+              </p>
+            </div>
+
+            <Form
+              name="login"
+              onFinish={onFinish}
+              layout="vertical"
+              size="large"
+              className="space-y-4 sm:space-y-6"
+            >
+              <Form.Item
+                label={
+                  <span className="text-sm sm:text-base text-gray-700 font-medium">
+                    Email
+                  </span>
+                }
+                name="username"
+                rules={[{ required: true, message: "Vui lòng nhập email!" }]}
               >
-                <Form.Item
-                  name="username"
-                  rules={[{ required: true, message: "Vui lòng nhập email!" }]}
-                  className="!mb-6"
+                <Input
+                  placeholder="Email của bạn"
+                  className="h-10 sm:h-12 rounded-lg text-sm sm:text-base"
+                  prefix={
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  }
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={
+                  <span className="text-sm sm:text-base text-gray-700 font-medium">
+                    Mật khẩu
+                  </span>
+                }
+                name="password"
+                rules={[
+                  { required: true, message: "Vui lòng nhập mật khẩu!" },
+                  { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+                ]}
+              >
+                <Input.Password
+                  placeholder="Mật khẩu của bạn"
+                  className="h-10 sm:h-12 rounded-lg text-sm sm:text-base"
+                  prefix={
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  }
+                />
+              </Form.Item>
+
+              <Form.Item className="!mb-4 sm:!mb-6">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold"
+                  loading={loading}
+                  rightIcon={
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  }
                 >
-                  <Input
-                    prefix={<UserOutlined className="site-form-item-icon" />}
-                    placeholder="Email"
-                  />
-                </Form.Item>
+                  {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                </Button>
+              </Form.Item>
 
-                <Form.Item
-                  name="password"
-                  rules={[
-                    { required: true, message: "Vui lòng nhập mật khẩu!" },
-                    { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
-                  ]}
-                  className="!mb-6"
-                >
-                  <Input.Password
-                    prefix={<LockOutlined className="site-form-item-icon" />}
-                    placeholder="Mật khẩu"
-                  />
-                </Form.Item>
-
-                <Form.Item className="!mb-8">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    className="w-full h-12 flex items-center justify-center font-semibold text-lg"
-                    loading={loading}
-                    icon={<ArrowRightOutlined />}
-                    style={{
-                      backgroundColor: "#333333",
-                      borderColor: "#333333",
-                    }}
-                  >
-                    {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-                  </Button>
-                </Form.Item>
-
-                <div className="mt-6 text-center text-gray-500 text-sm">
-                  <Divider plain className="!mb-4">
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
+                <div className="text-center space-y-1.5 sm:space-y-2">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
                     Thông tin hệ thống
-                  </Divider>
-                  <p>
-                    Hệ thống ElecLab dành cho giảng viên và quản lý phòng thực
-                    hành.
                   </p>
-                  <p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">
+                    Hệ thống ElecLab dành cho giảng viên và quản lý phòng thực
+                    hành
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     Liên hệ hỗ trợ:{" "}
                     <a
                       href="mailto:ndloi@hcmct.edu.vn"
-                      className="text-blue-600"
+                      className="font-medium hover:underline text-brand-primary break-all"
                     >
                       ndloi@hcmct.edu.vn
                     </a>
                   </p>
-                  <p>
-                    Đảm bảo bảo mật thông tin cá nhân và dữ liệu phòng thực
-                    hành.
+                  <p className="text-[10px] sm:text-xs text-gray-400">
+                    Đảm bảo bảo mật thông tin cá nhân và dữ liệu phòng thực hành
                   </p>
                 </div>
-              </Form>
-            </div>
-          </Col>
-        </Row>
+              </div>
+            </Form>
+          </Card>
+        </div>
       </div>
     </div>
   );
