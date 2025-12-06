@@ -7,6 +7,7 @@ import { Timetable, Semester, Period, StudyTime } from "@/types/timetable";
 import { SmartTable, SmartTableColumn } from "@/components/table";
 import { useTimetables } from "@/hooks/stores";
 import { EditOutlined } from "@ant-design/icons";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface TimetableTableProps {
   data: Timetable[];
@@ -40,41 +41,84 @@ export default function TimetableTable({ data }: TimetableTableProps) {
   React.useEffect(() => {
     setTableData(data);
   }, [data]);
+
   React.useEffect(() => {
-    fetch("/api/rooms?userRole=Admin")
-      .then((res) => res.json())
-      .then((d) =>
-        setRooms(
-          (d.rooms || []).map((r: any) => ({
-            _id: r._id,
-            name: r.name,
-            room_id: r.room_id,
-          }))
-        )
-      );
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((d) =>
-        setUsers(
-          (d || []).map((u: any) => ({
-            _id: u._id,
-            name: u.name,
-            email: u.email,
-          }))
-        )
-      );
-    fetch("/api/materials")
-      .then((res) => res.json())
-      .then((d) =>
-        setMaterials(
-          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
-            _id: m._id,
-            name: m.name,
-            quantity: m.quantity,
-          }))
-        )
-      );
-  }, []);
+    if (!user?._id || !user?.roles || user.roles.length === 0) return;
+
+    const fetchData = async () => {
+      try {
+        // Fetch rooms
+        const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+        const roomsRes = await authFetch(roomsEndpoint, user._id, user.roles);
+        if (roomsRes.ok) {
+          const roomsData = await roomsRes.json();
+          setRooms(
+            (roomsData.rooms || []).map((r: any) => ({
+              _id: r._id,
+              name: r.name,
+              room_id: r.room_id,
+            }))
+          );
+        }
+
+        // Fetch users - only for admins
+        const usersEndpoint = getApiEndpoint("users", user.roles);
+        const usersRes = await authFetch(usersEndpoint, user._id, user.roles);
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          setUsers(
+            (usersData || []).map((u: any) => ({
+              _id: u._id,
+              name: u.name,
+              email: u.email,
+            }))
+          );
+        } else {
+          // If user is not admin (API returns 403/404), create minimal user array with current user
+          setUsers([
+            {
+              _id: user._id,
+              name: user.name || "",
+              email: user.email || "",
+            },
+          ]);
+        }
+
+        // Fetch materials
+        const materialsEndpoint = getApiEndpoint("materials", user.roles);
+        const materialsRes = await authFetch(
+          materialsEndpoint,
+          user._id,
+          user.roles
+        );
+        if (materialsRes.ok) {
+          const materialsData = await materialsRes.json();
+          setMaterials(
+            (Array.isArray(materialsData)
+              ? materialsData
+              : materialsData.materials || []
+            ).map((m: any) => ({
+              _id: m._id,
+              name: m.name,
+              quantity: m.quantity,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // On error, still create minimal user array with current user
+        setUsers([
+          {
+            _id: user._id,
+            name: user.name || "",
+            email: user.email || "",
+          },
+        ]);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   const handleEdit = (record: Timetable) => {
     setEditRecord(record);

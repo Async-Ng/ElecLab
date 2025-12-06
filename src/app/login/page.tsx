@@ -60,29 +60,16 @@ export default function LoginPage() {
       const hasAdmin = userRoles.includes("Admin");
       const hasUser = userRoles.includes("User");
 
-      // Check activeRole trong localStorage (nếu user đã chọn role trước đó)
-      const storedActiveRole = localStorage.getItem("activeRole");
-
-      // Nếu có activeRole được lưu và user vẫn có role đó, giữ nguyên
-      if (storedActiveRole && userRoles.includes(storedActiveRole)) {
-        if (storedActiveRole === "Admin") {
-          router.push("/admin/timetables");
-        } else {
-          router.push("/timetables");
-        }
+      // Luôn ưu tiên Admin role khi đăng nhập
+      if (hasAdmin) {
+        localStorage.setItem("activeRole", "Admin");
+        router.push("/admin/timetables");
+      } else if (hasUser) {
+        localStorage.setItem("activeRole", "User");
+        router.push("/timetables");
       } else {
-        // Nếu chưa có activeRole hoặc không hợp lệ, set mặc định
-        if (hasAdmin) {
-          // Ưu tiên Admin nếu có role Admin
-          localStorage.setItem("activeRole", "Admin");
-          router.push("/admin/timetables");
-        } else if (hasUser) {
-          localStorage.setItem("activeRole", "User");
-          router.push("/timetables");
-        } else {
-          // Fallback về timetables nếu không có role nào
-          router.push("/timetables");
-        }
+        // Fallback về timetables nếu không có role nào
+        router.push("/timetables");
       }
     } catch (error) {
       message.error("Đăng nhập thất bại, vui lòng thử lại");

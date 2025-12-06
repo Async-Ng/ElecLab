@@ -18,7 +18,13 @@ export const useRooms = (options: UseRoomsOptions = {}) => {
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (autoFetch && !hasFetched.current && user?._id && user?.roles) {
+    if (
+      autoFetch &&
+      !hasFetched.current &&
+      user?._id &&
+      user?.roles &&
+      user.roles.length > 0
+    ) {
       hasFetched.current = true;
       store.fetchRooms(user._id, user.roles);
     }

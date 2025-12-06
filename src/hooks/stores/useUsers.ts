@@ -12,7 +12,12 @@ export const useUsers = () => {
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (!hasFetched.current && user?._id) {
+    if (
+      !hasFetched.current &&
+      user?._id &&
+      user?.roles &&
+      user.roles.length > 0
+    ) {
       hasFetched.current = true;
       store.fetchUsers(user._id, user.roles);
     }

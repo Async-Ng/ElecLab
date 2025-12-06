@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/common";
 import { SmartTable, SmartTableColumn } from "@/components/table";
 import { useTeachingLogs } from "@/hooks/stores";
 import { EyeOutlined } from "@ant-design/icons";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 const TeachingLogsTable: React.FC = () => {
   const { user } = useAuth();
@@ -47,29 +48,53 @@ const TeachingLogsTable: React.FC = () => {
 
   // Fetch materials and rooms for material requests
   React.useEffect(() => {
-    fetch("/api/materials")
-      .then((res) => res.json())
-      .then((d) =>
-        setMaterials(
-          (Array.isArray(d) ? d : d.materials || []).map((m: any) => ({
-            _id: m._id,
-            name: m.name,
-            quantity: m.quantity,
-          }))
-        )
-      );
-    fetch("/api/rooms")
-      .then((res) => res.json())
-      .then((d) =>
-        setRooms(
-          (Array.isArray(d) ? d : d.rooms || []).map((r: any) => ({
-            _id: r._id,
-            room_id: r.room_id,
-            name: r.name,
-          }))
-        )
-      );
-  }, []);
+    if (!user?._id || !user?.roles || user.roles.length === 0) return;
+
+    const fetchData = async () => {
+      try {
+        // Fetch materials
+        const materialsEndpoint = getApiEndpoint("materials", user.roles);
+        const materialsRes = await authFetch(
+          materialsEndpoint,
+          user._id,
+          user.roles
+        );
+        if (materialsRes.ok) {
+          const materialsData = await materialsRes.json();
+          setMaterials(
+            (Array.isArray(materialsData)
+              ? materialsData
+              : materialsData.materials || []
+            ).map((m: any) => ({
+              _id: m._id,
+              name: m.name,
+              quantity: m.quantity,
+            }))
+          );
+        }
+
+        // Fetch rooms
+        const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+        const roomsRes = await authFetch(roomsEndpoint, user._id, user.roles);
+        if (roomsRes.ok) {
+          const roomsData = await roomsRes.json();
+          setRooms(
+            (Array.isArray(roomsData) ? roomsData : roomsData.rooms || []).map(
+              (r: any) => ({
+                _id: r._id,
+                room_id: r.room_id,
+                name: r.name,
+              })
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   // Check if user is admin
   const isAdmin = user?.roles?.includes(UserRole.Admin);

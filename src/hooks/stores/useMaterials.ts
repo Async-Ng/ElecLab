@@ -18,7 +18,13 @@ export const useMaterials = (options: UseMaterialsOptions = {}) => {
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (autoFetch && !hasFetched.current && user?._id) {
+    if (
+      autoFetch &&
+      !hasFetched.current &&
+      user?._id &&
+      user?.roles &&
+      user.roles.length > 0
+    ) {
       hasFetched.current = true;
       store.fetchMaterials(user._id, user.roles);
     }

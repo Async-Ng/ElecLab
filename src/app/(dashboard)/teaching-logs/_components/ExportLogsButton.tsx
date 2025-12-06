@@ -4,6 +4,8 @@ import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
 import ExportPreviewModal from "./ExportPreviewModal";
 import * as XLSX from "xlsx";
+import { useAuth } from "@/hooks/useAuth";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface ExportLogsButtonProps {
   logs: any[];
@@ -29,6 +31,7 @@ function mapLogsToExcelRows(logs: any[]) {
 }
 
 const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
+  const { user } = useAuth();
   // All filter state and options logic moved to below (see previous patch)
 
   const [semester, setSemester] = useState<string | undefined>();
@@ -57,9 +60,12 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
   // Fetch rooms from API
   const [rooms, setRooms] = useState<{ value: string; label: string }[]>([]);
   useEffect(() => {
+    if (!user?._id || !user?.roles || user.roles.length === 0) return;
+
     const fetchRooms = async () => {
       try {
-        const res = await fetch("/api/rooms");
+        const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+        const res = await authFetch(roomsEndpoint, user._id, user.roles);
         const data = await res.json();
         const roomList = Array.isArray(data.rooms) ? data.rooms : [];
         setRooms(roomList.map((r: any) => ({ value: r._id, label: r.name })));
@@ -68,16 +74,19 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       }
     };
     fetchRooms();
-  }, []);
+  }, [user]);
 
   // Fetch lecturers from API
   const [lecturers, setLecturers] = useState<
     { value: string; label: string }[]
   >([]);
   useEffect(() => {
+    if (!user?._id || !user?.roles || user.roles.length === 0) return;
+
     const fetchLecturers = async () => {
       try {
-        const res = await fetch("/api/users?role=Lecture");
+        const usersEndpoint = getApiEndpoint("users", user.roles);
+        const res = await authFetch(usersEndpoint, user._id, user.roles);
         const data = await res.json();
         setLecturers(
           Array.isArray(data)
@@ -89,7 +98,7 @@ const ExportLogsButton: React.FC<ExportLogsButtonProps> = ({ logs }) => {
       }
     };
     fetchLecturers();
-  }, []);
+  }, [user]);
 
   // Filter logs using same logic as TeachingLogsTable
   const filteredLogs = useMemo(() => {

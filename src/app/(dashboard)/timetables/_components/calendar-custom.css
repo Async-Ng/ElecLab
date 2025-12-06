@@ -1,5 +1,22 @@
 /* Custom styles for timetable calendar grid */
 
+/* Brand color utilities */
+.text-brand-primary {
+  color: #3b82f6; /* primary-500 */
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.bg-gradient-primary-secondary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
 /* Calendar table styling */
 .timetable-calendar table {
   width: 100%;
