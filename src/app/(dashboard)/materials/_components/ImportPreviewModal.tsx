@@ -6,21 +6,24 @@ import {
   Table,
   Input,
   Select,
-  Button,
+  Button as AntButton,
   Tag,
   Space,
   Popconfirm,
   Switch,
+  Form,
 } from "antd";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   InfoCircleOutlined,
   ExclamationCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { MaterialCategory, MaterialStatus } from "@/types/material";
 import BaseModal from "@/components/common/BaseModal";
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 import type { ColumnsType } from "antd/es/table";
 
 const { Option } = Select;
@@ -46,6 +49,9 @@ export default function ImportPreviewModal(props: Props) {
   const { open, initialRows, onCancel, onConfirm, rooms = [] } = props;
   const [data, setData] = useState<Row[]>([]);
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
+  const [editingRow, setEditingRow] = useState<Row | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     if (open) {
@@ -65,6 +71,29 @@ export default function ImportPreviewModal(props: Props) {
 
   function removeRow(key: string | number) {
     setData((d) => d.filter((r) => r.key !== key));
+  }
+
+  function handleEdit(record: Row) {
+    setEditingRow(record);
+    form.setFieldsValue({
+      material_id: record.material_id,
+      name: record.name,
+      category: record.category,
+      status: record.status,
+      place_used: record.place_used,
+    });
+    setEditModalOpen(true);
+  }
+
+  function handleSaveEdit() {
+    form.validateFields().then((values) => {
+      if (editingRow) {
+        updateRow(editingRow.key, values);
+        setEditModalOpen(false);
+        setEditingRow(null);
+        form.resetFields();
+      }
+    });
   }
 
   const isValid = (r: Row) => !!(r.material_id && r.name && r.category);
@@ -115,115 +144,41 @@ export default function ImportPreviewModal(props: Props) {
       title: "Mã vật tư",
       dataIndex: "material_id",
       key: "material_id",
-      onCell: () => ({
-        style: { whiteSpace: "normal", wordBreak: "break-word" },
-      }),
-      render: (val: string, record: Row) => (
-        <Input
-          className="w-full"
-          value={val}
-          onChange={(e) =>
-            updateRow(record.key, { material_id: e.target.value })
-          }
-        />
-      ),
+      width: 150,
     },
     {
       title: "Tên",
       dataIndex: "name",
       key: "name",
-      onCell: () => ({
-        style: { whiteSpace: "normal", wordBreak: "break-word" },
-      }),
-      render: (val: string, record: Row) => (
-        <Input
-          className="w-full"
-          value={val}
-          onChange={(e) => updateRow(record.key, { name: e.target.value })}
-        />
-      ),
+      width: 200,
     },
     {
       title: "Danh mục",
       dataIndex: "category",
       key: "category",
-      onCell: () => ({
-        style: { whiteSpace: "normal", wordBreak: "break-word" },
-      }),
-      render: (val: string, record: Row) => (
-        <Select
-          value={val || undefined}
-          className="w-full"
-          onChange={(v) => updateRow(record.key, { category: String(v) })}
-        >
-          {Object.values(MaterialCategory).map((v) => (
-            <Option key={v} value={v}>
-              {v}
-            </Option>
-          ))}
-        </Select>
-      ),
+      width: 150,
     },
     {
       title: "Tình trạng",
       dataIndex: "status",
       key: "status",
-      onCell: () => ({
-        style: { whiteSpace: "normal", wordBreak: "break-word" },
-      }),
-      render: (val: string, record: Row) => (
-        <Select
-          value={val || undefined}
-          className="w-full"
-          onChange={(v) => updateRow(record.key, { status: String(v) })}
-          allowClear
-        >
-          {Object.values(MaterialStatus).map((v) => (
-            <Option key={v} value={v}>
-              {v}
-            </Option>
-          ))}
-        </Select>
-      ),
+      width: 120,
     },
     {
       title: "Vị trí",
       dataIndex: "place_used",
       key: "place_used",
-      onCell: () => ({
-        style: { whiteSpace: "normal", wordBreak: "break-word" },
-      }),
-      render: (val: string, record: Row) => (
-        <Select
-          showSearch
-          className="w-full"
-          value={val || undefined}
-          placeholder="Chọn phòng theo mã phòng"
-          optionFilterProp="children"
-          onChange={(v) => updateRow(record.key, { place_used: v })}
-          filterOption={(input, option) => {
-            const childrenStr = String(option?.children ?? "").toLowerCase();
-            const valueStr = String(option?.value ?? "").toLowerCase();
-            return (
-              childrenStr.includes(input.toLowerCase()) ||
-              valueStr.includes(input.toLowerCase())
-            );
-          }}
-        >
-          {rooms.map((room) => (
-            <Option key={room.room_id} value={room.room_id}>
-              {room.room_id} - {room.name}
-            </Option>
-          ))}
-        </Select>
-      ),
+      width: 200,
+      render: (val: string) => {
+        if (!val) return <span className="text-gray-400">Chưa chọn</span>;
+        const room = rooms.find((r) => r.room_id === val);
+        return room ? `${room.room_id} - ${room.name}` : val;
+      },
     },
     {
       title: "Trạng thái",
       key: "valid",
-      onCell: () => ({
-        style: { whiteSpace: "normal", wordBreak: "break-word" },
-      }),
+      width: 150,
       render: (_: any, record: Row) => {
         const error = getRowError(record);
         if (error) {
@@ -243,18 +198,25 @@ export default function ImportPreviewModal(props: Props) {
     {
       title: "Hành động",
       key: "actions",
-      onCell: () => ({
-        style: { whiteSpace: "normal", wordBreak: "break-word" },
-      }),
+      width: 150,
+      fixed: "right" as const,
       render: (_: any, record: Row) => (
         <Space>
+          <AntButton
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+            size="small"
+          >
+            Sửa
+          </AntButton>
           <Popconfirm
             title="Xóa bản ghi này?"
             onConfirm={() => removeRow(record.key)}
           >
-            <Button danger size="small">
+            <AntButton danger type="link" size="small">
               Xóa
-            </Button>
+            </AntButton>
           </Popconfirm>
         </Space>
       ),
@@ -271,39 +233,49 @@ export default function ImportPreviewModal(props: Props) {
     >
       {/* Stats Dashboard */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Tổng số dòng</p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                Tổng số dòng
+              </p>
+              <p className="text-3xl font-bold text-blue-600">
                 {stats.totalCount}
               </p>
             </div>
-            <InfoCircleOutlined className="text-4xl text-blue-500 opacity-50" />
+            <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+              <InfoCircleOutlined className="text-2xl text-blue-500" />
+            </div>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Hợp lệ</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-sm font-medium text-gray-600 mb-1">Hợp lệ</p>
+              <p className="text-3xl font-bold text-green-600">
                 {stats.validCount}
               </p>
             </div>
-            <CheckCircleOutlined className="text-4xl text-green-500 opacity-50" />
+            <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+              <CheckCircleOutlined className="text-2xl text-green-500" />
+            </div>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
+        <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Lỗi/Cảnh báo</p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                Lỗi/Cảnh báo
+              </p>
+              <p className="text-3xl font-bold text-red-600">
                 {stats.errorCount}
               </p>
             </div>
-            <ExclamationCircleOutlined className="text-4xl text-red-500 opacity-50" />
+            <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center">
+              <ExclamationCircleOutlined className="text-2xl text-red-500" />
+            </div>
           </div>
         </Card>
       </div>
@@ -319,61 +291,191 @@ export default function ImportPreviewModal(props: Props) {
       )}
 
       {/* Filter Controls */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex items-center gap-3">
           <Switch
             checked={showErrorsOnly}
             onChange={setShowErrorsOnly}
             checkedChildren="Chỉ hiện lỗi"
             unCheckedChildren="Hiện tất cả"
           />
-          <span className="text-sm text-gray-600">
+          <span className="text-sm font-medium text-gray-700">
             {showErrorsOnly
               ? `Đang hiển thị ${displayRows.length} dòng lỗi`
-              : `Đang hiển thị ${displayRows.length} dòng`}
+              : `Đang hiển thị tất cả ${displayRows.length} dòng`}
           </span>
         </div>
       </div>
 
       {/* Data Table with Sticky Header */}
-      <Table<Row>
-        rowKey={(r) => r.key}
-        dataSource={displayRows}
-        columns={columns}
-        scroll={{ x: "max-content", y: 500 }}
-        pagination={{ pageSize: 10 }}
-        rowClassName={(record) =>
-          getRowError(record) ? "bg-red-50 hover:bg-red-100" : ""
-        }
-        sticky
-      />
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <Table<Row>
+          rowKey={(r) => r.key}
+          dataSource={displayRows}
+          columns={columns}
+          scroll={{ x: "max-content", y: 500 }}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng ${total} dòng`,
+          }}
+          rowClassName={(record) =>
+            getRowError(record)
+              ? "bg-red-50/50 hover:bg-red-100/50 transition-colors"
+              : "hover:bg-gray-50 transition-colors"
+          }
+          sticky
+        />
+      </div>
+
+      {/* Edit Modal */}
+      <BaseModal
+        title="Chỉnh sửa vật tư"
+        open={editModalOpen}
+        onCancel={() => {
+          setEditModalOpen(false);
+          setEditingRow(null);
+          form.resetFields();
+        }}
+        onOk={handleSaveEdit}
+        size="md"
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Form.Item
+            label="Mã vật tư"
+            name="material_id"
+            rules={[{ required: true, message: "Vui lòng nhập mã vật tư" }]}
+          >
+            <Input placeholder="Nhập mã vật tư" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Tên vật tư"
+            name="name"
+            rules={[{ required: true, message: "Vui lòng nhập tên vật tư" }]}
+          >
+            <Input placeholder="Nhập tên vật tư" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Danh mục"
+            name="category"
+            rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
+          >
+            <Select
+              placeholder="Chọn danh mục"
+              size="large"
+              getPopupContainer={(trigger) =>
+                trigger.parentElement || document.body
+              }
+            >
+              {Object.values(MaterialCategory).map((v) => (
+                <Option key={v} value={v}>
+                  {v}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Tình trạng" name="status">
+            <Select
+              placeholder="Chọn tình trạng"
+              size="large"
+              allowClear
+              getPopupContainer={(trigger) =>
+                trigger.parentElement || document.body
+              }
+            >
+              {Object.values(MaterialStatus).map((v) => (
+                <Option key={v} value={v}>
+                  {v}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Vị trí sử dụng" name="place_used">
+            <Select
+              showSearch
+              placeholder="Chọn phòng"
+              size="large"
+              allowClear
+              optionFilterProp="children"
+              getPopupContainer={(trigger) =>
+                trigger.parentElement || document.body
+              }
+              filterOption={(input, option) => {
+                const childrenStr = String(
+                  option?.children ?? ""
+                ).toLowerCase();
+                return childrenStr.includes(input.toLowerCase());
+              }}
+            >
+              {rooms.map((room) => (
+                <Option key={room.room_id} value={room.room_id}>
+                  {room.room_id} - {room.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </BaseModal>
 
       {/* Action Footer */}
-      <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
-        <Button onClick={onCancel} size="large">
-          Hủy
-        </Button>
-        <Popconfirm
-          title="Xác nhận Import"
-          description={
-            stats.errorCount > 0
-              ? `Có ${stats.errorCount} dòng lỗi sẽ bị bỏ qua. Tiếp tục import ${stats.validCount} bản ghi hợp lệ?`
-              : `Import ${stats.validCount} bản ghi?`
-          }
-          onConfirm={() => onConfirm(data.filter((r) => !getRowError(r)))}
-          okText="Import"
-          cancelText="Hủy"
-          disabled={stats.validCount === 0}
-        >
-          <Button
-            type="primary"
-            size="large"
-            disabled={stats.validCount === 0}
-            icon={<CheckCircleOutlined />}
-          >
-            Import {stats.validCount} bản ghi
+      <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
+        <div className="text-sm text-gray-600">
+          <span className="font-semibold text-gray-900">
+            {stats.validCount}
+          </span>{" "}
+          bản ghi hợp lệ
+          {stats.errorCount > 0 && (
+            <span className="ml-2">
+              •{" "}
+              <span className="font-semibold text-red-600">
+                {stats.errorCount}
+              </span>{" "}
+              bản ghi lỗi
+            </span>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <Button onClick={onCancel} variant="outline" size="lg">
+            Hủy
           </Button>
-        </Popconfirm>
+          <Popconfirm
+            title={<span className="font-semibold">Xác nhận Import</span>}
+            description={
+              <div className="max-w-sm">
+                {stats.errorCount > 0
+                  ? `Có ${stats.errorCount} dòng lỗi sẽ bị bỏ qua. Tiếp tục import ${stats.validCount} bản ghi hợp lệ?`
+                  : `Import ${stats.validCount} bản ghi vào hệ thống?`}
+              </div>
+            }
+            onConfirm={() => {
+              onConfirm(data.filter((r) => !getRowError(r)));
+            }}
+            okText="Xác nhận"
+            cancelText="Hủy"
+            okButtonProps={{
+              danger: false,
+              type: "primary",
+            }}
+            getPopupContainer={(trigger) =>
+              trigger.parentElement || document.body
+            }
+          >
+            <Button
+              variant="primary"
+              size="lg"
+              disabled={stats.validCount === 0}
+            >
+              <CheckCircleOutlined className="mr-2" />
+              Import {stats.validCount} bản ghi
+            </Button>
+          </Popconfirm>
+        </div>
       </div>
     </BaseModal>
   );

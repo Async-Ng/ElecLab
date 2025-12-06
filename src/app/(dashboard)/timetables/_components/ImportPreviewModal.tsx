@@ -7,7 +7,7 @@ import {
   Table,
   Input,
   Select,
-  Button,
+  Button as AntButton,
   Tag,
   Space,
   Popconfirm,
@@ -24,6 +24,7 @@ import { UserRole } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
 import BaseModal from "@/components/common/BaseModal";
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 import {
   isWeekValidForSemester,
   getWeekValidationError,
@@ -96,6 +97,22 @@ export default function ImportPreviewModal({
     setRows((d) => d.filter((r) => r.key !== key));
   }
 
+  // Check if row is empty (all fields are empty or undefined)
+  const isEmptyRow = (r: Timetable) => {
+    return (
+      !r.schoolYear &&
+      !r.semester &&
+      !r.date &&
+      !r.week &&
+      !r.period &&
+      !r.time &&
+      !r.subject &&
+      !r.room &&
+      !r.className &&
+      !r.lecturer
+    );
+  };
+
   const isValid = (r: Timetable) =>
     !!(
       r.schoolYear &&
@@ -111,6 +128,9 @@ export default function ImportPreviewModal({
     );
 
   const getRowError = (record: Timetable): string | null => {
+    // Skip validation for empty rows
+    if (isEmptyRow(record)) return null;
+
     const dateVal = normalizeDate(record.date);
 
     if (!isValid(record)) return "Thiếu trường bắt buộc";
@@ -538,19 +558,24 @@ export default function ImportPreviewModal({
               ? `Có ${stats.errorCount} dòng lỗi sẽ bị bỏ qua. Tiếp tục import ${stats.validCount} bản ghi hợp lệ?`
               : `Import ${stats.validCount} bản ghi?`
           }
-          onConfirm={() => onImport(rows.filter((r) => !getRowError(r)))}
+          onConfirm={() =>
+            onImport(rows.filter((r) => !isEmptyRow(r) && !getRowError(r)))
+          }
           okText="Import"
           cancelText="Hủy"
           disabled={stats.validCount === 0}
+          getPopupContainer={(trigger) =>
+            trigger.parentElement || document.body
+          }
         >
-          <Button
+          <AntButton
             type="primary"
             size="large"
             disabled={stats.validCount === 0}
             icon={<CheckCircleOutlined />}
           >
             Import {stats.validCount} bản ghi
-          </Button>
+          </AntButton>
         </Popconfirm>
       </div>
     </BaseModal>
