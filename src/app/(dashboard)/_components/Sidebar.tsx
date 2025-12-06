@@ -205,17 +205,11 @@ export default function Sidebar({ onClose }: Props) {
   const isActive = (path: string) => pathname?.startsWith(path);
 
   return (
-    <aside
-      className="relative h-full flex flex-col text-white shadow-xl w-full md:w-64 p-0"
-      style={{
-        background: `linear-gradient(180deg, ${brandColors.primary} 0%, ${brandColors.secondary} 100%)`,
-      }}
-    >
+    <aside className="relative h-full flex flex-col text-white shadow-xl w-full md:w-64 p-0 bg-gradient-to-b from-blue-600 to-blue-800">
       {/* Close button for mobile */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 rounded md:hidden"
-        style={{ background: "rgba(255, 255, 255, 0.15)" }}
+        className="absolute top-4 right-4 p-2 rounded md:hidden bg-white/15 hover:bg-white/25"
         aria-label="Đóng menu"
       >
         <svg
@@ -233,10 +227,7 @@ export default function Sidebar({ onClose }: Props) {
         </svg>
       </button>
 
-      <div
-        className="flex flex-col items-center py-8 gap-2"
-        style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.15)" }}
-      >
+      <div className="flex flex-col items-center py-8 gap-2 border-b border-white/15">
         <div className="rounded-md bg-white p-4 shadow-lg">
           <Image
             src="/images/logo.png"
@@ -313,27 +304,10 @@ export default function Sidebar({ onClose }: Props) {
         </ul>
       </nav>
 
-      <div
-        className="mt-auto px-6 py-6"
-        style={{
-          borderTop: "1px solid rgba(255, 255, 255, 0.15)",
-          background: "rgba(0, 0, 0, 0.15)",
-        }}
-      >
+      <div className="mt-auto px-6 py-6 border-t border-white/15 bg-black/15">
         <button
           onClick={logout}
-          className="w-full text-sm rounded px-3 py-2 transition-all font-semibold"
-          style={{
-            background: "rgba(255, 255, 255, 0.15)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            color: "white",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(255, 255, 255, 0.25)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
-          }}
+          className="w-full text-sm rounded px-3 py-2 transition-all font-semibold bg-white/15 border border-white/30 text-white hover:bg-white/25"
         >
           Đăng xuất
         </button>

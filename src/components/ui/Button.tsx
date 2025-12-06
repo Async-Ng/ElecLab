@@ -96,9 +96,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={disabled || loading}
-        style={{
-          ...props.style,
-        }}
         {...props}
       >
         {loading && (

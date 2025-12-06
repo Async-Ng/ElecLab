@@ -234,7 +234,7 @@ const TeachingLogsTable: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div className="p-6">
       <PageHeader
         title="Nhật ký giảng dạy"
         description="Quản lý nhật ký các ca giảng dạy"

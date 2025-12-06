@@ -242,6 +242,7 @@ const Select: React.FC<SelectProps> = ({
               onClick={handleClear}
               className="hover:text-neutral-700 transition-colors"
               type="button"
+              aria-label="Clear selection"
             >
               <svg
                 className="w-4 h-4"

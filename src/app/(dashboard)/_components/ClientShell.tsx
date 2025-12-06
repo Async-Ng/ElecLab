@@ -61,10 +61,7 @@ export default function ClientShell({
   }, [sidebarOpen]);
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ backgroundColor: brandColors.background }}
-    >
+    <div className="min-h-screen flex bg-gray-50">
       {/* Mobile Backdrop Overlay (darkens content when sidebar is open) */}
       {sidebarOpen && (
         <div
