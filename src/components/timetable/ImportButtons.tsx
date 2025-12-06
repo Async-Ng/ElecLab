@@ -93,14 +93,17 @@ export default function ImportButtons({ isAdminMode }: ImportButtonsProps) {
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    console.log("📁 File selected:", file?.name);
     if (!file) return;
     try {
+      console.log("📊 Starting to read Excel file...");
       const XLSX = await import("xlsx");
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      console.log("📋 Rows parsed:", rows.length);
 
       // Map dữ liệu từ file sang type Timetable
       const preview: Timetable[] = rows
@@ -196,9 +199,12 @@ export default function ImportButtons({ isAdminMode }: ImportButtonsProps) {
             (isUserAdmin && row.lecturer)
           );
         });
+      console.log("✅ Preview rows prepared:", preview.length);
       setPreviewRows(preview);
       setPreviewOpen(true);
+      console.log("🎯 Modal should open now");
     } catch (err) {
+      console.error("❌ Import error:", err);
       showMessage.error("Import thất bại");
     }
   }
