@@ -13,7 +13,10 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   hasRole: (role: string) => boolean;
+  getPrimaryRole: () => string | null;
+  isAdmin: () => boolean;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -72,7 +75,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasRole = (role: string) => {
-    return user?.roles.includes(role) || false;
+    return user?.roles.includes(role as any) || false;
+  };
+
+  // Hàm kiểm tra role cao nhất - ưu tiên Admin
+  const getPrimaryRole = () => {
+    if (!user || !user.roles || user.roles.length === 0) return null;
+    // Nếu có role Admin thì ưu tiên Admin
+    if (user.roles.includes("Admin" as any)) return "Admin";
+    // Ngược lại trả về role đầu tiên
+    return user.roles[0];
+  };
+
+  const isAdmin = () => {
+    return user?.roles.includes("Admin" as any) || false;
+  };
+
+  const refreshUser = async () => {
+    const storedToken = localStorage.getItem("auth_token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Failed to refresh user", error);
+      }
+    }
   };
 
   return (
@@ -82,9 +112,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         login,
         logout,
-        isAuthenticated: !!token,
+        isAuthenticated: !!user,
         hasRole,
+        getPrimaryRole,
+        isAdmin,
         loading,
+        refreshUser,
       }}
     >
       {children}

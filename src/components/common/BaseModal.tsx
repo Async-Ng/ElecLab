@@ -1,7 +1,11 @@
 import React from "react";
-import { Modal, Button, ModalProps } from "antd";
+import Modal, { ModalProps as CustomModalProps } from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import { cn } from "@/design-system/utilities";
 
-interface BaseModalProps extends Omit<ModalProps, "footer"> {
+interface BaseModalProps {
+  title?: React.ReactNode;
+  open: boolean;
   onOk?: () => void;
   onCancel?: () => void;
   okText?: string;
@@ -10,6 +14,14 @@ interface BaseModalProps extends Omit<ModalProps, "footer"> {
   showFooter?: boolean;
   customFooter?: React.ReactNode;
   children: React.ReactNode;
+  /** Size preset - overridden by width if provided */
+  size?: "sm" | "md" | "lg" | "xl" | "full";
+  /** Custom width - overrides size preset */
+  width?: number | string;
+  centered?: boolean;
+  closable?: boolean;
+  maskClosable?: boolean;
+  className?: string;
 }
 
 export default function BaseModal({
@@ -22,33 +34,45 @@ export default function BaseModal({
   loading = false,
   showFooter = true,
   customFooter,
-  width = 600,
-  destroyOnClose = true,
+  size = "md",
+  width,
+  centered = true,
+  closable = true,
+  maskClosable = true,
+  className,
   children,
-  ...restProps
 }: BaseModalProps) {
-  const defaultFooter = showFooter
-    ? [
-        <Button key="cancel" onClick={onCancel}>
-          {cancelText}
-        </Button>,
-        <Button key="submit" type="primary" loading={loading} onClick={onOk}>
-          {okText}
-        </Button>,
-      ]
-    : null;
+  const defaultFooter = showFooter ? (
+    <>
+      <Button variant="outline" onClick={onCancel}>
+        {cancelText}
+      </Button>
+      <Button onClick={onOk} loading={loading}>
+        {okText}
+      </Button>
+    </>
+  ) : undefined;
 
   const footer = customFooter || defaultFooter;
+
+  // If width is provided, convert to className override
+  const widthClassName = width
+    ? typeof width === "number"
+      ? `max-w-[${width}px]`
+      : `max-w-[${width}]`
+    : undefined;
 
   return (
     <Modal
       title={title}
       open={open}
-      onCancel={onCancel}
+      onClose={onCancel}
       footer={footer}
-      width={width}
-      destroyOnHidden={destroyOnClose}
-      {...restProps}
+      size={width ? undefined : size} // Only use size if no width provided
+      centered={centered}
+      closable={closable}
+      maskClosable={maskClosable}
+      className={cn(widthClassName, className)}
     >
       {children}
     </Modal>

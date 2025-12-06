@@ -31,14 +31,12 @@ export async function fetchMaterialsSSR() {
     });
 
     if (!res.ok) {
-      console.error("SSR fetch materials failed:", res.status, res.statusText);
       throw new Error("Failed to fetch materials");
     }
 
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("SSR fetch materials error:", error);
     return [];
   }
 }
@@ -54,14 +52,12 @@ export async function fetchUsersSSR() {
     });
 
     if (!res.ok) {
-      console.error("SSR fetch users failed:", res.status, res.statusText);
       throw new Error("Failed to fetch users");
     }
 
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("SSR fetch users error:", error);
     return [];
   }
 }
@@ -83,11 +79,6 @@ export async function fetchRoomsSSR() {
     ]);
 
     if (!roomsRes.ok) {
-      console.error(
-        "SSR fetch rooms failed:",
-        roomsRes.status,
-        roomsRes.statusText
-      );
       throw new Error("Failed to fetch rooms");
     }
 
@@ -99,7 +90,6 @@ export async function fetchRoomsSSR() {
       users: Array.isArray(usersData) ? usersData : [],
     };
   } catch (error) {
-    console.error("SSR fetch rooms error:", error);
     return { rooms: [], users: [] };
   }
 }
@@ -115,14 +105,12 @@ export async function fetchTimetablesSSR() {
     });
 
     if (!res.ok) {
-      console.error("SSR fetch timetables failed:", res.status, res.statusText);
       throw new Error("Failed to fetch timetables");
     }
 
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("SSR fetch timetables error:", error);
     return [];
   }
 }
@@ -138,18 +126,12 @@ export async function fetchTeachingLogsSSR() {
     });
 
     if (!res.ok) {
-      console.error(
-        "SSR fetch teaching logs failed:",
-        res.status,
-        res.statusText
-      );
       throw new Error("Failed to fetch teaching logs");
     }
 
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("SSR fetch teaching logs error:", error);
     return [];
   }
 }

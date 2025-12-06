@@ -1,11 +1,16 @@
 import { create } from "zustand";
 import { User } from "@/types/user";
+import { getApiEndpoint, authFetch, isAdmin } from "@/lib/apiClient";
 
 interface UsersState {
   users: User[];
   loading: boolean;
   lastFetch: number | null;
-  fetchUsers: (force?: boolean) => Promise<void>;
+  fetchUsers: (
+    userId: string,
+    userRole: string | string[],
+    force?: boolean
+  ) => Promise<void>;
   addUser: (user: User) => void;
   updateUser: (id: string, user: Partial<User>) => void;
   deleteUser: (id: string) => void;
@@ -19,31 +24,38 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchUsers: async (force = false) => {
-    const { lastFetch, loading } = get();
-    const now = Date.now();
-
-    // Check if cache is still valid (skip if force refresh)
-    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
-      return; // Use cached data
-    }
+  fetchUsers: async (
+    userId: string,
+    userRole: string | string[],
+    force = false
+  ) => {
+    const { loading } = get();
 
     // Prevent duplicate fetches
     if (loading) return;
 
+    // Chỉ admin mới có quyền fetch danh sách users
+    // User thường không có endpoint /api/user/users
+    if (!isAdmin(userRole)) {
+      set({ users: [], loading: false, lastFetch: null });
+      return;
+    }
+
     set({ loading: true });
     try {
-      const response = await fetch("/api/users");
+      const endpoint = getApiEndpoint("users", userRole);
+
+      const response = await authFetch(endpoint, userId, userRole);
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
+
       set({
         users: Array.isArray(data) ? data : [],
-        lastFetch: now,
+        lastFetch: Date.now(),
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching users:", error);
-      set({ loading: false });
+      set({ users: [], loading: false });
     }
   },
 

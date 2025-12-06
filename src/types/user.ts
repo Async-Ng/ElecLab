@@ -1,7 +1,13 @@
 export enum UserRole {
-  User = "Người dùng",
-  Admin = "Quản lý",
+  User = "User",
+  Admin = "Admin",
 }
+
+// Display names for roles (UI)
+export const UserRoleLabels: Record<UserRole, string> = {
+  [UserRole.User]: "Người dùng",
+  [UserRole.Admin]: "Quản lý",
+};
 
 export interface User {
   _id?: string;

@@ -1,5 +1,7 @@
 import React, { useMemo, useEffect, useState, useCallback } from "react";
-import { Row, Col, Select } from "antd";
+import Select from "@/components/ui/Select";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 export interface TeachingLogsFilterProps {
   logs: any[];
@@ -14,6 +16,7 @@ export interface TeachingLogsFilterProps {
 
 const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
   ({ logs, filters, onChange }) => {
+    const { user } = useAuth();
     const semesters = useMemo(
       () => [
         { value: 1, label: "Học kỳ 1" },
@@ -37,26 +40,66 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
     >([]);
 
     useEffect(() => {
-      Promise.all([
-        fetch("/api/rooms").then((res) => res.json()),
-        fetch("/api/users?role=Lecture").then((res) => res.json()),
-      ])
-        .then(([roomsData, usersData]) => {
+      if (!user) return;
+
+      const fetchData = async () => {
+        try {
+          const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+
+          const roomsRes = await authFetch(
+            roomsEndpoint,
+            user._id!,
+            user.roles
+          );
+
+          let roomsData = { rooms: [] };
+
+          // Check if response is OK and is JSON
+          if (roomsRes.ok) {
+            const roomsText = await roomsRes.text();
+            try {
+              roomsData = JSON.parse(roomsText);
+            } catch (e) {
+              roomsData = { rooms: [] };
+            }
+          }
+
+          // Extract lecturers from existing logs data instead of API call
+          const lecturerList = Array.from(
+            new Set(
+              logs
+                .map((log) => {
+                  const timetable = log.timetable;
+                  if (timetable?.lecturer) {
+                    const lecturer = timetable.lecturer;
+                    return typeof lecturer === "object"
+                      ? { id: lecturer._id || lecturer.id, name: lecturer.name }
+                      : null;
+                  }
+                  return null;
+                })
+                .filter(Boolean)
+            )
+          );
+
           const roomList = Array.isArray(roomsData.rooms)
             ? roomsData.rooms
             : [];
           setRooms(roomList.map((r: any) => ({ value: r._id, label: r.name })));
           setLecturers(
-            Array.isArray(usersData)
-              ? usersData.map((u: any) => ({ value: u._id, label: u.name }))
-              : []
+            lecturerList.map((lecturer: any) => ({
+              value: lecturer.id,
+              label: lecturer.name,
+            }))
           );
-        })
-        .catch(() => {
+        } catch (error) {
           setRooms([]);
           setLecturers([]);
-        });
-    }, []);
+        }
+      };
+
+      fetchData();
+    }, [user, logs]);
 
     const handleChange = useCallback(
       (key: string) => (v: any) => {
@@ -71,48 +114,32 @@ const TeachingLogsFilter: React.FC<TeachingLogsFilterProps> = React.memo(
     );
 
     return (
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Học kỳ"
-            style={{ width: "100%" }}
-            value={filters.semester}
-            onChange={handleChange("semester")}
-            options={semesters}
-          />
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Năm học"
-            style={{ width: "100%" }}
-            value={filters.schoolYear}
-            onChange={handleChange("schoolYear")}
-            options={schoolYearOptions}
-          />
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Phòng học"
-            style={{ width: "100%" }}
-            value={filters.room}
-            onChange={handleChange("room")}
-            options={rooms}
-          />
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Giảng viên"
-            style={{ width: "100%" }}
-            value={filters.lecturer}
-            onChange={handleChange("lecturer")}
-            options={lecturers}
-          />
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <Select
+          value={filters.semester}
+          onChange={handleChange("semester")}
+          options={[{ value: "", label: "Học kỳ" }, ...semesters]}
+          placeholder="Học kỳ"
+        />
+        <Select
+          value={filters.schoolYear}
+          onChange={handleChange("schoolYear")}
+          options={[{ value: "", label: "Năm học" }, ...schoolYearOptions]}
+          placeholder="Năm học"
+        />
+        <Select
+          value={filters.room}
+          onChange={handleChange("room")}
+          options={[{ value: "", label: "Phòng học" }, ...rooms]}
+          placeholder="Phòng học"
+        />
+        <Select
+          value={filters.lecturer}
+          onChange={handleChange("lecturer")}
+          options={[{ value: "", label: "Giảng viên" }, ...lecturers]}
+          placeholder="Giảng viên"
+        />
+      </div>
     );
   }
 );

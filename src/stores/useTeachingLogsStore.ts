@@ -1,11 +1,17 @@
 import { create } from "zustand";
 import { TeachingLog } from "@/types/teachingLog";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface TeachingLogsState {
   teachingLogs: TeachingLog[];
   loading: boolean;
   lastFetch: number | null;
-  fetchTeachingLogs: (userId?: string, force?: boolean) => Promise<void>;
+  fetchTeachingLogs: (
+    userId: string,
+    userRole: string | string[],
+    force?: boolean,
+    lessonId?: string
+  ) => Promise<void>;
   addTeachingLog: (teachingLog: TeachingLog) => void;
   updateTeachingLog: (id: string, teachingLog: Partial<TeachingLog>) => void;
   deleteTeachingLog: (id: string) => void;
@@ -19,7 +25,12 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchTeachingLogs: async (userId?: string, force = false) => {
+  fetchTeachingLogs: async (
+    userId: string,
+    userRole: string | string[],
+    force = false,
+    lessonId?: string
+  ) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
 
@@ -31,12 +42,13 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
 
     set({ loading: true });
     try {
-      let url = "/api/teaching-logs";
-      if (userId) {
-        url += `?userId=${userId}`;
+      let endpoint = getApiEndpoint("teaching-logs", userRole);
+
+      if (lessonId) {
+        endpoint += `?lessonId=${lessonId}`;
       }
 
-      const response = await fetch(url);
+      const response = await authFetch(endpoint, userId, userRole);
       if (!response.ok) throw new Error("Failed to fetch teaching logs");
       const data = await response.json();
 
@@ -60,7 +72,6 @@ export const useTeachingLogsStore = create<TeachingLogsState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching teaching logs:", error);
       set({ loading: false });
     }
   },

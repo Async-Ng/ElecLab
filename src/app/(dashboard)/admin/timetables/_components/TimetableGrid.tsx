@@ -1,0 +1,231 @@
+import Card from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
+import LessonCard from "@/components/timetable/LessonCard";
+import { Timetable } from "@/types/timetable";
+import { Dayjs } from "dayjs";
+import { brandColors, gradients } from "@/styles/theme";
+
+interface TimetableGridProps {
+  items: Timetable[];
+  days: Dayjs[];
+  allPeriods: number[];
+  statusInfo: (row: Timetable) => {
+    color?: string;
+    text?: string;
+    canClick?: boolean;
+    isEdit?: boolean;
+  };
+  materials?: Array<{ _id: string; name: string; quantity: number }>;
+  rooms?: Array<{ _id: string; room_id: string; name: string }>;
+}
+
+const PERIOD_LABELS = ["Ca 1", "Ca 2", "Ca 3", "Ca 4"];
+const DAY_NAMES = [
+  "Chủ Nhật",
+  "Thứ 2",
+  "Thứ 3",
+  "Thứ 4",
+  "Thứ 5",
+  "Thứ 6",
+  "Thứ 7",
+];
+
+export default function TimetableGrid({
+  items,
+  days,
+  allPeriods,
+  statusInfo,
+  materials = [],
+  rooms = [],
+}: TimetableGridProps) {
+  const getLessonsForCell = (day: Dayjs, period: number) => {
+    return items.filter((it) => {
+      let itemDate = it.date;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(itemDate)) {
+        const [dd, mm, yyyy] = itemDate.split("/");
+        itemDate = `${yyyy}-${mm}-${dd}`;
+      }
+      return (
+        itemDate === day.format("YYYY-MM-DD") && Number(it.period) === period
+      );
+    });
+  };
+
+  const isToday = (day: Dayjs) => {
+    return day.format("YYYY-MM-DD") === day.format("YYYY-MM-DD");
+  };
+
+  return (
+    <div
+      style={{ padding: "12px", background: brandColors.backgroundSecondary }}
+    >
+      {/* Day header */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "60px repeat(7, 1fr)",
+          gap: "8px",
+          marginBottom: "8px",
+        }}
+        className="sm:grid-cols-[100px_repeat(7,1fr)] sm:gap-3 sm:mb-3"
+      >
+        {/* Empty corner */}
+        <div />
+
+        {/* Day cells */}
+        {days.map((day, index) => {
+          const isCurrentDay = isToday(day);
+          return (
+            <Card
+              key={day.toString()}
+              size="small"
+              style={{
+                textAlign: "center",
+                background: isCurrentDay ? gradients.primary : "white",
+                border: isCurrentDay
+                  ? "none"
+                  : `1px solid ${brandColors.border}`,
+                borderRadius: 8,
+                boxShadow: isCurrentDay
+                  ? `0 4px 12px ${brandColors.primary}40`
+                  : "none",
+                minWidth: "80px",
+              }}
+              styles={{ body: { padding: "8px 4px" } }}
+              className="sm:body-style-[padding:12px_8px]"
+            >
+              <span
+                className="block text-[11px] sm:text-xs mb-1"
+                style={{
+                  fontWeight: 600,
+                  color: isCurrentDay ? "white" : brandColors.textSecondary,
+                }}
+              >
+                {DAY_NAMES[index]}
+              </span>
+              <span
+                className="block text-sm sm:text-base font-semibold"
+                style={{
+                  color: isCurrentDay ? "white" : brandColors.textPrimary,
+                }}
+              >
+                {day.format("DD/MM")}
+              </span>
+              {isCurrentDay && (
+                <Badge variant="info" className="mt-1 hidden sm:inline-flex">
+                  Hôm nay
+                </Badge>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Time slots grid */}
+      {allPeriods.map((period) => (
+        <div
+          key={period}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "60px repeat(7, 1fr)",
+            gap: "8px",
+            marginBottom: "8px",
+          }}
+          className="sm:grid-cols-[100px_repeat(7,1fr)] sm:gap-3 sm:mb-3 overflow-x-auto"
+        >
+          {/* Period label */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: brandColors.primary,
+              color: "white",
+              fontWeight: 600,
+              borderRadius: 6,
+              minWidth: "60px",
+              fontSize: "12px",
+              textAlign: "center",
+              padding: "8px 4px",
+            }}
+            className="sm:min-w-[100px] sm:text-sm"
+          >
+            {PERIOD_LABELS[period - 1]}
+          </div>
+
+          {/* Time slot cells */}
+          {days.map((day) => {
+            const lessons = getLessonsForCell(day, period);
+            const isCurrentDay = isToday(day);
+
+            return (
+              <div
+                key={day.toString() + period}
+                style={{
+                  background: isCurrentDay
+                    ? `${brandColors.primaryLight}80`
+                    : "white",
+                  border: isCurrentDay
+                    ? `2px dashed ${brandColors.primary}50`
+                    : `1px solid ${brandColors.border}`,
+                  borderRadius: 8,
+                  padding: lessons.length > 0 ? "6px" : "8px",
+                  minHeight: "100px",
+                  minWidth: "80px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  transition: "all 0.3s ease",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+                className="sm:min-h-[120px] sm:p-2"
+                onMouseEnter={(e) => {
+                  if (lessons.length === 0) {
+                    e.currentTarget.style.background = isCurrentDay
+                      ? `${brandColors.primaryLight}CC`
+                      : brandColors.backgroundSecondary;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (lessons.length === 0) {
+                    e.currentTarget.style.background = isCurrentDay
+                      ? `${brandColors.primaryLight}80`
+                      : "white";
+                  }
+                }}
+              >
+                {lessons.length === 0 ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      opacity: 0.3,
+                    }}
+                  >
+                    <span className="text-xl sm:text-2xl text-gray-400">—</span>
+                  </div>
+                ) : (
+                  lessons.map((lesson) => (
+                    <LessonCard
+                      key={
+                        lesson._id ||
+                        `${lesson.className}-${lesson.date}-${lesson.period}`
+                      }
+                      lesson={lesson}
+                      statusInfo={statusInfo(lesson)}
+                      materials={materials}
+                      rooms={rooms}
+                    />
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}

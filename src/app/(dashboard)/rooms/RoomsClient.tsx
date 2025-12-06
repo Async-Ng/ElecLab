@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, lazy, Suspense, useMemo } from "react";
-import { Form, message } from "antd";
 import { Room } from "@/types/room";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { PageHeader, ActionButtons } from "@/components/common";
+import PageHeader from "@/components/common/PageHeader";
+import Button from "@/components/ui/Button";
+import Alert from "@/components/ui/Alert";
 import { useRooms, useUsers } from "@/hooks/stores";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 // Lazy load components
 const RoomTable = lazy(() => import("./_components/RoomTable"));
@@ -16,7 +18,10 @@ export default function RoomsClient() {
   const [submitting, setSubmitting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
-  const [form] = Form.useForm<Room>();
+  const [alertMessage, setAlertMessage] = useState<{
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+  } | null>(null);
 
   // Get user info from localStorage - memoized to prevent re-calculation
   const user = useMemo(() => {
@@ -31,57 +36,55 @@ export default function RoomsClient() {
   }, []);
 
   // Use Zustand stores with auto-fetch and caching
-  const {
-    rooms,
-    updateRoom,
-    deleteRoom: removeRoom,
-    fetchRooms,
-  } = useRooms({
-    userRole: user?.roles?.[0],
-    userId: user?._id,
-  });
+  const { rooms, updateRoom, deleteRoom: removeRoom, fetchRooms } = useRooms();
   const { users } = useUsers();
 
   function openCreate() {
     setEditing(null);
-    form.resetFields();
     setModalOpen(true);
   }
 
   function openEdit(record: Room) {
     setEditing(record);
-    form.setFieldsValue(record);
     setModalOpen(true);
   }
 
   async function handleDelete(id?: string) {
-    if (!id) return;
+    if (!id || !user) return;
     try {
-      const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
+      const endpoint = getApiEndpoint("rooms", user.roles);
+      const res = await authFetch(`${endpoint}/${id}`, user._id, user.roles, {
+        method: "DELETE",
+      });
 
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Xóa thất bại");
       }
 
-      message.success("Xóa phòng thành công!");
+      setAlertMessage({ type: "success", message: "Xóa phòng thành công!" });
       removeRoom(id);
+      setTimeout(() => setAlertMessage(null), 3000);
     } catch (err: any) {
-      message.error(err?.message || "Có lỗi xảy ra khi xóa phòng");
+      setAlertMessage({
+        type: "error",
+        message: err?.message || "Có lỗi xảy ra khi xóa phòng",
+      });
+      setTimeout(() => setAlertMessage(null), 5000);
     }
   }
 
-  async function handleOk() {
+  async function handleSubmit(formData: Room) {
+    if (!user) return;
     setSubmitting(true);
     try {
-      const values = await form.validateFields();
       const method = editing ? "PUT" : "POST";
-      const url = editing ? `/api/rooms/${editing._id}` : "/api/rooms";
+      const endpoint = getApiEndpoint("rooms", user.roles);
+      const url = editing ? `${endpoint}/${editing._id}` : endpoint;
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, user._id, user.roles, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(formData),
       });
 
       if (!res.ok) {
@@ -91,26 +94,49 @@ export default function RoomsClient() {
 
       const savedRoom = await res.json();
 
-      message.success(
-        editing ? "Cập nhật phòng thành công!" : "Thêm phòng mới thành công!"
-      );
+      setAlertMessage({
+        type: "success",
+        message: editing
+          ? "Cập nhật phòng thành công!"
+          : "Thêm phòng mới thành công!",
+      });
+      setTimeout(() => setAlertMessage(null), 3000);
       setModalOpen(false);
 
       // Refetch rooms to get latest data (force bypass cache)
-      await fetchRooms(user?.roles?.[0], user?._id, true);
+      await fetchRooms(user.roles?.[0], user._id, true);
     } catch (err: any) {
-      message.error(err?.message || "Có lỗi xảy ra khi lưu phòng");
+      setAlertMessage({
+        type: "error",
+        message: err?.message || "Có lỗi xảy ra khi lưu phòng",
+      });
+      setTimeout(() => setAlertMessage(null), 5000);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div className="p-6 space-y-6">
+      {/* Alert Messages */}
+      {alertMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <Alert
+            type={alertMessage.type}
+            message={alertMessage.message}
+            onClose={() => setAlertMessage(null)}
+          />
+        </div>
+      )}
+
       <PageHeader
         title="Phòng học"
         description="Quản lý danh sách phòng học và thiết bị"
-        extra={<ActionButtons onAdd={openCreate} addText="Thêm phòng mới" />}
+        extra={
+          <Button variant="primary" onClick={openCreate} size="md">
+            Thêm phòng mới
+          </Button>
+        }
       />
 
       <Suspense
@@ -135,12 +161,12 @@ export default function RoomsClient() {
         >
           <RoomModal
             open={modalOpen}
-            onOk={handleOk}
+            onSubmit={handleSubmit}
             onCancel={() => setModalOpen(false)}
             editing={editing}
-            form={form}
             users={users}
             loading={submitting}
+            onDelete={handleDelete}
           />
         </Suspense>
       )}

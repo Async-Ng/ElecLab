@@ -1,4 +1,3 @@
-import { Select, DatePicker, Button, Col } from "antd";
 import dayjs from "dayjs";
 import React from "react";
 import { Semester, Period, StudyTime, Timetable } from "@/types/timetable";
@@ -11,6 +10,8 @@ import {
   SubjectSelect,
   ClassNameSelect,
 } from "@/components/common/SelectFields";
+import { useAuth } from "@/hooks/useAuth";
+import { authFetch, getApiEndpoint } from "@/lib/apiClient";
 
 interface TimetableFilterBarProps {
   data: Timetable[];
@@ -20,6 +21,8 @@ interface TimetableFilterBarProps {
   setSemester: (v: Semester | "") => void;
   date: string;
   setDate: (v: string) => void;
+  week: number | "";
+  setWeek: (v: number | "") => void;
   period: Period | "";
   setPeriod: (v: Period | "") => void;
   time: StudyTime | "";
@@ -43,6 +46,8 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
   setSemester,
   date,
   setDate,
+  week,
+  setWeek,
   period,
   setPeriod,
   time,
@@ -64,14 +69,46 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
     { label: string; value: string }[]
   >([]);
   const [lecturerOptions, setLecturerOptions] = React.useState<string[]>([]);
+  const { user } = useAuth();
 
   React.useEffect(() => {
-    fetch("/api/rooms")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.rooms)) {
+    if (!user) return;
+
+    const fetchData = async () => {
+      try {
+        const roomsEndpoint = getApiEndpoint("rooms", user.roles);
+        const usersEndpoint = getApiEndpoint("users", user.roles);
+
+        const [roomsRes, lecturersRes] = await Promise.all([
+          authFetch(roomsEndpoint, user._id!, user.roles),
+          authFetch(`${usersEndpoint}?role=lecturer`, user._id!, user.roles),
+        ]);
+
+        let roomsData = { rooms: [] };
+        let lecturersData = [];
+
+        // Parse rooms response safely
+        if (roomsRes.ok) {
+          try {
+            roomsData = await roomsRes.json();
+          } catch (e) {
+            // Failed to parse rooms response
+          }
+        }
+
+        // Parse lecturers response safely
+        if (lecturersRes.ok) {
+          try {
+            lecturersData = await lecturersRes.json();
+          } catch (e) {
+            // Failed to parse lecturers response
+          }
+        }
+
+        // Xử lý rooms
+        if (Array.isArray(roomsData.rooms)) {
           setRoomOptions(
-            data.rooms.map((r: any) => ({
+            roomsData.rooms.map((r: any) => ({
               label: r.room_id + (r.name ? ` - ${r.name}` : ""),
               value: r.room_id,
             }))
@@ -79,13 +116,17 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
         } else {
           setRoomOptions([]);
         }
-      });
-    fetch("/api/users?role=lecturer")
-      .then((res) => res.json())
-      .then((lecturers) => {
-        setLecturerOptions(lecturers.map((l: any) => l.name));
-      });
-  }, []);
+
+        // Xử lý lecturers
+        setLecturerOptions(lecturersData.map((l: any) => l.name));
+      } catch (error) {
+        setRoomOptions([]);
+        setLecturerOptions([]);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   return (
     <FilterBar onClear={handleClear} clearText="Xóa lọc">
@@ -115,6 +156,20 @@ const TimetableFilterBar: React.FC<TimetableFilterBarProps> = ({
           value={date ? dayjs(date, "DD/MM/YYYY") : null}
           onChange={(d) => setDate(d ? d.format("DD/MM/YYYY") : "")}
           placeholder="Ngày"
+          allowClear
+        />
+      </Col>
+
+      <Col xs={24} sm={12} lg={6} className="mb-2">
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Tuần"
+          value={week || undefined}
+          onChange={(v) => setWeek(v)}
+          options={Array.from({ length: 52 }, (_, i) => ({
+            label: `Tuần ${i + 1}`,
+            value: i + 1,
+          }))}
           allowClear
         />
       </Col>

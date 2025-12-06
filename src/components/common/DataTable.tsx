@@ -29,7 +29,6 @@ export default function DataTable<
   scrollY,
   pagination = {
     pageSize: 10,
-    showSizeChanger: true,
     showTotal: (total) => `Tổng ${total} bản ghi`,
   },
   ...restProps

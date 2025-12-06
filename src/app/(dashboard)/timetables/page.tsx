@@ -2,12 +2,15 @@
 
 import { Suspense } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import TimetablesClient from "./TimetablesClient";
+import UserTimetablesClient from "./UserTimetablesClient";
+import PrivateRoute from "@/components/PrivateRoute";
 
-export default function TimetablePage() {
+export default function UserTimetablesPage() {
   return (
-    <Suspense fallback={<LoadingSpinner tip="Đang tải thời khóa biểu..." />}>
-      <TimetablesClient />
-    </Suspense>
+    <PrivateRoute>
+      <Suspense fallback={<LoadingSpinner tip="Đang tải thời khóa biểu..." />}>
+        <UserTimetablesClient />
+      </Suspense>
+    </PrivateRoute>
   );
 }

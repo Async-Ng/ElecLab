@@ -1,14 +1,15 @@
 import { create } from "zustand";
 import { Room } from "@/types/room";
 import { User } from "@/types/user";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface RoomsState {
   rooms: (Room & { users_manage?: User[] })[];
   loading: boolean;
   lastFetch: number | null;
   fetchRooms: (
-    userRole?: string,
-    userId?: string,
+    userId: string,
+    userRole: string | string[],
     force?: boolean
   ) => Promise<void>;
   addRoom: (room: Room & { users_manage?: User[] }) => void;
@@ -24,27 +25,25 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchRooms: async (userRole?: string, userId?: string, force = false) => {
-    const { lastFetch, loading } = get();
-    const now = Date.now();
-
-    // Check if cache is still valid (skip if force refresh)
-    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
-      return;
-    }
+  fetchRooms: async (
+    userId: string,
+    userRole: string | string[],
+    force = false
+  ) => {
+    const { loading } = get();
 
     if (loading) return;
 
     set({ loading: true });
     try {
-      const params = new URLSearchParams();
-      if (userRole) params.append("userRole", userRole);
-      if (userId) params.append("userId", userId);
+      const endpoint = getApiEndpoint("rooms", userRole);
 
-      const response = await fetch(`/api/rooms?${params.toString()}`);
-      if (!response.ok) throw new Error("Failed to fetch rooms");
-
+      const response = await authFetch(endpoint, userId, userRole);
+      if (!response.ok) {
+        throw new Error("Failed to fetch rooms");
+      }
       const data = await response.json();
+
       const roomsData = Array.isArray(data.rooms) ? data.rooms : [];
       const roomsWithUsers = roomsData.map((room: any) => ({
         ...room,
@@ -55,12 +54,11 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
 
       set({
         rooms: roomsWithUsers,
-        lastFetch: now,
+        lastFetch: Date.now(),
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching rooms:", error);
-      set({ loading: false });
+      set({ rooms: [], loading: false });
     }
   },
 

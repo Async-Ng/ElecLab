@@ -54,7 +54,23 @@ export default function LoginPage() {
 
       loginContext(data.token, data.user);
       message.success("Đăng nhập thành công!");
-      router.push(`/timetables/${data.user._id}`);
+
+      // Redirect dựa trên role
+      const userRoles = data.user.roles || [];
+      const hasAdmin = userRoles.includes("Admin");
+      const hasUser = userRoles.includes("User");
+
+      // Luôn ưu tiên Admin role khi đăng nhập
+      if (hasAdmin) {
+        localStorage.setItem("activeRole", "Admin");
+        router.push("/admin/timetables");
+      } else if (hasUser) {
+        localStorage.setItem("activeRole", "User");
+        router.push("/timetables");
+      } else {
+        // Fallback về timetables nếu không có role nào
+        router.push("/timetables");
+      }
     } catch (error) {
       message.error("Đăng nhập thất bại, vui lòng thử lại");
     } finally {

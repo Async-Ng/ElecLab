@@ -1,14 +1,16 @@
 import { create } from "zustand";
 import { Timetable } from "@/types/timetable";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface TimetablesState {
   timetables: Timetable[];
   loading: boolean;
   lastFetch: number | null;
   fetchTimetables: (
-    userRole?: string,
-    userId?: string,
-    force?: boolean
+    userId: string,
+    userRole: string | string[],
+    force?: boolean,
+    forceUserEndpoint?: boolean
   ) => Promise<void>;
   addTimetable: (timetable: Timetable) => void;
   updateTimetable: (id: string, timetable: Partial<Timetable>) => void;
@@ -24,31 +26,30 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
   lastFetch: null,
 
   fetchTimetables: async (
-    userRole?: string,
-    userId?: string,
-    force = false
+    userId: string,
+    userRole: string | string[],
+    force = false,
+    forceUserEndpoint = false
   ) => {
-    const { lastFetch, loading } = get();
-    const now = Date.now();
-
-    if (!force && lastFetch && now - lastFetch < CACHE_DURATION && !loading) {
-      return;
-    }
+    const { loading } = get();
 
     if (loading) return;
 
     set({ loading: true });
     try {
-      let url = "/api/timetables";
-      const params = new URLSearchParams();
-      if (userRole) params.append("userRole", userRole);
-      if (userId) params.append("userId", userId);
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
+      const endpoint = getApiEndpoint(
+        "timetables",
+        userRole,
+        forceUserEndpoint
+      );
 
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch timetables");
+      const response = await authFetch(endpoint, userId, userRole);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `Failed to fetch timetables: ${response.status}`
+        );
+      }
       const data = await response.json();
 
       const processedData = Array.isArray(data)
@@ -64,11 +65,10 @@ export const useTimetablesStore = create<TimetablesState>((set, get) => ({
 
       set({
         timetables: processedData,
-        lastFetch: now,
+        lastFetch: Date.now(),
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching timetables:", error);
       set({ loading: false });
     }
   },

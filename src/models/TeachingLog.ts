@@ -9,7 +9,7 @@ const TeachingLogSchema: Schema = new Schema(
       required: true,
     },
     note: { type: String },
-    images: [{ type: Buffer }],
+    images: [{ type: String }], // Array of image URLs (from ImgBB)
     status: {
       type: String,
       enum: Object.values(TeachingLogStatus),

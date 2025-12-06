@@ -1,0 +1,124 @@
+/* Custom styles for timetable calendar grid */
+
+/* Brand color utilities */
+.text-brand-primary {
+  color: #3b82f6; /* primary-500 */
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.bg-gradient-primary-secondary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Calendar table styling */
+.timetable-calendar table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.timetable-calendar th {
+  padding: 12px;
+  background-color: var(--color-primary-500);
+  color: var(--color-white);
+  font-weight: 600;
+  border: 1px solid var(--color-primary-700);
+  text-align: center;
+}
+
+.timetable-calendar td {
+  padding: 8px;
+  border: 1px solid var(--color-gray-300);
+  vertical-align: top;
+}
+
+/* Timetable cells */
+.timetable-cell {
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+}
+
+.timetable-cell.empty {
+  min-height: 80px;
+  border: 1px dashed var(--color-gray-300);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray-400);
+}
+
+.timetable-cell.empty:hover {
+  background-color: var(--color-gray-50);
+  border-color: var(--color-primary-500);
+}
+
+.timetable-cell.filled {
+  min-height: 80px;
+  padding: 8px;
+  background-color: var(--color-primary-50);
+  border: 1px solid var(--color-primary-500);
+  cursor: pointer;
+}
+
+.timetable-cell.filled:hover {
+  background-color: var(--color-primary-100);
+  box-shadow: var(--shadow-primary-md);
+  transform: translateY(-1px);
+}
+
+/* Today highlight */
+.today-column {
+  background-color: var(--color-success-50) !important;
+}
+
+.today-header {
+  background-color: var(--color-success-600) !important;
+}
+
+/* Period label */
+.period-label {
+  position: sticky;
+  left: 0;
+  background-color: var(--color-gray-50);
+  z-index: 5;
+}
+
+/* Week navigation */
+.week-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: var(--color-gray-50);
+  border-radius: var(--radius-sm);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .timetable-calendar {
+    overflow-x: auto;
+  }
+
+  .timetable-calendar table {
+    min-width: 800px;
+  }
+
+  .timetable-cell {
+    min-height: 60px;
+    font-size: 12px;
+  }
+
+  .week-navigation {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

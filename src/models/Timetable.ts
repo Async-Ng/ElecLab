@@ -9,6 +9,12 @@ const TimetableSchema = new mongoose.Schema({
     enum: Object.values(Semester).filter((v) => typeof v === "number"),
   },
   date: { type: String, required: true },
+  week: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 52,
+  },
   period: {
     type: Number,
     required: true,
@@ -27,6 +33,7 @@ const TimetableSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  note: { type: String, default: "" }, // Ghi chú cho TKB
 });
 
 // Tối ưu: Thêm indexes cho các trường thường query và sort

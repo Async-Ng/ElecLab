@@ -21,6 +21,9 @@ export const useTimetables = (options: UseTimetablesOptions = {}) => {
   useEffect(() => {
     if (!autoFetch) return;
 
+    // Don't fetch if we don't have required parameters
+    if (!userId || !userRole) return;
+
     const paramsChanged =
       prevParams.current.userRole !== userRole ||
       prevParams.current.userId !== userId;
@@ -28,7 +31,8 @@ export const useTimetables = (options: UseTimetablesOptions = {}) => {
     if (!hasFetched.current || paramsChanged) {
       hasFetched.current = true;
       prevParams.current = { userRole, userId };
-      store.fetchTimetables(userRole, userId);
+      // Force refresh when parameters change to bypass cache
+      store.fetchTimetables(userId, userRole, paramsChanged);
     }
   }, [userRole, userId, autoFetch, store]);
 

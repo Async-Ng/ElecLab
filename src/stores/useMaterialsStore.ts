@@ -1,11 +1,16 @@
 import { create } from "zustand";
 import { Material } from "@/types/material";
+import { getApiEndpoint, authFetch } from "@/lib/apiClient";
 
 interface MaterialsState {
   materials: Material[];
   loading: boolean;
   lastFetch: number | null;
-  fetchMaterials: (force?: boolean) => Promise<void>;
+  fetchMaterials: (
+    userId: string,
+    userRole: string | string[],
+    force?: boolean
+  ) => Promise<void>;
   addMaterial: (material: Material) => void;
   updateMaterial: (id: string, material: Partial<Material>) => void;
   deleteMaterial: (id: string) => void;
@@ -19,7 +24,11 @@ export const useMaterialsStore = create<MaterialsState>((set, get) => ({
   loading: false,
   lastFetch: null,
 
-  fetchMaterials: async (force = false) => {
+  fetchMaterials: async (
+    userId: string,
+    userRole: string | string[],
+    force = false
+  ) => {
     const { lastFetch, loading } = get();
     const now = Date.now();
 
@@ -31,7 +40,9 @@ export const useMaterialsStore = create<MaterialsState>((set, get) => ({
 
     set({ loading: true });
     try {
-      const response = await fetch("/api/materials");
+      const endpoint = getApiEndpoint("materials", userRole);
+
+      const response = await authFetch(endpoint, userId, userRole);
       if (!response.ok) throw new Error("Failed to fetch materials");
       const data = await response.json();
       set({
@@ -40,7 +51,6 @@ export const useMaterialsStore = create<MaterialsState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      console.error("Error fetching materials:", error);
       set({ loading: false });
     }
   },

@@ -25,7 +25,8 @@ export const useTeachingLogs = (options: UseTeachingLogsOptions = {}) => {
     if (!hasFetched.current || userIdChanged) {
       hasFetched.current = true;
       prevUserId.current = userId;
-      store.fetchTeachingLogs(userId);
+      // Force refresh when userId changes to bypass cache
+      store.fetchTeachingLogs(userId, userIdChanged);
     }
   }, [userId, autoFetch, store]);
 
