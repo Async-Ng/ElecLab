@@ -3,7 +3,7 @@
 import React from "react";
 import { Typography } from "antd";
 import Breadcrumbs from "@/components/layout/Breadcrumbs";
-import { brandColors } from "@/styles/theme";
+import { cn } from "@/design-system/utilities";
 
 const { Title } = Typography;
 
@@ -44,7 +44,9 @@ export default function PageHeader({
   showBreadcrumbs = true,
 }: PageHeaderProps) {
   return (
-    <div className="bg-white border-b border-gray-200 mb-4 sm:mb-6 p-4 sm:p-5 md:p-6 rounded-b-lg">
+    <div
+      className="bg-white border-b border-gray-200 mb-4 sm:mb-6 p-4 sm:p-5 md:p-6 rounded-b-lg"
+    >
       {/* Breadcrumbs Navigation */}
       {showBreadcrumbs && (
         <div className="mb-3 sm:mb-4">
@@ -54,14 +56,15 @@ export default function PageHeader({
 
       {/* Title and Actions Row */}
       <div
-        className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 ${
-          description ? "mb-3" : ""
-        }`}
+        className={cn(
+          "flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4",
+          description && "mb-3"
+        )}
       >
         <div className="flex-1 min-w-0">
           <Title
             level={2}
-            className="!m-0 !text-2xl sm:!text-3xl md:!text-4xl !text-gray-900 !font-bold !leading-snug"
+            className="!m-0 !text-2xl sm:!text-3xl md:!text-4xl !text-gray-900 !font-bold"
           >
             {title}
           </Title>
@@ -77,7 +80,9 @@ export default function PageHeader({
 
       {/* Description */}
       {description && (
-        <p className="m-0 mt-2 text-sm sm:text-base max-w-full md:max-w-3xl text-gray-600 leading-relaxed">
+        <p
+          className="m-0 mt-2 text-sm sm:text-base max-w-full md:max-w-3xl text-gray-600 leading-relaxed"
+        >
           {description}
         </p>
       )}

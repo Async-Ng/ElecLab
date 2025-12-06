@@ -5,7 +5,6 @@ import ModernSidebar from "@/components/layout/ModernSidebar";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { cn } from "@/design-system/utilities";
-import { brandColors } from "@/styles/theme";
 
 /**
  * ClientShell - Single Source of Truth for Dashboard Layout
@@ -26,9 +25,6 @@ export default function ClientShell({
   // Mobile sidebar drawer state (true = open overlay)
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Desktop sidebar collapsed state (saved to localStorage)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
   // Close sidebar on Escape key press
   useEffect(() => {
     function handleEscapeKey(e: KeyboardEvent) {
@@ -38,14 +34,6 @@ export default function ClientShell({
     }
     window.addEventListener("keydown", handleEscapeKey);
     return () => window.removeEventListener("keydown", handleEscapeKey);
-  }, []);
-
-  // Load collapsed state from localStorage on mount
-  useEffect(() => {
-    const savedState = localStorage.getItem("sidebarCollapsed");
-    if (savedState !== null) {
-      setSidebarCollapsed(savedState === "true");
-    }
   }, []);
 
   // Prevent body scroll when mobile sidebar is open
@@ -61,7 +49,9 @@ export default function ClientShell({
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div
+      className="min-h-screen flex bg-[#F3F4F6]"
+    >
       {/* Mobile Backdrop Overlay (darkens content when sidebar is open) */}
       {sidebarOpen && (
         <div

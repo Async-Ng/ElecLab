@@ -183,9 +183,7 @@ const Tabs: React.FC<TabsProps> = ({
       <div
         role="tablist"
         className={tabListStyles}
-        aria-orientation={
-          orientation === "vertical" ? "vertical" : "horizontal"
-        }
+        aria-orientation={orientation === "horizontal" ? "horizontal" : "vertical"}
       >
         {items.map((item, index) => {
           const isActive = item.key === activeKey;
@@ -194,7 +192,7 @@ const Tabs: React.FC<TabsProps> = ({
             <button
               key={item.key}
               role="tab"
-              aria-selected={isActive ? true : false}
+              aria-selected={isActive ? "true" : "false"}
               aria-controls={`tabpanel-${item.key}`}
               id={`tab-${item.key}`}
               tabIndex={isActive ? 0 : -1}
