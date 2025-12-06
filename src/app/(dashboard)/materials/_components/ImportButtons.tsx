@@ -84,7 +84,7 @@ export default function ImportButtons({ onImported, setLoading }: Props) {
       setPreviewRows(preview);
       setPreviewOpen(true);
     } catch (err) {
-      showshowMessage.error("Import thất bại");
+      showMessage.error("Import thất bại");
     } finally {
       setLoading?.(false);
     }

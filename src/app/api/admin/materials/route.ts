@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Material } from "@/models/Material";
 import { jwtVerify } from "jose";
+import { requireAdmin } from "@/lib/apiMiddleware";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key"
@@ -73,16 +74,29 @@ export async function POST(request: Request) {
     const data = await request.json();
     await connectToDatabase();
 
+    // Helper function to clean material data
+    const cleanMaterialData = (item: any) => {
+      const cleaned = { ...item };
+      // Convert empty string place_used to undefined so it won't be saved
+      if (cleaned.place_used === "" || cleaned.place_used === null) {
+        delete cleaned.place_used;
+      }
+      return cleaned;
+    };
+
     // Support both single object and array batch import
     if (Array.isArray(data)) {
+      // Clean all items before inserting
+      const cleanedData = data.map(cleanMaterialData);
       // insertMany with ordered:false so other docs still insert if some fail
-      const res = await Material.insertMany(data, { ordered: false });
+      const res = await Material.insertMany(cleanedData, { ordered: false });
       return NextResponse.json(
         { insertedCount: res.length, inserted: res },
         { status: 201 }
       );
     } else {
-      const material = await Material.create(data);
+      const cleanedData = cleanMaterialData(data);
+      const material = await Material.create(cleanedData);
       return NextResponse.json(material, { status: 201 });
     }
   } catch (err: any) {
